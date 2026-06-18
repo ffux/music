@@ -52,7 +52,8 @@ const upload = multer({ dest: '/tmp/' });
 app.post('/api/cookies', upload.single('cookies'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   const dest = path.join(DATA_DIR, 'cookies.txt');
-  fs.renameSync(req.file.path, dest);
+  fs.copyFileSync(req.file.path, dest);
+  fs.unlinkSync(req.file.path);
   res.json({ ok: true, message: 'cookies.txt updated' });
 });
 
