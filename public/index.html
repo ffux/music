@@ -70,6 +70,29 @@
     nav button:hover { color: var(--text); background: var(--surface2); }
     nav button.active { color: var(--accent2); background: rgba(124,106,247,0.15); }
 
+    /* Search */
+    .search-panel { padding: 24px; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+    .search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+    .search-bar input { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.15s; }
+    .search-bar input:focus { border-color: var(--accent); }
+    .search-bar input::placeholder { color: var(--muted); }
+    .search-types { display: flex; gap: 6px; margin-bottom: 20px; }
+    .type-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 5px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+    .type-btn.active { background: rgba(124,106,247,0.15); border-color: var(--accent); color: var(--accent2); }
+    .search-results { flex: 1; overflow-y: auto; }
+    .result-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+    .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; cursor: pointer; transition: border-color 0.15s, transform 0.1s; }
+    .result-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .result-art { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--surface2); display: block; }
+    .result-art-placeholder { width: 100%; aspect-ratio: 1; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 36px; }
+    .result-info { padding: 10px 12px 12px; }
+    .result-title { font-size: 13px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 2px; }
+    .result-sub { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 8px; }
+    .result-dl { width: 100%; background: var(--accent); color: #fff; border: none; padding: 6px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+    .result-dl:hover { opacity: 0.85; }
+    .result-dl.queued { background: var(--success); }
+    .search-loading { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }
+
     /* Player bar */
     #player-bar {
       background: var(--surface);
@@ -408,6 +431,7 @@
   <div class="logo">♫ Music</div>
   <nav>
     <button class="active" data-tab="download">Download</button>
+    <button data-tab="search">Search</button>
     <button data-tab="queue">Queue</button>
     <button data-tab="history">History</button>
     <button data-tab="library">Library</button>
@@ -429,6 +453,24 @@
     <div class="jobs-container" id="active-jobs-list">
       <div class="section-header" style="padding-top:28px">Active</div>
       <div id="active-jobs"></div>
+    </div>
+  </div>
+
+  <!-- Search tab -->
+  <div class="tab" id="tab-search">
+    <div class="search-panel">
+      <form class="search-bar" id="search-form">
+        <input type="text" id="search-input" placeholder="Search for songs, albums, artists..." autocomplete="off">
+        <button type="submit" class="btn">Search</button>
+      </form>
+      <div class="search-types">
+        <button class="type-btn active" data-type="song">Songs</button>
+        <button class="type-btn" data-type="album">Albums</button>
+        <button class="type-btn" data-type="artist">Artists</button>
+      </div>
+      <div class="search-results" id="search-results">
+        <div class="search-loading" style="padding-top:60px;color:var(--muted)">Search for music to get started</div>
+      </div>
     </div>
   </div>
 
@@ -536,6 +578,7 @@ document.querySelectorAll('nav button').forEach(btn => {
     btn.classList.add('active');
     document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
     if (btn.dataset.tab === 'library' && !state.libraryData) loadLibrary();
+    if (btn.dataset.tab === 'search') document.getElementById('search-input').focus();
     if (btn.dataset.tab === 'settings') loadCookieStatus();
   });
 });
@@ -840,6 +883,100 @@ function showToast(msg, type = '') {
   el.className = `show ${type}`;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.className = '', 3000);
+}
+
+// Search
+let searchType = 'song';
+
+document.querySelectorAll('.type-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    searchType = btn.dataset.type;
+    if (document.getElementById('search-input').value.trim()) doSearch();
+  });
+});
+
+document.getElementById('search-form').addEventListener('submit', e => {
+  e.preventDefault();
+  doSearch();
+});
+
+async function doSearch() {
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) return;
+  const results = document.getElementById('search-results');
+  results.innerHTML = '<div class="search-loading"><span class="spinner"></span> Searching...</div>';
+  try {
+    const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&type=${searchType}`);
+    const data = await res.json();
+    renderSearchResults(data.results || []);
+  } catch (e) {
+    results.innerHTML = '<div class="search-loading">Search failed — try again</div>';
+  }
+}
+
+function renderSearchResults(items) {
+  const results = document.getElementById('search-results');
+  if (!items.length) {
+    results.innerHTML = '<div class="search-loading">No results found</div>';
+    return;
+  }
+  results.innerHTML = `<div class="result-grid">${items.map(item => resultCardHtml(item)).join('')}</div>`;
+  results.querySelectorAll('.result-dl').forEach(btn => {
+    btn.addEventListener('click', async e => {
+      e.stopPropagation();
+      const url = btn.dataset.url;
+      btn.disabled = true;
+      btn.textContent = 'Queuing...';
+      try {
+        const res = await fetch('/api/queue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        if (res.ok) {
+          btn.textContent = 'Queued!';
+          btn.classList.add('queued');
+          showToast('Added to queue', 'success');
+        } else {
+          const d = await res.json();
+          btn.textContent = 'Download';
+          btn.disabled = false;
+          showToast(d.error || 'Failed', 'error');
+        }
+      } catch {
+        btn.textContent = 'Download';
+        btn.disabled = false;
+        showToast('Connection error', 'error');
+      }
+    });
+  });
+}
+
+function resultCardHtml(item) {
+  const title = escHtml(item.trackName || item.collectionName || item.artistName || 'Unknown');
+  const sub = escHtml(
+    item.artistName && item.collectionName ? `${item.artistName} — ${item.collectionName}` :
+    item.artistName || item.collectionName || ''
+  );
+  const art = item.artworkUrl100
+    ? `<img class="result-art" src="${escHtml(item.artworkUrl100.replace('100x100', '300x300'))}" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`
+    : '';
+  const placeholder = `<div class="result-art-placeholder" ${art ? 'style="display:none"' : ''}>♫</div>`;
+  const url = item.trackViewUrl || item.collectionViewUrl || item.artistLinkUrl || '';
+  const type = item.kind === 'song' ? 'Song' : item.wrapperType === 'collection' ? 'Album' : 'Artist';
+
+  return `
+    <div class="result-card">
+      ${art}${placeholder}
+      <div class="result-info">
+        <div class="result-title" title="${title}">${title}</div>
+        <div class="result-sub">${sub || type}</div>
+        ${url ? `<button class="result-dl" data-url="${escHtml(url)}">Download</button>` : '<button class="result-dl" disabled>No link</button>'}
+      </div>
+    </div>
+  `;
 }
 
 // Init

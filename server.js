@@ -117,6 +117,24 @@ app.get('/api/library', (req, res) => {
   res.json(scanDir(MUSIC_DIR));
 });
 
+// Search via iTunes API (proxied to avoid any CORS issues)
+app.get('/api/search', async (req, res) => {
+  const { q, type = 'song' } = req.query;
+  if (!q) return res.status(400).json({ error: 'Query required' });
+
+  const entityMap = { song: 'song', album: 'album', artist: 'musicArtist' };
+  const entity = entityMap[type] || 'song,album';
+
+  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=${entity}&limit=25&country=us`;
+  try {
+    const r = await fetch(url);
+    const data = await r.json();
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: 'Search failed' });
+  }
+});
+
 // WebSocket broadcast
 const clients = new Set();
 wss.on('connection', ws => {
