@@ -1,2 +1,2 @@
-type: static
-port: 80
+type: node
+port: 3000

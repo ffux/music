@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d12;
+      --surface: #16161e;
+      --surface2: #1e1e2a;
+      --border: #2a2a3a;
+      --accent: #7c6af7;
+      --accent2: #a78bfa;
+      --text: #e2e2f0;
+      --muted: #6b6b8a;
+      --success: #4ade80;
+      --error: #f87171;
+      --warning: #fbbf24;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      height: 52px;
+      flex-shrink: 0;
+    }
+    .logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent2);
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    nav {
+      display: flex;
+      gap: 4px;
+    }
+    nav button {
+      background: none;
+      border: none;
+      color: var(--muted);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    nav button:hover { color: var(--text); background: var(--surface2); }
+    nav button.active { color: var(--accent2); background: rgba(124,106,247,0.15); }
+
+    /* Player bar */
+    #player-bar {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 10px 24px;
+      display: none;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+    #player-bar.visible { display: flex; }
+    #player-title {
+      font-size: 13px;
+      color: var(--text);
+      min-width: 0;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #player-title span { color: var(--muted); font-size: 12px; display: block; }
+    audio#player {
+      flex: 2;
+      height: 32px;
+      accent-color: var(--accent);
+    }
+    #player-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      padding: 4px;
+    }
+    #player-close:hover { color: var(--text); }
+
+    /* Main content */
+    main {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .tab { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+    .tab.active { display: flex; }
+
+    /* Download tab */
+    .download-panel {
+      padding: 32px 24px 0;
+      max-width: 720px;
+    }
+    .download-panel h2 { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+    .download-panel p { color: var(--muted); margin-bottom: 24px; font-size: 13px; }
+    .url-form {
+      display: flex;
+      gap: 10px;
+    }
+    .url-form input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .url-form input:focus { border-color: var(--accent); }
+    .url-form input::placeholder { color: var(--muted); }
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-sm {
+      padding: 5px 12px;
+      font-size: 12px;
+      border-radius: 5px;
+    }
+    .btn-ghost {
+      background: var(--surface2);
+      color: var(--text);
+    }
+    .btn-danger { background: var(--error); }
+
+    /* Queue / History */
+    .jobs-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+    .section-header {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .job-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      transition: border-color 0.15s;
+    }
+    .job-card.running { border-color: var(--accent); }
+    .job-card.error { border-color: var(--error); }
+    .job-card.done { border-color: #2a2a3a; }
+    .job-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .job-url {
+      flex: 1;
+      font-size: 13px;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .job-meta {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .badge-pending { background: rgba(107,107,138,0.2); color: var(--muted); }
+    .badge-running { background: rgba(124,106,247,0.2); color: var(--accent2); }
+    .badge-done { background: rgba(74,222,128,0.15); color: var(--success); }
+    .badge-error { background: rgba(248,113,113,0.15); color: var(--error); }
+    .job-log {
+      margin-top: 10px;
+      background: #0a0a0f;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'Cascadia Code', 'Fira Code', 'Courier New', monospace;
+      font-size: 11.5px;
+      line-height: 1.6;
+      color: #a0a0c0;
+      max-height: 220px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .job-log .log-error { color: var(--error); }
+    .log-toggle {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 11px;
+      cursor: pointer;
+      padding: 4px 0 0;
+      display: block;
+    }
+    .log-toggle:hover { color: var(--text); }
+    .empty-state {
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--muted);
+    }
+    .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-state p { font-size: 13px; }
+
+    /* Library */
+    .library-layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    .library-tree {
+      width: 280px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 16px 0;
+    }
+    .tree-item {
+      padding: 5px 16px;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+      transition: background 0.1s;
+    }
+    .tree-item:hover { background: var(--surface2); }
+    .tree-item.selected { background: rgba(124,106,247,0.15); color: var(--accent2); }
+    .tree-icon { font-size: 14px; flex-shrink: 0; }
+    .tree-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tree-children { padding-left: 16px; }
+    .tree-dir { font-weight: 500; color: var(--text); }
+    .tree-file { color: var(--muted); }
+    .tree-item.playing { color: var(--success); }
+    .library-empty {
+      text-align: center;
+      padding: 40px 16px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .track-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .track-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 24px;
+    }
+    .track-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 12px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .track-row:hover { background: var(--surface2); }
+    .track-row.playing { background: rgba(124,106,247,0.12); }
+    .track-num { width: 24px; text-align: right; color: var(--muted); font-size: 12px; }
+    .track-name { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .track-size { color: var(--muted); font-size: 11px; white-space: nowrap; }
+    .play-icon { font-size: 14px; color: var(--accent2); }
+    .panel-title {
+      padding: 16px 24px 8px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-subtitle { color: var(--muted); font-size: 12px; font-weight: 400; margin-top: 2px; }
+
+    /* Settings */
+    .settings-panel {
+      padding: 32px 24px;
+      max-width: 560px;
+    }
+    .settings-panel h2 { font-size: 20px; font-weight: 600; margin-bottom: 24px; }
+    .setting-group {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .setting-group h3 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    .setting-group p { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+    .cookie-status {
+      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+    .cookie-status.ok { background: rgba(74,222,128,0.1); color: var(--success); }
+    .cookie-status.missing { background: rgba(248,113,113,0.1); color: var(--error); }
+    .file-input-row { display: flex; gap: 10px; align-items: center; }
+    #cookie-file { display: none; }
+    .file-label {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 7px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .file-label:hover { border-color: var(--accent); }
+    #cookie-filename { font-size: 12px; color: var(--muted); }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      opacity: 0;
+      transition: all 0.2s;
+      pointer-events: none;
+      z-index: 100;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.success { border-color: var(--success); color: var(--success); }
+    #toast.error { border-color: var(--error); color: var(--error); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .spinner {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 2px solid rgba(124,106,247,0.3);
+      border-top-color: var(--accent2);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">♫ Music</div>
+  <nav>
+    <button class="active" data-tab="download">Download</button>
+    <button data-tab="queue">Queue</button>
+    <button data-tab="history">History</button>
+    <button data-tab="library">Library</button>
+    <button data-tab="settings">Settings</button>
+  </nav>
+</header>
+
+<main>
+  <!-- Download tab -->
+  <div class="tab active" id="tab-download">
+    <div class="download-panel">
+      <h2>Download Music</h2>
+      <p>Paste an Apple Music link — track, album, or playlist.</p>
+      <form class="url-form" id="download-form">
+        <input type="url" id="url-input" placeholder="https://music.apple.com/..." autocomplete="off" spellcheck="false">
+        <button type="submit" class="btn" id="submit-btn">Download</button>
+      </form>
+    </div>
+    <div class="jobs-container" id="active-jobs-list">
+      <div class="section-header" style="padding-top:28px">Active</div>
+      <div id="active-jobs"></div>
+    </div>
+  </div>
+
+  <!-- Queue tab -->
+  <div class="tab" id="tab-queue">
+    <div class="jobs-container">
+      <div class="section-header">All Jobs</div>
+      <div id="queue-jobs"></div>
+    </div>
+  </div>
+
+  <!-- History tab -->
+  <div class="tab" id="tab-history">
+    <div class="jobs-container">
+      <div class="section-header">Completed Downloads</div>
+      <div id="history-jobs"></div>
+    </div>
+  </div>
+
+  <!-- Library tab -->
+  <div class="tab" id="tab-library">
+    <div class="library-layout">
+      <div class="library-tree" id="library-tree">
+        <div class="library-empty">Loading library...</div>
+      </div>
+      <div class="track-panel">
+        <div class="panel-title" id="track-panel-title">
+          Select an album
+          <div class="panel-subtitle" id="track-panel-sub"></div>
+        </div>
+        <div class="track-list" id="track-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings tab -->
+  <div class="tab" id="tab-settings">
+    <div class="settings-panel">
+      <h2>Settings</h2>
+      <div class="setting-group">
+        <h3>Apple Music Cookies</h3>
+        <p>gamdl requires a valid cookies.txt file exported from your browser while logged into Apple Music. Use a "Export Cookies" extension in Netscape format.</p>
+        <div id="cookie-status-box" class="cookie-status missing">No cookies.txt uploaded</div>
+        <div class="file-input-row">
+          <label class="file-label" for="cookie-file">Choose file</label>
+          <input type="file" id="cookie-file" accept=".txt">
+          <span id="cookie-filename">No file chosen</span>
+          <button class="btn btn-sm" id="upload-cookie-btn" disabled>Upload</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Player bar -->
+<div id="player-bar">
+  <div id="player-title">
+    <strong id="player-track-name"></strong>
+    <span id="player-album-name"></span>
+  </div>
+  <audio id="player" controls></audio>
+  <button id="player-close" title="Close player">✕</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const state = {
+  jobs: {},
+  currentTrack: null,
+  libraryData: null,
+  selectedNode: null,
+  expandedDirs: new Set(),
+};
+
+// WebSocket
+let ws;
+function connectWs() {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(`${proto}//${location.host}`);
+  ws.onopen = () => console.log('WS connected');
+  ws.onmessage = e => handleWsMessage(JSON.parse(e.data));
+  ws.onclose = () => setTimeout(connectWs, 2000);
+}
+
+function handleWsMessage(msg) {
+  if (msg.type === 'init') {
+    state.jobs = {};
+    msg.jobs.forEach(j => state.jobs[j.id] = j);
+    renderJobs();
+  } else if (msg.type === 'jobs_update') {
+    msg.jobs.forEach(j => state.jobs[j.id] = j);
+    renderJobs();
+  } else if (msg.type === 'job_added') {
+    state.jobs[msg.id] = { id: msg.id, url: msg.url, status: 'pending', log: '', created_at: new Date().toISOString() };
+    renderJobs();
+  }
+}
+
+// Tabs
+document.querySelectorAll('nav button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+    if (btn.dataset.tab === 'library' && !state.libraryData) loadLibrary();
+    if (btn.dataset.tab === 'settings') loadCookieStatus();
+  });
+});
+
+// Download form
+document.getElementById('download-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const url = document.getElementById('url-input').value.trim();
+  if (!url) return;
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/queue', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      document.getElementById('url-input').value = '';
+      showToast('Added to queue', 'success');
+      switchTab('queue');
+    } else {
+      showToast(data.error || 'Failed to queue', 'error');
+    }
+  } catch (err) {
+    showToast('Connection error', 'error');
+  }
+  btn.disabled = false;
+});
+
+function switchTab(name) {
+  document.querySelectorAll('nav button').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === name);
+  });
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.id === `tab-${name}`);
+  });
+}
+
+// Render jobs
+function renderJobs() {
+  const all = Object.values(state.jobs).sort((a, b) => b.id - a.id);
+  const active = all.filter(j => j.status === 'pending' || j.status === 'running');
+  const done = all.filter(j => j.status === 'done' || j.status === 'error');
+
+  // Active on download tab
+  const activeEl = document.getElementById('active-jobs');
+  if (active.length === 0) {
+    activeEl.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>No active downloads</p></div>';
+  } else {
+    activeEl.innerHTML = active.map(j => jobCardHtml(j, true)).join('');
+  }
+
+  // Queue tab
+  document.getElementById('queue-jobs').innerHTML = all.length
+    ? all.map(j => jobCardHtml(j, true)).join('')
+    : '<div class="empty-state"><div class="icon">🎵</div><p>No jobs yet</p></div>';
+
+  // History tab
+  document.getElementById('history-jobs').innerHTML = done.length
+    ? done.map(j => jobCardHtml(j, true)).join('')
+    : '<div class="empty-state"><div class="icon">📂</div><p>No completed downloads</p></div>';
+
+  // Auto-scroll logs for running jobs
+  document.querySelectorAll('.job-log[data-id]').forEach(el => {
+    const job = state.jobs[el.dataset.id];
+    if (job && job.status === 'running') el.scrollTop = el.scrollHeight;
+  });
+}
+
+function jobCardHtml(job, showLog) {
+  const badgeClass = `badge-${job.status}`;
+  const cardClass = job.status === 'running' ? 'running' : job.status === 'error' ? 'error' : '';
+  const timeStr = formatTime(job.created_at);
+  const spinner = job.status === 'running' ? '<span class="spinner"></span>' : '';
+
+  const logLines = (job.log || '').split('\n').map(l => {
+    if (/error|failed|exception/i.test(l)) return `<span class="log-error">${escHtml(l)}</span>`;
+    return escHtml(l);
+  }).join('\n');
+
+  const logSection = (job.log && showLog) ? `
+    <div class="job-log" data-id="${job.id}">${logLines}</div>
+  ` : '';
+
+  return `
+    <div class="job-card ${cardClass}" data-id="${job.id}">
+      <div class="job-header">
+        ${spinner}
+        <span class="job-url" title="${escHtml(job.url)}">${escHtml(job.url)}</span>
+        <span class="badge ${badgeClass}">${job.status}</span>
+        <span class="job-meta">${timeStr}</span>
+      </div>
+      ${logSection}
+    </div>
+  `;
+}
+
+function formatTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Library
+async function loadLibrary() {
+  document.getElementById('library-tree').innerHTML = '<div class="library-empty">Loading...</div>';
+  try {
+    const res = await fetch('/api/library');
+    state.libraryData = await res.json();
+    renderTree();
+  } catch (e) {
+    document.getElementById('library-tree').innerHTML = '<div class="library-empty">Failed to load library</div>';
+  }
+}
+
+function renderTree() {
+  const tree = document.getElementById('library-tree');
+  if (!state.libraryData || state.libraryData.length === 0) {
+    tree.innerHTML = '<div class="library-empty">No music downloaded yet</div>';
+    return;
+  }
+  tree.innerHTML = buildTreeHtml(state.libraryData, 0);
+  tree.querySelectorAll('.tree-item').forEach(el => {
+    el.addEventListener('click', () => onTreeClick(el));
+  });
+}
+
+function buildTreeHtml(nodes, depth) {
+  return nodes.map(node => {
+    if (node.type === 'dir') {
+      const expanded = state.expandedDirs.has(node.path);
+      const icon = expanded ? '▾' : '▸';
+      const children = expanded ? `<div class="tree-children">${buildTreeHtml(node.children, depth + 1)}</div>` : '';
+      return `
+        <div class="tree-item tree-dir" data-path="${escHtml(node.path)}" data-type="dir">
+          <span class="tree-icon">${icon}</span>
+          <span class="tree-label">${escHtml(node.name)}</span>
+        </div>
+        ${children}
+      `;
+    }
+    const isPlaying = state.currentTrack && state.currentTrack.path === node.path;
+    return `
+      <div class="tree-item tree-file${isPlaying ? ' playing' : ''}" data-path="${escHtml(node.path)}" data-type="file" data-name="${escHtml(node.name)}">
+        <span class="tree-icon">${isPlaying ? '♪' : '♩'}</span>
+        <span class="tree-label">${escHtml(node.name)}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function onTreeClick(el) {
+  const path = el.dataset.path;
+  const type = el.dataset.type;
+  if (type === 'dir') {
+    if (state.expandedDirs.has(path)) {
+      state.expandedDirs.delete(path);
+    } else {
+      state.expandedDirs.add(path);
+    }
+    renderTree();
+    showTracksForDir(path);
+  } else {
+    playTrack({ path, name: el.dataset.name });
+  }
+}
+
+function showTracksForDir(dirPath) {
+  function findNode(nodes, p) {
+    for (const n of nodes) {
+      if (n.path === p) return n;
+      if (n.type === 'dir' && n.children) {
+        const found = findNode(n.children, p);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+  const node = findNode(state.libraryData, dirPath);
+  if (!node) return;
+
+  const files = node.children ? node.children.filter(c => c.type === 'file') : [];
+  const title = node.name;
+  document.getElementById('track-panel-title').textContent = title;
+  document.getElementById('track-panel-sub').textContent = `${files.length} track${files.length !== 1 ? 's' : ''}`;
+
+  const list = document.getElementById('track-list');
+  if (files.length === 0) {
+    list.innerHTML = '<div style="padding:24px;color:var(--muted);font-size:13px">No tracks</div>';
+    return;
+  }
+
+  list.innerHTML = files.map((f, i) => {
+    const isPlaying = state.currentTrack && state.currentTrack.path === f.path;
+    const size = formatSize(f.size);
+    return `
+      <div class="track-row${isPlaying ? ' playing' : ''}" data-path="${escHtml(f.path)}" data-name="${escHtml(f.name)}" style="cursor:pointer">
+        <span class="track-num">${isPlaying ? '<span class="play-icon">▶</span>' : i + 1}</span>
+        <span class="track-name">${escHtml(stripExt(f.name))}</span>
+        <span class="track-size">${size}</span>
+      </div>
+    `;
+  }).join('');
+
+  list.querySelectorAll('.track-row').forEach(row => {
+    row.addEventListener('click', () => {
+      playTrack({ path: row.dataset.path, name: row.dataset.name });
+    });
+  });
+}
+
+function playTrack(track) {
+  state.currentTrack = track;
+  const player = document.getElementById('player');
+  const bar = document.getElementById('player-bar');
+  document.getElementById('player-track-name').textContent = stripExt(track.name);
+  document.getElementById('player-album-name').textContent = track.path.split('/').slice(0, -1).join(' / ');
+  player.src = `/files/${encodeURIPath(track.path)}`;
+  player.play();
+  bar.classList.add('visible');
+  // Re-render to show playing indicator
+  if (state.libraryData) renderTree();
+}
+
+document.getElementById('player-close').addEventListener('click', () => {
+  document.getElementById('player').pause();
+  document.getElementById('player-bar').classList.remove('visible');
+  state.currentTrack = null;
+  if (state.libraryData) renderTree();
+});
+
+function encodeURIPath(p) {
+  return p.split('/').map(encodeURIComponent).join('/');
+}
+
+function stripExt(name) {
+  return name.replace(/\.[^.]+$/, '');
+}
+
+function formatSize(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// Cookies / Settings
+async function loadCookieStatus() {
+  try {
+    const res = await fetch('/api/cookies/status');
+    const data = await res.json();
+    const box = document.getElementById('cookie-status-box');
+    if (data.exists) {
+      const d = new Date(data.mtime);
+      box.className = 'cookie-status ok';
+      box.textContent = `cookies.txt present — updated ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+    } else {
+      box.className = 'cookie-status missing';
+      box.textContent = 'No cookies.txt uploaded';
+    }
+  } catch (e) {}
+}
+
+document.getElementById('cookie-file').addEventListener('change', function () {
+  const name = this.files[0]?.name || 'No file chosen';
+  document.getElementById('cookie-filename').textContent = name;
+  document.getElementById('upload-cookie-btn').disabled = !this.files[0];
+});
+
+document.getElementById('upload-cookie-btn').addEventListener('click', async () => {
+  const file = document.getElementById('cookie-file').files[0];
+  if (!file) return;
+  const form = new FormData();
+  form.append('cookies', file);
+  try {
+    const res = await fetch('/api/cookies', { method: 'POST', body: form });
+    const data = await res.json();
+    if (res.ok) {
+      showToast('cookies.txt updated', 'success');
+      loadCookieStatus();
+      document.getElementById('cookie-file').value = '';
+      document.getElementById('cookie-filename').textContent = 'No file chosen';
+      document.getElementById('upload-cookie-btn').disabled = true;
+    } else {
+      showToast(data.error || 'Upload failed', 'error');
+    }
+  } catch (e) {
+    showToast('Upload failed', 'error');
+  }
+});
+
+// Toast
+let toastTimer;
+function showToast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = '', 3000);
+}
+
+// Init
+connectWs();
+</script>
+</body>
+</html>
