@@ -9,9 +9,6 @@ MUSIC_DIR = os.environ.get('MUSIC_DIR', '/music')
 DB_PATH = os.path.join(DATA_DIR, 'queue.db')
 COOKIES_PATH = os.path.join(DATA_DIR, 'cookies.txt')
 
-OUTPUT_TEMPLATE = '{artist_name}/{album_name}/{track_number:02d} {title}'
-
-
 def get_db():
     conn = sqlite3.connect(DB_PATH, timeout=10)
     conn.row_factory = sqlite3.Row
@@ -36,7 +33,7 @@ def run_job(job_id, url):
 
     cmd = [
         'gamdl', 'dl', url,
-        '--output-path', os.path.join(MUSIC_DIR, OUTPUT_TEMPLATE),
+        '--output-path', MUSIC_DIR,
     ]
     if os.path.exists(COOKIES_PATH):
         cmd += ['--cookies-path', COOKIES_PATH]
