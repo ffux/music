@@ -1,7 +1,7 @@
 FROM node:20-slim
 
-RUN apt-get update && apt-get install -y \
-    python3 python3-pip python3-venv \
+RUN apt-get update --fix-missing && apt-get install -y --fix-missing --no-install-recommends \
+    python3 python3-pip \
     supervisor \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
