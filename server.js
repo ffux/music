@@ -129,6 +129,20 @@ app.get('/api/search', async (req, res) => {
   try {
     const r = await fetch(url);
     const data = await r.json();
+
+    if (type === 'artist') {
+      const artists = data.results || [];
+      await Promise.all(artists.map(async artist => {
+        if (!artist.artistId) return;
+        try {
+          const lu = await fetch(`https://itunes.apple.com/lookup?id=${artist.artistId}&entity=album&limit=1`);
+          const ld = await lu.json();
+          const album = (ld.results || []).find(r => r.wrapperType === 'collection');
+          if (album && album.artworkUrl100) artist.artworkUrl100 = album.artworkUrl100;
+        } catch {}
+      }));
+    }
+
     res.json(data);
   } catch (e) {
     res.status(500).json({ error: 'Search failed' });
