@@ -39,7 +39,7 @@
       padding: 0 24px;
       display: flex;
       align-items: center;
-      gap: 32px;
+      justify-content: space-between;
       height: 52px;
       flex-shrink: 0;
     }
@@ -52,23 +52,80 @@
       align-items: center;
       gap: 8px;
     }
-    nav {
+    .header-right {
       display: flex;
-      gap: 4px;
+      align-items: center;
+      gap: 10px;
     }
-    nav button {
+    .current-tab-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    .hamburger {
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: background 0.15s;
+    }
+    .hamburger:hover { background: var(--surface2); }
+    .hamburger span {
+      display: block;
+      width: 20px;
+      height: 2px;
+      background: currentColor;
+      border-radius: 2px;
+      transition: all 0.2s;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+    /* Nav dropdown */
+    .nav-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+    }
+    .nav-overlay.open { display: block; }
+    .nav-dropdown {
+      position: absolute;
+      top: 52px;
+      right: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px;
+      min-width: 180px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      z-index: 51;
+    }
+    .nav-dropdown button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
       background: none;
       border: none;
       color: var(--muted);
-      padding: 6px 14px;
-      border-radius: 6px;
+      padding: 9px 12px;
+      border-radius: 7px;
       cursor: pointer;
       font-size: 13px;
       font-weight: 500;
-      transition: all 0.15s;
+      text-align: left;
+      transition: all 0.12s;
     }
-    nav button:hover { color: var(--text); background: var(--surface2); }
-    nav button.active { color: var(--accent2); background: rgba(124,106,247,0.15); }
+    .nav-dropdown button:hover { color: var(--text); background: var(--surface2); }
+    .nav-dropdown button.active { color: var(--accent2); background: rgba(124,106,247,0.15); }
+    .nav-dropdown .nav-icon { font-size: 15px; width: 20px; text-align: center; }
 
     /* Search */
     .search-panel { padding: 24px; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
@@ -431,15 +488,25 @@
 
 <header>
   <div class="logo">♫ Music</div>
-  <nav>
-    <button class="active" data-tab="download">Download</button>
-    <button data-tab="search">Search</button>
-    <button data-tab="queue">Queue</button>
-    <button data-tab="history">History</button>
-    <button data-tab="library">Library</button>
-    <button data-tab="settings">Settings</button>
-  </nav>
+  <div class="header-right">
+    <span class="current-tab-label" id="current-tab-label">Download</span>
+    <button class="hamburger" id="hamburger-btn" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
 </header>
+
+<div class="nav-overlay" id="nav-overlay">
+  <div class="nav-dropdown">
+    <button class="active" data-tab="download"><span class="nav-icon">⬇</span>Download</button>
+    <button data-tab="search"><span class="nav-icon">🔍</span>Search</button>
+    <button data-tab="queue"><span class="nav-icon">⏳</span>Queue</button>
+    <button data-tab="history"><span class="nav-icon">📋</span>History</button>
+    <button data-tab="library"><span class="nav-icon">🎵</span>Library</button>
+    <button data-tab="settings"><span class="nav-icon">⚙</span>Settings</button>
+    <button data-tab="about"><span class="nav-icon">ℹ</span>About</button>
+  </div>
+</div>
 
 <main>
   <!-- Download tab -->
@@ -525,6 +592,33 @@
       </div>
     </div>
   </div>
+
+  <!-- About tab -->
+  <div class="tab" id="tab-about">
+    <div class="settings-panel">
+      <h2>About</h2>
+      <div class="setting-group">
+        <h3>Music Downloader</h3>
+        <p>A self-hosted Apple Music downloader and library browser. Search for music, download lossless ALAC files, and play them straight from the browser.</p>
+      </div>
+      <div class="setting-group">
+        <h3>Stack</h3>
+        <p>
+          <strong style="color:var(--text)">Backend:</strong> Node.js + Express, better-sqlite3, WebSockets<br>
+          <strong style="color:var(--text)">Downloader:</strong> gamdl (Python) — Apple Music ALAC via cookies auth<br>
+          <strong style="color:var(--text)">Audio:</strong> FFmpeg for processing<br>
+          <strong style="color:var(--text)">Process:</strong> Supervisor (Node + Python worker)<br>
+          <strong style="color:var(--text)">Infra:</strong> Docker → Caddy → Cloudflare Tunnel (vibedeploy)
+        </p>
+      </div>
+      <div class="setting-group">
+        <h3>How it works</h3>
+        <p>
+          Paste an Apple Music URL or search for music. The download is queued and processed by the Python worker using gamdl with your stored cookies. Files are saved as ALAC .m4a and served from the Library tab.
+        </p>
+      </div>
+    </div>
+  </div>
 </main>
 
 <!-- Player bar -->
@@ -572,16 +666,29 @@ function handleWsMessage(msg) {
   }
 }
 
+// Hamburger menu
+const hamburgerBtn = document.getElementById('hamburger-btn');
+const navOverlay = document.getElementById('nav-overlay');
+
+hamburgerBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  const open = navOverlay.classList.toggle('open');
+  hamburgerBtn.classList.toggle('open', open);
+});
+
+navOverlay.addEventListener('click', e => {
+  if (!e.target.closest('.nav-dropdown')) {
+    navOverlay.classList.remove('open');
+    hamburgerBtn.classList.remove('open');
+  }
+});
+
 // Tabs
-document.querySelectorAll('nav button').forEach(btn => {
+document.querySelectorAll('.nav-dropdown button').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
-    if (btn.dataset.tab === 'library' && !state.libraryData) loadLibrary();
-    if (btn.dataset.tab === 'search') document.getElementById('search-input').focus();
-    if (btn.dataset.tab === 'settings') loadCookieStatus();
+    switchTab(btn.dataset.tab);
+    navOverlay.classList.remove('open');
+    hamburgerBtn.classList.remove('open');
   });
 });
 
@@ -613,12 +720,17 @@ document.getElementById('download-form').addEventListener('submit', async e => {
 });
 
 function switchTab(name) {
-  document.querySelectorAll('nav button').forEach(b => {
+  document.querySelectorAll('.nav-dropdown button').forEach(b => {
     b.classList.toggle('active', b.dataset.tab === name);
   });
   document.querySelectorAll('.tab').forEach(t => {
     t.classList.toggle('active', t.id === `tab-${name}`);
   });
+  const labels = { download: 'Download', search: 'Search', queue: 'Queue', history: 'History', library: 'Library', settings: 'Settings', about: 'About' };
+  document.getElementById('current-tab-label').textContent = labels[name] || name;
+  if (name === 'library' && !state.libraryData) loadLibrary();
+  if (name === 'search') document.getElementById('search-input').focus();
+  if (name === 'settings') loadCookieStatus();
 }
 
 // Render jobs
