@@ -57,78 +57,36 @@
       align-items: center;
       gap: 10px;
     }
-    .current-tab-label {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--muted);
-    }
-    .hamburger {
-      background: none;
-      border: none;
-      color: var(--text);
-      cursor: pointer;
-      padding: 6px 8px;
-      border-radius: 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      transition: background 0.15s;
-    }
-    .hamburger:hover { background: var(--surface2); }
-    .hamburger span {
-      display: block;
-      width: 20px;
-      height: 2px;
-      background: currentColor;
-      border-radius: 2px;
-      transition: all 0.2s;
-    }
-    .hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
-    .hamburger.open span:nth-child(2) { opacity: 0; }
-    .hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
-
-    /* Nav dropdown */
-    .nav-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      display: none;
-    }
-    .nav-overlay.open { display: block; }
-    .nav-dropdown {
-      position: absolute;
-      top: 52px;
-      right: 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 6px;
-      min-width: 180px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-      z-index: 51;
-    }
-    .nav-dropdown button {
+    .primary-nav {
       display: flex;
       align-items: center;
-      gap: 10px;
-      width: 100%;
+      gap: 4px;
+    }
+    .nav-button, .settings-button {
       background: none;
       border: none;
       color: var(--muted);
-      padding: 9px 12px;
-      border-radius: 7px;
       cursor: pointer;
+      padding: 7px 12px;
+      border-radius: 6px;
       font-size: 13px;
       font-weight: 500;
-      text-align: left;
-      transition: all 0.12s;
+      transition: color 0.15s, background 0.15s;
     }
-    .nav-dropdown button:hover { color: var(--text); background: var(--surface2); }
-    .nav-dropdown button.active { color: var(--accent2); background: rgba(124,106,247,0.15); }
-    .nav-dropdown .nav-icon { font-size: 15px; width: 20px; text-align: center; }
+    .nav-button:hover, .settings-button:hover { color: var(--text); background: var(--surface2); }
+    .nav-button.active, .settings-button.active { color: var(--accent2); background: rgba(124,106,247,0.15); }
+    .settings-button { font-size: 17px; padding: 5px 9px; }
+    .mobile-nav { display: none; }
 
     /* Search */
-    .search-panel { padding: 24px; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+    .discover-panel { padding: 24px; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+    .discover-header { margin-bottom: 20px; }
+    .discover-header h2 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .discover-header p { color: var(--muted); font-size: 13px; }
+    .url-download { display: flex; gap: 10px; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .url-download input { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; outline: none; }
+    .url-download input:focus { border-color: var(--accent); }
+    .search-panel { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
     .search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
     .search-bar input { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.15s; }
     .search-bar input:focus { border-color: var(--accent); }
@@ -252,6 +210,12 @@
       overflow-y: auto;
       padding: 20px 24px;
     }
+    .downloads-header { padding: 24px 24px 0; }
+    .downloads-header h2 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .downloads-header p { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+    .job-filters { display: flex; gap: 6px; }
+    .job-filter { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+    .job-filter.active { color: var(--accent2); border-color: var(--accent); background: rgba(124,106,247,0.15); }
     .section-header {
       font-size: 12px;
       font-weight: 600;
@@ -315,6 +279,9 @@
       white-space: pre-wrap;
       word-break: break-all;
     }
+    .job-details { margin-top: 8px; }
+    .job-details summary { color: var(--muted); font-size: 11px; cursor: pointer; user-select: none; }
+    .job-details[open] summary { color: var(--accent2); }
     .job-log .log-error { color: var(--error); }
     .log-toggle {
       background: none;
@@ -420,6 +387,7 @@
       color: var(--text);
       border-bottom: 1px solid var(--border);
     }
+    .library-back { display: none; background: none; border: none; color: var(--accent2); font-size: 13px; cursor: pointer; margin-bottom: 6px; }
     .panel-subtitle { color: var(--muted); font-size: 12px; font-weight: 400; margin-top: 2px; }
 
     /* Settings */
@@ -495,80 +463,103 @@
       animation: spin 0.7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 700px) {
+      body { padding-bottom: 58px; }
+      header { padding: 0 16px; }
+      header .primary-nav { display: none; }
+      .discover-panel { padding: 20px 16px; }
+      .url-download, .search-bar { flex-direction: column; }
+      .result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .downloads-header { padding: 20px 16px 0; }
+      .jobs-container { padding: 16px; }
+      .job-header { flex-wrap: wrap; }
+      .job-url { flex-basis: calc(100% - 30px); }
+      .job-meta { margin-left: auto; }
+      .mobile-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 58px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        z-index: 80;
+      }
+      .mobile-nav .nav-button { border-radius: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 10px; padding: 4px; }
+      .mobile-nav .nav-icon { font-size: 17px; }
+      .library-tree { width: 100%; border-right: none; }
+      .track-panel { width: 100%; }
+      .library-layout:not(.show-tracks) .track-panel { display: none; }
+      .library-layout.show-tracks .library-tree { display: none; }
+      .library-back { display: block; }
+      .track-list { padding: 12px 8px; }
+      .panel-title { padding: 14px 16px 10px; }
+      .settings-panel { padding: 24px 16px; }
+      .file-input-row { flex-wrap: wrap; }
+      #player-bar { padding: 8px 12px; gap: 8px; }
+      #player-title { display: none; }
+    }
   </style>
 </head>
 <body>
 
 <header>
   <div class="logo">♫ Music</div>
+  <nav class="primary-nav" aria-label="Primary navigation">
+    <button class="nav-button active" data-tab="discover">Discover</button>
+    <button class="nav-button" data-tab="downloads">Downloads</button>
+    <button class="nav-button" data-tab="library">Library</button>
+  </nav>
   <div class="header-right">
-    <span class="current-tab-label" id="current-tab-label">Download</span>
-    <button class="hamburger" id="hamburger-btn" aria-label="Menu">
-      <span></span><span></span><span></span>
-    </button>
+    <button class="settings-button" data-tab="settings" aria-label="Settings" title="Settings">⚙</button>
   </div>
 </header>
 
-<div class="nav-overlay" id="nav-overlay">
-  <div class="nav-dropdown">
-    <button class="active" data-tab="download"><span class="nav-icon">⬇</span>Download</button>
-    <button data-tab="search"><span class="nav-icon">🔍</span>Search</button>
-    <button data-tab="queue"><span class="nav-icon">⏳</span>Queue</button>
-    <button data-tab="history"><span class="nav-icon">📋</span>History</button>
-    <button data-tab="library"><span class="nav-icon">🎵</span>Library</button>
-    <button data-tab="settings"><span class="nav-icon">⚙</span>Settings</button>
-    <button data-tab="about"><span class="nav-icon">ℹ</span>About</button>
-  </div>
-</div>
-
 <main>
-  <!-- Download tab -->
-  <div class="tab active" id="tab-download">
-    <div class="download-panel">
-      <h2>Download Music</h2>
-      <p>Paste an Apple Music link — track, album, or playlist.</p>
-      <form class="url-form" id="download-form">
+  <!-- Discover tab -->
+  <div class="tab active" id="tab-discover">
+    <div class="discover-panel">
+      <div class="discover-header">
+        <h2>Discover music</h2>
+        <p>Search Apple Music or paste a direct link.</p>
+      </div>
+      <form class="url-download" id="download-form">
         <input type="url" id="url-input" placeholder="https://music.apple.com/..." autocomplete="off" spellcheck="false">
-        <button type="submit" class="btn" id="submit-btn">Download</button>
+        <button type="submit" class="btn" id="submit-btn">Add link</button>
       </form>
-    </div>
-    <div class="jobs-container" id="active-jobs-list">
-      <div class="section-header" style="padding-top:28px">Active</div>
-      <div id="active-jobs"></div>
-    </div>
-  </div>
-
-  <!-- Search tab -->
-  <div class="tab" id="tab-search">
-    <div class="search-panel">
-      <form class="search-bar" id="search-form">
-        <input type="text" id="search-input" placeholder="Search for songs, albums, artists..." autocomplete="off">
-        <button type="submit" class="btn">Search</button>
-      </form>
-      <div class="search-types">
-        <button class="type-btn active" data-type="song">Songs</button>
-        <button class="type-btn" data-type="album">Albums</button>
-        <button class="type-btn" data-type="artist">Artists</button>
-      </div>
-      <div class="search-results" id="search-results">
-        <div class="search-loading" style="padding-top:60px;color:var(--muted)">Search for music to get started</div>
+      <div class="search-panel">
+        <form class="search-bar" id="search-form">
+          <input type="text" id="search-input" placeholder="Search for songs, albums, artists..." autocomplete="off">
+          <button type="submit" class="btn">Search</button>
+        </form>
+        <div class="search-types">
+          <button class="type-btn active" data-type="song">Songs</button>
+          <button class="type-btn" data-type="album">Albums</button>
+          <button class="type-btn" data-type="artist">Artists</button>
+        </div>
+        <div class="search-results" id="search-results">
+          <div class="search-loading">Search for music to get started</div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Queue tab -->
-  <div class="tab" id="tab-queue">
-    <div class="jobs-container">
-      <div class="section-header">All Jobs</div>
-      <div id="queue-jobs"></div>
+  <!-- Downloads tab -->
+  <div class="tab" id="tab-downloads">
+    <div class="downloads-header">
+      <h2>Downloads</h2>
+      <p>Follow active downloads and review completed jobs.</p>
+      <div class="job-filters" role="group" aria-label="Filter downloads">
+        <button class="job-filter active" data-filter="active">Active <span id="active-count">0</span></button>
+        <button class="job-filter" data-filter="completed">Completed</button>
+        <button class="job-filter" data-filter="all">All</button>
+      </div>
     </div>
-  </div>
-
-  <!-- History tab -->
-  <div class="tab" id="tab-history">
     <div class="jobs-container">
-      <div class="section-header">Completed Downloads</div>
-      <div id="history-jobs"></div>
+      <div id="download-jobs"></div>
     </div>
   </div>
 
@@ -580,7 +571,8 @@
       </div>
       <div class="track-panel">
         <div class="panel-title" id="track-panel-title">
-          Select an album
+          <button class="library-back" id="library-back">‹ Folders</button>
+          <span id="track-panel-name">Select an album</span>
           <div class="panel-subtitle" id="track-panel-sub"></div>
         </div>
         <div class="track-list" id="track-list"></div>
@@ -606,32 +598,6 @@
     </div>
   </div>
 
-  <!-- About tab -->
-  <div class="tab" id="tab-about">
-    <div class="settings-panel">
-      <h2>About</h2>
-      <div class="setting-group">
-        <h3>Music Downloader</h3>
-        <p>A self-hosted Apple Music downloader and library browser. Search for music, download lossless ALAC files, and play them straight from the browser.</p>
-      </div>
-      <div class="setting-group">
-        <h3>Stack</h3>
-        <p>
-          <strong style="color:var(--text)">Backend:</strong> Node.js + Express, better-sqlite3, WebSockets<br>
-          <strong style="color:var(--text)">Downloader:</strong> gamdl (Python) — Apple Music ALAC via cookies auth<br>
-          <strong style="color:var(--text)">Audio:</strong> FFmpeg for processing<br>
-          <strong style="color:var(--text)">Process:</strong> Supervisor (Node + Python worker)<br>
-          <strong style="color:var(--text)">Infra:</strong> Docker → Caddy → Cloudflare Tunnel (vibedeploy)
-        </p>
-      </div>
-      <div class="setting-group">
-        <h3>How it works</h3>
-        <p>
-          Paste an Apple Music URL or search for music. The download is queued and processed by the Python worker using gamdl with your stored cookies. Files are saved as ALAC .m4a and served from the Library tab.
-        </p>
-      </div>
-    </div>
-  </div>
 </main>
 
 <!-- Player bar -->
@@ -646,6 +612,12 @@
 
 <div id="toast"></div>
 
+<nav class="mobile-nav" aria-label="Primary navigation">
+  <button class="nav-button active" data-tab="discover"><span class="nav-icon">⌕</span>Discover</button>
+  <button class="nav-button" data-tab="downloads"><span class="nav-icon">↓</span>Downloads</button>
+  <button class="nav-button" data-tab="library"><span class="nav-icon">♫</span>Library</button>
+</nav>
+
 <script>
 const state = {
   jobs: {},
@@ -653,6 +625,7 @@ const state = {
   libraryData: null,
   selectedNode: null,
   expandedDirs: new Set(),
+  jobFilter: 'active',
 };
 
 // WebSocket
@@ -683,29 +656,10 @@ function handleWsMessage(msg) {
   }
 }
 
-// Hamburger menu
-const hamburgerBtn = document.getElementById('hamburger-btn');
-const navOverlay = document.getElementById('nav-overlay');
-
-hamburgerBtn.addEventListener('click', e => {
-  e.stopPropagation();
-  const open = navOverlay.classList.toggle('open');
-  hamburgerBtn.classList.toggle('open', open);
-});
-
-navOverlay.addEventListener('click', e => {
-  if (!e.target.closest('.nav-dropdown')) {
-    navOverlay.classList.remove('open');
-    hamburgerBtn.classList.remove('open');
-  }
-});
-
 // Tabs
-document.querySelectorAll('.nav-dropdown button').forEach(btn => {
+document.querySelectorAll('[data-tab]').forEach(btn => {
   btn.addEventListener('click', () => {
     switchTab(btn.dataset.tab);
-    navOverlay.classList.remove('open');
-    hamburgerBtn.classList.remove('open');
   });
 });
 
@@ -726,7 +680,8 @@ document.getElementById('download-form').addEventListener('submit', async e => {
     if (res.ok) {
       document.getElementById('url-input').value = '';
       showToast('Added to queue', 'success');
-      switchTab('queue');
+      state.jobFilter = 'active';
+      switchTab('downloads');
     } else {
       showToast(data.error || 'Failed to queue', 'error');
     }
@@ -737,18 +692,24 @@ document.getElementById('download-form').addEventListener('submit', async e => {
 });
 
 function switchTab(name) {
-  document.querySelectorAll('.nav-dropdown button').forEach(b => {
+  document.querySelectorAll('.nav-button').forEach(b => {
     b.classList.toggle('active', b.dataset.tab === name);
   });
+  document.querySelector('.settings-button').classList.toggle('active', name === 'settings');
   document.querySelectorAll('.tab').forEach(t => {
     t.classList.toggle('active', t.id === `tab-${name}`);
   });
-  const labels = { download: 'Download', search: 'Search', queue: 'Queue', history: 'History', library: 'Library', settings: 'Settings', about: 'About' };
-  document.getElementById('current-tab-label').textContent = labels[name] || name;
   if (name === 'library' && !state.libraryData) loadLibrary();
-  if (name === 'search') document.getElementById('search-input').focus();
+  if (name === 'discover') document.getElementById('search-input').focus();
   if (name === 'settings') loadCookieStatus();
 }
+
+document.querySelectorAll('.job-filter').forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.jobFilter = btn.dataset.filter;
+    renderJobs();
+  });
+});
 
 // Render jobs
 function renderJobs() {
@@ -756,23 +717,17 @@ function renderJobs() {
   const active = all.filter(j => j.status === 'pending' || j.status === 'running');
   const done = all.filter(j => j.status === 'done' || j.status === 'error');
 
-  // Active on download tab
-  const activeEl = document.getElementById('active-jobs');
-  if (active.length === 0) {
-    activeEl.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>No active downloads</p></div>';
-  } else {
-    activeEl.innerHTML = active.map(j => jobCardHtml(j, true)).join('');
-  }
+  document.getElementById('active-count').textContent = active.length;
+  document.querySelectorAll('.job-filter').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === state.jobFilter);
+  });
 
-  // Queue tab
-  document.getElementById('queue-jobs').innerHTML = all.length
-    ? all.map(j => jobCardHtml(j, true)).join('')
-    : '<div class="empty-state"><div class="icon">🎵</div><p>No jobs yet</p></div>';
-
-  // History tab
-  document.getElementById('history-jobs').innerHTML = done.length
-    ? done.map(j => jobCardHtml(j, true)).join('')
-    : '<div class="empty-state"><div class="icon">📂</div><p>No completed downloads</p></div>';
+  const visible = state.jobFilter === 'active' ? active : state.jobFilter === 'completed' ? done : all;
+  const emptyMessage = state.jobFilter === 'active' ? 'No active downloads' :
+    state.jobFilter === 'completed' ? 'No completed downloads' : 'No downloads yet';
+  document.getElementById('download-jobs').innerHTML = visible.length
+    ? visible.map(j => jobCardHtml(j, true)).join('')
+    : `<div class="empty-state"><div class="icon">${state.jobFilter === 'active' ? '✓' : '♫'}</div><p>${emptyMessage}</p></div>`;
 
   // Auto-scroll logs for running jobs
   document.querySelectorAll('.job-log[data-id]').forEach(el => {
@@ -793,7 +748,10 @@ function jobCardHtml(job, showLog) {
   }).join('\n');
 
   const logSection = (job.log && showLog) ? `
-    <div class="job-log" data-id="${job.id}">${logLines}</div>
+    <details class="job-details">
+      <summary>View log</summary>
+      <div class="job-log" data-id="${job.id}">${logLines}</div>
+    </details>
   ` : '';
 
   return `
@@ -925,7 +883,10 @@ function showTracksForDir(dirPath) {
 
   const files = node.children ? node.children.filter(c => c.type === 'file') : [];
   const title = node.name;
-  document.getElementById('track-panel-title').textContent = title;
+  if (files.length > 0) {
+    document.querySelector('.library-layout').classList.add('show-tracks');
+  }
+  document.getElementById('track-panel-name').textContent = title;
   document.getElementById('track-panel-sub').textContent = `${files.length} track${files.length !== 1 ? 's' : ''}`;
 
   const list = document.getElementById('track-list');
@@ -953,6 +914,10 @@ function showTracksForDir(dirPath) {
     });
   });
 }
+
+document.getElementById('library-back').addEventListener('click', () => {
+  document.querySelector('.library-layout').classList.remove('show-tracks');
+});
 
 function playTrack(track) {
   state.currentTrack = track;
@@ -1138,6 +1103,7 @@ function resultCardHtml(item) {
 }
 
 // Init
+renderJobs();
 connectWs();
 </script>
 </body>
