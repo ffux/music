@@ -1,10 +1,17 @@
 FROM node:20-slim
 
-RUN apt-get update --fix-missing && apt-get install -y --fix-missing --no-install-recommends \
-    python3 python3-pip \
-    supervisor \
-    ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
+RUN set -eu; \
+    for attempt in 1 2 3; do \
+      rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*; \
+      if apt-get -o Acquire::http::No-Cache=true update \
+        && apt-get -o Acquire::http::No-Cache=true install -y --no-install-recommends \
+          python3 python3-pip supervisor ffmpeg; then \
+        break; \
+      fi; \
+      if [ "$attempt" -eq 3 ]; then exit 1; fi; \
+      sleep 3; \
+    done; \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 WORKDIR /app
 
