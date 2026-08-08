@@ -671,8 +671,12 @@ function handleWsMessage(msg) {
     msg.jobs.forEach(j => state.jobs[j.id] = j);
     renderJobs();
   } else if (msg.type === 'jobs_update') {
+    const libraryChanged = msg.jobs.some(job =>
+      job.status === 'done' && state.jobs[job.id]?.status !== 'done'
+    );
     msg.jobs.forEach(j => state.jobs[j.id] = j);
     renderJobs();
+    if (libraryChanged) scheduleLibraryRefresh();
   } else if (msg.type === 'job_added') {
     state.jobs[msg.id] = { id: msg.id, url: msg.url, status: 'pending', log: '', created_at: new Date().toISOString() };
     renderJobs();
@@ -816,15 +820,34 @@ function escHtml(s) {
 }
 
 // Library
-async function loadLibrary() {
-  document.getElementById('library-tree').innerHTML = '<div class="library-empty">Loading...</div>';
+async function loadLibrary({ silent = false } = {}) {
+  if (!silent) {
+    document.getElementById('library-tree').innerHTML = '<div class="library-empty">Loading...</div>';
+  }
   try {
     const res = await fetch('/api/library');
+    if (!res.ok) throw new Error('Library request failed');
     state.libraryData = await res.json();
     renderTree();
+    if (state.selectedNode) showTracksForDir(state.selectedNode);
+    return true;
   } catch (e) {
-    document.getElementById('library-tree').innerHTML = '<div class="library-empty">Failed to load library</div>';
+    if (!silent) {
+      document.getElementById('library-tree').innerHTML = '<div class="library-empty">Failed to load library</div>';
+    }
+    return false;
   }
+}
+
+let libraryRefreshTimer;
+function scheduleLibraryRefresh() {
+  // If Library has not been opened yet, its first load will already be current.
+  if (!state.libraryData) return;
+  clearTimeout(libraryRefreshTimer);
+  libraryRefreshTimer = setTimeout(async () => {
+    const updated = await loadLibrary({ silent: true });
+    if (updated) showToast('Library updated', 'success');
+  }, 350);
 }
 
 function renderTree() {
@@ -846,10 +869,11 @@ function buildTreeHtml(nodes, depth) {
   return nodes.map(node => {
     if (node.type === 'dir') {
       const expanded = state.expandedDirs.has(node.path);
+      const selected = state.selectedNode === node.path;
       const icon = expanded ? '▾' : '▸';
       const children = expanded ? `<div class="tree-children">${buildTreeHtml(node.children, depth + 1)}</div>` : '';
       return `
-        <div class="tree-item tree-dir" data-path="${escHtml(node.path)}" data-type="dir">
+        <div class="tree-item tree-dir${selected ? ' selected' : ''}" data-path="${escHtml(node.path)}" data-type="dir">
           <span class="tree-icon">${icon}</span>
           <span class="tree-label">${escHtml(node.name)}</span>
           <a class="tree-download" href="/api/library/download?path=${encodeURIComponent(node.path)}" download title="Download ${escHtml(node.name)} as ZIP" aria-label="Download ${escHtml(node.name)} as ZIP">⬇</a>
@@ -872,6 +896,7 @@ function onTreeClick(el) {
   const path = el.dataset.path;
   const type = el.dataset.type;
   if (type === 'dir') {
+    state.selectedNode = path;
     if (state.expandedDirs.has(path)) {
       state.expandedDirs.delete(path);
     } else {
