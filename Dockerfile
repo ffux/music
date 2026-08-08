@@ -11,8 +11,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip3 install --break-system-packages -r requirements.txt
 
-COPY package.json .
-RUN npm install --production
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 
 COPY . .
 

@@ -2,6 +2,7 @@ const express = require('express');
 const { WebSocketServer } = require('ws');
 const Database = require('better-sqlite3');
 const multer = require('multer');
+const archiver = require('archiver');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -115,6 +116,60 @@ app.get('/api/library', (req, res) => {
     return result.sort((a, b) => a.name.localeCompare(b.name));
   }
   res.json(scanDir(MUSIC_DIR));
+});
+
+// Download a library track directly or stream any library folder as a ZIP.
+app.get('/api/library/download', (req, res) => {
+  const relativePath = req.query.path;
+  if (typeof relativePath !== 'string' || !relativePath) {
+    return res.status(400).json({ error: 'Library path required' });
+  }
+
+  const libraryRoot = path.resolve(MUSIC_DIR);
+  const targetPath = path.resolve(libraryRoot, relativePath);
+  if (!targetPath.startsWith(`${libraryRoot}${path.sep}`)) {
+    return res.status(400).json({ error: 'Invalid library path' });
+  }
+
+  let realRoot;
+  let realTarget;
+  let stat;
+  try {
+    realRoot = fs.realpathSync(libraryRoot);
+    realTarget = fs.realpathSync(targetPath);
+    stat = fs.statSync(realTarget);
+  } catch {
+    return res.status(404).json({ error: 'Library item not found' });
+  }
+
+  if (realTarget !== realRoot && !realTarget.startsWith(`${realRoot}${path.sep}`)) {
+    return res.status(400).json({ error: 'Invalid library path' });
+  }
+
+  if (stat.isFile()) {
+    if (!/\.(m4a|mp3|flac|aac|opus)$/i.test(realTarget)) {
+      return res.status(400).json({ error: 'Unsupported file type' });
+    }
+    return res.download(realTarget, path.basename(realTarget));
+  }
+
+  if (!stat.isDirectory()) {
+    return res.status(400).json({ error: 'Unsupported library item' });
+  }
+
+  const folderName = path.basename(realTarget);
+  res.attachment(`${folderName}.zip`);
+  res.type('application/zip');
+
+  const archive = archiver('zip', { zlib: { level: 6 } });
+  archive.on('error', error => {
+    console.error('ZIP download failed:', error);
+    if (!res.headersSent) res.status(500).json({ error: 'Could not create ZIP' });
+    else res.destroy(error);
+  });
+  archive.pipe(res);
+  archive.directory(realTarget, folderName);
+  archive.finalize();
 });
 
 // Search via iTunes API (proxied to avoid any CORS issues)

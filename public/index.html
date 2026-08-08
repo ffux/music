@@ -360,7 +360,20 @@
     .tree-item:hover { background: var(--surface2); }
     .tree-item.selected { background: rgba(124,106,247,0.15); color: var(--accent2); }
     .tree-icon { font-size: 14px; flex-shrink: 0; }
-    .tree-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tree-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tree-download {
+      color: var(--muted);
+      font-size: 14px;
+      text-decoration: none;
+      padding: 3px 5px;
+      border-radius: 4px;
+      line-height: 1;
+      flex-shrink: 0;
+      opacity: 0.6;
+      transition: color 0.15s, background 0.15s, opacity 0.15s;
+    }
+    .tree-item:hover .tree-download, .tree-download:focus { opacity: 1; }
+    .tree-download:hover { color: var(--accent2); background: var(--surface2); }
     .tree-children { padding-left: 16px; }
     .tree-dir { font-weight: 500; color: var(--text); }
     .tree-file { color: var(--muted); }
@@ -824,6 +837,9 @@ function renderTree() {
   tree.querySelectorAll('.tree-item').forEach(el => {
     el.addEventListener('click', () => onTreeClick(el));
   });
+  tree.querySelectorAll('.tree-download').forEach(link => {
+    link.addEventListener('click', event => event.stopPropagation());
+  });
 }
 
 function buildTreeHtml(nodes, depth) {
@@ -836,6 +852,7 @@ function buildTreeHtml(nodes, depth) {
         <div class="tree-item tree-dir" data-path="${escHtml(node.path)}" data-type="dir">
           <span class="tree-icon">${icon}</span>
           <span class="tree-label">${escHtml(node.name)}</span>
+          <a class="tree-download" href="/api/library/download?path=${encodeURIComponent(node.path)}" download title="Download ${escHtml(node.name)} as ZIP" aria-label="Download ${escHtml(node.name)} as ZIP">⬇</a>
         </div>
         ${children}
       `;
@@ -845,6 +862,7 @@ function buildTreeHtml(nodes, depth) {
       <div class="tree-item tree-file${isPlaying ? ' playing' : ''}" data-path="${escHtml(node.path)}" data-type="file" data-name="${escHtml(node.name)}">
         <span class="tree-icon">${isPlaying ? '♪' : '♩'}</span>
         <span class="tree-label">${escHtml(node.name)}</span>
+        <a class="tree-download" href="/api/library/download?path=${encodeURIComponent(node.path)}" download title="Download ${escHtml(node.name)}" aria-label="Download ${escHtml(node.name)}">⬇</a>
       </div>
     `;
   }).join('');
