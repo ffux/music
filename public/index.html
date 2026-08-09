@@ -625,6 +625,7 @@ const state = {
   libraryData: null,
   selectedNode: null,
   expandedDirs: new Set(),
+  expandedJobLogs: new Set(),
   jobFilter: 'active',
 };
 
@@ -729,6 +730,14 @@ function renderJobs() {
     ? visible.map(j => jobCardHtml(j, true)).join('')
     : `<div class="empty-state"><div class="icon">${state.jobFilter === 'active' ? '✓' : '♫'}</div><p>${emptyMessage}</p></div>`;
 
+  document.querySelectorAll('.job-details[data-id]').forEach(details => {
+    details.addEventListener('toggle', () => {
+      const jobId = details.dataset.id;
+      if (details.open) state.expandedJobLogs.add(jobId);
+      else state.expandedJobLogs.delete(jobId);
+    });
+  });
+
   // Auto-scroll logs for running jobs
   document.querySelectorAll('.job-log[data-id]').forEach(el => {
     const job = state.jobs[el.dataset.id];
@@ -747,8 +756,9 @@ function jobCardHtml(job, showLog) {
     return escHtml(l);
   }).join('\n');
 
+  const logOpen = state.expandedJobLogs.has(String(job.id)) ? ' open' : '';
   const logSection = (job.log && showLog) ? `
-    <details class="job-details">
+    <details class="job-details" data-id="${job.id}"${logOpen}>
       <summary>View log</summary>
       <div class="job-log" data-id="${job.id}">${logLines}</div>
     </details>
