@@ -76,6 +76,8 @@
     .nav-button:hover, .settings-button:hover { color: var(--text); background: var(--surface2); }
     .nav-button.active, .settings-button.active { color: var(--accent2); background: rgba(124,106,247,0.15); }
     .settings-button { font-size: 17px; padding: 5px 9px; }
+    .settings-button { position: relative; }
+    #active-badge { position: absolute; top: -3px; right: -4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 9px; background: var(--accent); color: white; font-size: 10px; line-height: 16px; }
     .mobile-nav { display: none; }
 
     /* Search */
@@ -107,6 +109,7 @@
     .result-dl:hover { opacity: 0.85; }
     .result-dl.queued { background: var(--success); }
     .search-loading { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }
+    .search-fallback { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; padding: 48px 20px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
 
     /* Player bar */
     #player-bar {
@@ -303,6 +306,13 @@
 
     /* Library */
     .library-browser { flex: 1; overflow-y: auto; padding: 28px 32px 96px; }
+    .library-page-heading { margin-bottom: 20px; }
+    .library-page-heading h1 { font-size: 24px; }
+    .library-page-heading p { color: var(--muted); font-size: 13px; margin-top: 3px; }
+    .unified-search { display: flex; gap: 10px; max-width: 900px; margin-bottom: 12px; }
+    .unified-search input { flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; outline: none; }
+    .unified-search input:focus { border-color: var(--accent); }
+    .btn-secondary { background: var(--surface2) !important; border: 1px solid var(--border) !important; color: var(--text) !important; }
     .library-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; min-height: 42px; }
     .library-heading { min-width: 0; }
     .library-heading h2 { font-size: 21px; line-height: 1.2; }
@@ -325,17 +335,15 @@
     .library-art { aspect-ratio: 1; background: var(--surface2); position: relative; overflow: hidden; }
     .library-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .library-art img.art-missing { display: none; }
-    .library-art::before {
-      content: '♫'; position: absolute; inset: 0; display: grid; place-items: center;
-      color: var(--muted); font-size: 42px;
-    }
     .library-card-body { padding: 11px 12px 12px; }
     .library-card-title { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .library-card-meta { color: var(--muted); font-size: 11px; margin-top: 3px; }
-    .library-card-actions { display: flex; justify-content: flex-end; margin-top: 9px; }
+    .library-card-actions { display: flex; gap: 7px; margin-top: 9px; }
+    .library-play { flex: 1; border: none; border-radius: 6px; padding: 7px 10px; background: var(--accent); color: white; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .library-play:hover { opacity: .86; }
     .library-download {
-      color: var(--accent2); background: rgba(124,106,247,.12); text-decoration: none;
-      border-radius: 6px; padding: 5px 8px; font-size: 11px; font-weight: 600;
+      color: var(--accent2); background: rgba(124,106,247,.12); border: none; cursor: pointer;
+      border-radius: 6px; padding: 5px 10px; font-size: 16px; font-weight: 600;
     }
     .library-download:hover { background: rgba(124,106,247,.22); }
     .library-empty {
@@ -361,8 +369,30 @@
     .track-name { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .track-size { color: var(--muted); font-size: 11px; white-space: nowrap; }
     .play-icon { font-size: 14px; color: var(--accent2); }
-    .track-dl { color: var(--muted); font-size: 16px; text-decoration: none; padding: 4px 6px; border-radius: 4px; transition: color 0.15s, background 0.15s; line-height: 1; }
+    .track-dl { color: var(--muted); background: none; border: none; cursor: pointer; font-size: 16px; text-decoration: none; padding: 4px 6px; border-radius: 4px; transition: color 0.15s, background 0.15s; line-height: 1; }
     .track-dl:hover { color: var(--accent2); background: var(--surface2); }
+
+    /* Settings drawer */
+    .settings-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.58); z-index: 89; }
+    .settings-drawer { position: fixed; z-index: 90; top: 0; right: 0; bottom: 0; width: min(520px, 100%); background: var(--bg); border-left: 1px solid var(--border); transform: translateX(100%); transition: transform .2s ease; overflow-y: auto; }
+    .settings-drawer.open { transform: translateX(0); }
+    .drawer-header { position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; background: var(--surface); border-bottom: 1px solid var(--border); }
+    .drawer-header h2 { font-size: 19px; }
+    .drawer-header button { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; }
+    .drawer-section { padding: 22px 20px; border-bottom: 1px solid var(--border); }
+    .drawer-section h3 { font-size: 15px; margin-bottom: 4px; }
+    .drawer-section > p { color: var(--muted); font-size: 12px; margin-bottom: 14px; }
+    .drawer-section .jobs-container { padding: 0; }
+
+    /* Confirmation modal */
+    .modal-backdrop { position: fixed; inset: 0; z-index: 110; background: rgba(0,0,0,.7); display: grid; place-items: center; padding: 20px; }
+    .modal-backdrop[hidden] { display: none; }
+    .confirmation-dialog { width: min(430px, 100%); background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+    .confirmation-dialog h2 { font-size: 18px; margin-bottom: 8px; }
+    .confirmation-dialog p { color: var(--muted); font-size: 13px; }
+    .confirmation-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 22px; }
+    .player-skip { background: none; border: none; color: var(--text); font-size: 17px; cursor: pointer; }
+    #player-queue-position { font-size: 10px !important; }
 
     /* Settings */
     .settings-panel {
@@ -439,31 +469,16 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     @media (max-width: 700px) {
-      body { padding-bottom: 58px; }
       header { padding: 0 16px; }
-      header .primary-nav { display: none; }
-      .discover-panel { padding: 20px 16px; }
-      .url-download, .search-bar { flex-direction: column; }
+      .unified-search { flex-wrap: wrap; }
+      .unified-search input { flex-basis: 100%; }
+      .unified-search .btn { flex: 1; }
       .result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
       .downloads-header { padding: 20px 16px 0; }
       .jobs-container { padding: 16px; }
       .job-header { flex-wrap: wrap; }
       .job-url { flex-basis: calc(100% - 30px); }
       .job-meta { margin-left: auto; }
-      .mobile-nav {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: 58px;
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        background: var(--surface);
-        border-top: 1px solid var(--border);
-        z-index: 80;
-      }
-      .mobile-nav .nav-button { border-radius: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 10px; padding: 4px; }
-      .mobile-nav .nav-icon { font-size: 17px; }
       .library-browser { padding: 20px 16px 86px; }
       .library-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
       .library-toolbar { margin-bottom: 16px; }
@@ -480,64 +495,28 @@
 
 <header>
   <div class="logo">♫ Music</div>
-  <nav class="primary-nav" aria-label="Primary navigation">
-    <button class="nav-button active" data-tab="discover">Discover</button>
-    <button class="nav-button" data-tab="downloads">Downloads</button>
-    <button class="nav-button" data-tab="library">Library</button>
-  </nav>
   <div class="header-right">
-    <button class="settings-button" data-tab="settings" aria-label="Settings" title="Settings">⚙</button>
+    <button class="settings-button" id="settings-toggle" aria-label="Settings" title="Settings">⚙<span id="active-badge" hidden>0</span></button>
   </div>
 </header>
 
 <main>
-  <!-- Discover tab -->
-  <div class="tab active" id="tab-discover">
-    <div class="discover-panel">
-      <div class="discover-header">
-        <h2>Discover music</h2>
-        <p>Search Apple Music or paste a direct link.</p>
-      </div>
-      <form class="url-download" id="download-form">
-        <input type="url" id="url-input" placeholder="https://music.apple.com/..." autocomplete="off" spellcheck="false">
-        <button type="submit" class="btn" id="submit-btn">Add link</button>
-      </form>
-      <div class="search-panel">
-        <form class="search-bar" id="search-form">
-          <input type="text" id="search-input" placeholder="Search for songs, albums, artists..." autocomplete="off">
-          <button type="submit" class="btn">Search</button>
-        </form>
-        <div class="search-types">
-          <button class="type-btn active" data-type="song">Songs</button>
-          <button class="type-btn" data-type="album">Albums</button>
-          <button class="type-btn" data-type="artist">Artists</button>
-        </div>
-        <div class="search-results" id="search-results">
-          <div class="search-loading">Search for music to get started</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Downloads tab -->
-  <div class="tab" id="tab-downloads">
-    <div class="downloads-header">
-      <h2>Downloads</h2>
-      <p>Follow active downloads and review completed jobs.</p>
-      <div class="job-filters" role="group" aria-label="Filter downloads">
-        <button class="job-filter active" data-filter="active">Active <span id="active-count">0</span></button>
-        <button class="job-filter" data-filter="completed">Completed</button>
-        <button class="job-filter" data-filter="all">All</button>
-      </div>
-    </div>
-    <div class="jobs-container">
-      <div id="download-jobs"></div>
-    </div>
-  </div>
-
-  <!-- Library tab -->
-  <div class="tab" id="tab-library">
+  <div class="tab active" id="tab-library">
     <div class="library-browser">
+      <div class="library-page-heading">
+        <h1>Library</h1>
+        <p>Browse, play, and search your downloaded music.</p>
+      </div>
+      <form class="unified-search" id="search-form">
+        <input type="text" id="search-input" placeholder="Search your music…" autocomplete="off" spellcheck="false">
+        <button type="submit" class="btn">Search</button>
+        <button type="button" class="btn btn-secondary" id="apple-search-btn">Search Apple Music</button>
+      </form>
+      <div class="search-types" role="group" aria-label="Search type">
+        <button class="type-btn" data-type="song">Songs</button>
+        <button class="type-btn" data-type="album">Albums</button>
+        <button class="type-btn active" data-type="artist">Artists</button>
+      </div>
       <div class="library-toolbar">
         <button class="library-back" id="library-back" hidden>‹ Back</button>
         <div class="library-heading">
@@ -548,44 +527,64 @@
       <div id="library-content"><div class="library-empty">Loading library...</div></div>
     </div>
   </div>
-
-  <!-- Settings tab -->
-  <div class="tab" id="tab-settings">
-    <div class="settings-panel">
-      <h2>Settings</h2>
-      <div class="setting-group">
-        <h3>Apple Music Cookies</h3>
-        <p>gamdl requires a valid cookies.txt file exported from your browser while logged into Apple Music. Use a "Export Cookies" extension in Netscape format.</p>
-        <div id="cookie-status-box" class="cookie-status missing">No cookies.txt uploaded</div>
-        <div class="file-input-row">
-          <label class="file-label" for="cookie-file">Choose file</label>
-          <input type="file" id="cookie-file" accept=".txt">
-          <span id="cookie-filename">No file chosen</span>
-          <button class="btn btn-sm" id="upload-cookie-btn" disabled>Upload</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
 </main>
+
+<div class="settings-overlay" id="settings-overlay" hidden></div>
+<aside class="settings-drawer" id="settings-drawer" aria-hidden="true">
+  <div class="drawer-header"><h2>Settings</h2><button id="settings-close" aria-label="Close settings">✕</button></div>
+  <section class="drawer-section">
+    <h3>Download History</h3>
+    <p>Monitor active downloads and review completed jobs.</p>
+    <div class="job-filters" role="group" aria-label="Filter download history">
+      <button class="job-filter active" data-filter="active">Active <span id="active-count">0</span></button>
+      <button class="job-filter" data-filter="completed">Completed</button>
+      <button class="job-filter" data-filter="all">All</button>
+    </div>
+    <div id="download-jobs"></div>
+  </section>
+  <section class="drawer-section">
+    <h3>Apple Music Cookies</h3>
+    <p>Upload a Netscape-format cookies.txt exported while signed in to Apple Music.</p>
+    <div id="cookie-status-box" class="cookie-status missing">No cookies.txt uploaded</div>
+    <div class="file-input-row">
+      <label class="file-label" for="cookie-file">Choose file</label>
+      <input type="file" id="cookie-file" accept=".txt">
+      <span id="cookie-filename">No file chosen</span>
+      <button class="btn btn-sm" id="upload-cookie-btn" disabled>Upload</button>
+    </div>
+  </section>
+  <section class="drawer-section">
+    <h3>Download confirmation</h3>
+    <p id="confirmation-status">The confirmation dialog is enabled.</p>
+    <button class="btn btn-secondary" id="reset-download-confirmation">Reset confirmation dialog</button>
+  </section>
+</aside>
 
 <!-- Player bar -->
 <div id="player-bar">
+  <button class="player-skip" id="player-prev" title="Previous track">⏮</button>
   <div id="player-title">
     <strong id="player-track-name"></strong>
     <span id="player-album-name"></span>
+    <span id="player-queue-position"></span>
   </div>
   <audio id="player" controls></audio>
+  <button class="player-skip" id="player-next" title="Next track">⏭</button>
   <button id="player-close" title="Close player">✕</button>
 </div>
 
 <div id="toast"></div>
 
-<nav class="mobile-nav" aria-label="Primary navigation">
-  <button class="nav-button active" data-tab="discover"><span class="nav-icon">⌕</span>Discover</button>
-  <button class="nav-button" data-tab="downloads"><span class="nav-icon">↓</span>Downloads</button>
-  <button class="nav-button" data-tab="library"><span class="nav-icon">♫</span>Library</button>
-</nav>
+<div class="modal-backdrop" id="download-confirmation" hidden>
+  <div class="confirmation-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmation-title">
+    <h2 id="confirmation-title">Download to this device?</h2>
+    <p id="confirmation-message"></p>
+    <div class="confirmation-actions">
+      <button class="btn btn-secondary" id="confirmation-cancel">Cancel</button>
+      <button class="btn" id="confirmation-accept">Download</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const state = {
@@ -593,6 +592,10 @@ const state = {
   currentTrack: null,
   libraryData: null,
   libraryView: { level: 'artists', artistPath: null, albumPath: null },
+  albumMetadata: {},
+  playQueue: [],
+  playIndex: -1,
+  searchScope: 'local',
   expandedJobLogs: new Set(),
   jobFilter: 'active',
 };
@@ -625,53 +628,25 @@ function handleWsMessage(msg) {
   }
 }
 
-// Tabs
-document.querySelectorAll('[data-tab]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    switchTab(btn.dataset.tab);
-  });
-});
-
-// Download form
-document.getElementById('download-form').addEventListener('submit', async e => {
-  e.preventDefault();
-  const url = document.getElementById('url-input').value.trim();
-  if (!url) return;
-  const btn = document.getElementById('submit-btn');
-  btn.disabled = true;
-  try {
-    const res = await fetch('/api/queue', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      document.getElementById('url-input').value = '';
-      showToast('Added to queue', 'success');
-      state.jobFilter = 'active';
-      switchTab('downloads');
-    } else {
-      showToast(data.error || 'Failed to queue', 'error');
-    }
-  } catch (err) {
-    showToast('Connection error', 'error');
-  }
-  btn.disabled = false;
-});
-
-function switchTab(name) {
-  document.querySelectorAll('.nav-button').forEach(b => {
-    b.classList.toggle('active', b.dataset.tab === name);
-  });
-  document.querySelector('.settings-button').classList.toggle('active', name === 'settings');
-  document.querySelectorAll('.tab').forEach(t => {
-    t.classList.toggle('active', t.id === `tab-${name}`);
-  });
-  if (name === 'library' && !state.libraryData) loadLibrary();
-  if (name === 'discover') document.getElementById('search-input').focus();
-  if (name === 'settings') loadCookieStatus();
+function openSettings() {
+  document.getElementById('settings-overlay').hidden = false;
+  document.getElementById('settings-drawer').classList.add('open');
+  document.getElementById('settings-drawer').setAttribute('aria-hidden', 'false');
+  document.getElementById('settings-toggle').classList.add('active');
+  loadCookieStatus();
+  updateConfirmationStatus();
 }
+
+function closeSettings() {
+  document.getElementById('settings-drawer').classList.remove('open');
+  document.getElementById('settings-drawer').setAttribute('aria-hidden', 'true');
+  document.getElementById('settings-overlay').hidden = true;
+  document.getElementById('settings-toggle').classList.remove('active');
+}
+
+document.getElementById('settings-toggle').addEventListener('click', openSettings);
+document.getElementById('settings-close').addEventListener('click', closeSettings);
+document.getElementById('settings-overlay').addEventListener('click', closeSettings);
 
 document.querySelectorAll('.job-filter').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -687,6 +662,9 @@ function renderJobs() {
   const done = all.filter(j => j.status === 'done' || j.status === 'error');
 
   document.getElementById('active-count').textContent = active.length;
+  const badge = document.getElementById('active-badge');
+  badge.textContent = active.length;
+  badge.hidden = active.length === 0;
   document.querySelectorAll('.job-filter').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.filter === state.jobFilter);
   });
@@ -809,6 +787,49 @@ function collectTracks(node) {
   return (node.children || []).flatMap(collectTracks);
 }
 
+async function getAlbumMetadata(album) {
+  if (state.albumMetadata[album.path]) return state.albumMetadata[album.path];
+  try {
+    const res = await fetch(`/api/library/metadata?path=${encodeURIComponent(album.path)}`);
+    if (!res.ok) throw new Error('metadata unavailable');
+    state.albumMetadata[album.path] = await res.json();
+  } catch {
+    state.albumMetadata[album.path] = { releaseDate: null, tracks: {} };
+  }
+  return state.albumMetadata[album.path];
+}
+
+function naturalCompare(a, b) {
+  return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+}
+
+function orderedTracks(album) {
+  const metadata = state.albumMetadata[album.path] || { tracks: {} };
+  return collectTracks(album).sort((a, b) => {
+    const relA = a.path.slice(album.path.length + 1);
+    const relB = b.path.slice(album.path.length + 1);
+    const aMeta = metadata.tracks?.[relA] || {};
+    const bMeta = metadata.tracks?.[relB] || {};
+    const discA = aMeta.disc ?? Number(relA.match(/disc\D*(\d+)/i)?.[1] || 1);
+    const discB = bMeta.disc ?? Number(relB.match(/disc\D*(\d+)/i)?.[1] || 1);
+    const trackA = aMeta.track ?? Number(a.name.match(/^(\d+)/)?.[1] || 9999);
+    const trackB = bMeta.track ?? Number(b.name.match(/^(\d+)/)?.[1] || 9999);
+    return discA - discB || trackA - trackB || naturalCompare(a.path, b.path);
+  });
+}
+
+function orderedAlbums(artist) {
+  return (artist.children || []).filter(node => node.type === 'dir').sort((a, b) => {
+    const dateA = state.albumMetadata[a.path]?.releaseDate || '9999';
+    const dateB = state.albumMetadata[b.path]?.releaseDate || '9999';
+    return dateA.localeCompare(dateB) || naturalCompare(a.name, b.name);
+  });
+}
+
+async function ensureArtistMetadata(artist) {
+  await Promise.all((artist.children || []).filter(node => node.type === 'dir').map(getAlbumMetadata));
+}
+
 function libraryCardHtml(node, kind) {
   const count = kind === 'artist'
     ? (node.children || []).filter(child => child.type === 'dir').length
@@ -822,7 +843,8 @@ function libraryCardHtml(node, kind) {
         <div class="library-card-title" title="${escHtml(node.name)}">${escHtml(node.name)}</div>
         <div class="library-card-meta">${count} ${unit}</div>
         <div class="library-card-actions">
-          <a class="library-download" href="/api/library/download?path=${encodeURIComponent(node.path)}" download>Download ZIP</a>
+          <button class="library-play" data-action="play">Play</button>
+          <button class="library-download" data-action="download" title="Download" aria-label="Download ${escHtml(node.name)}">↓</button>
         </div>
       </div>
     </article>`;
@@ -852,7 +874,7 @@ function renderLibrary() {
   } else if (view.level === 'albums') {
     const artist = findLibraryNode(view.artistPath);
     if (!artist) return showArtists();
-    const albums = (artist.children || []).filter(node => node.type === 'dir');
+    const albums = orderedAlbums(artist);
     back.hidden = false;
     title.textContent = artist.name;
     subtitle.textContent = `${albums.length} album${albums.length !== 1 ? 's' : ''}`;
@@ -862,7 +884,7 @@ function renderLibrary() {
   } else {
     const album = findLibraryNode(view.albumPath);
     if (!album) return showAlbums(view.artistPath);
-    const files = collectTracks(album);
+    const files = orderedTracks(album);
     back.hidden = false;
     title.textContent = album.name;
     subtitle.textContent = `${files.length} track${files.length !== 1 ? 's' : ''}`;
@@ -874,7 +896,7 @@ function renderLibrary() {
         <span class="track-num">${isPlaying ? '<span class="play-icon">▶</span>' : i + 1}</span>
         <span class="track-name">${escHtml(stripExt(f.name))}</span>
         <span class="track-size">${size}</span>
-        <a class="track-dl" href="/api/library/download?path=${encodeURIComponent(f.path)}" download title="Download ${escHtml(f.name)}" aria-label="Download ${escHtml(f.name)}" onclick="event.stopPropagation()">⬇</a>
+        <button class="track-dl client-download" data-path="${escHtml(f.path)}" data-name="${escHtml(f.name)}" data-kind="song" title="Download ${escHtml(f.name)}" aria-label="Download ${escHtml(f.name)}">↓</button>
       </div>
     `;
     }).join('')}</div>` : '<div class="library-empty">No tracks found</div>';
@@ -887,15 +909,31 @@ function renderLibrary() {
       if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); }
     });
   });
-  content.querySelectorAll('.library-download').forEach(link => link.addEventListener('click', event => event.stopPropagation()));
+  content.querySelectorAll('.library-play').forEach(button => button.addEventListener('click', async event => {
+    event.stopPropagation();
+    const card = button.closest('.library-card');
+    await playLibraryScope(findLibraryNode(card.dataset.path), card.dataset.kind);
+  }));
+  content.querySelectorAll('.library-download').forEach(button => button.addEventListener('click', event => {
+    event.stopPropagation();
+    const card = button.closest('.library-card');
+    requestClientDownload(card.dataset.path, card.dataset.kind, findLibraryNode(card.dataset.path)?.name || 'music');
+  }));
+  content.querySelectorAll('.client-download').forEach(button => button.addEventListener('click', event => {
+    event.stopPropagation();
+    requestClientDownload(button.dataset.path, button.dataset.kind, button.dataset.name);
+  }));
   content.querySelectorAll('.track-row').forEach(row => {
     row.addEventListener('click', () => {
-      playTrack({ path: row.dataset.path, name: row.dataset.name });
+      const track = findLibraryNode(row.dataset.path);
+      state.playQueue = [track];
+      playTrack(track, 0);
     });
   });
 }
 
 function showArtists() {
+  state.searchScope = 'local';
   state.libraryView = { level: 'artists', artistPath: null, albumPath: null };
   renderLibrary();
 }
@@ -903,12 +941,20 @@ function showArtists() {
 function showAlbums(artistPath) {
   state.libraryView = { level: 'albums', artistPath, albumPath: null };
   renderLibrary();
+  const artist = findLibraryNode(artistPath);
+  if (artist) ensureArtistMetadata(artist).then(() => {
+    if (state.libraryView.level === 'albums' && state.libraryView.artistPath === artistPath) renderLibrary();
+  });
 }
 
 function showAlbum(albumPath) {
   const artistPath = albumPath.split('/')[0];
   state.libraryView = { level: 'tracks', artistPath, albumPath };
   renderLibrary();
+  const album = findLibraryNode(albumPath);
+  if (album) getAlbumMetadata(album).then(() => {
+    if (state.libraryView.level === 'tracks' && state.libraryView.albumPath === albumPath) renderLibrary();
+  });
 }
 
 document.getElementById('library-back').addEventListener('click', () => {
@@ -916,24 +962,53 @@ document.getElementById('library-back').addEventListener('click', () => {
   else showArtists();
 });
 
-function playTrack(track) {
+function playTrack(track, index = null) {
+  if (index !== null) state.playIndex = index;
   state.currentTrack = track;
   const player = document.getElementById('player');
   const bar = document.getElementById('player-bar');
   document.getElementById('player-track-name').textContent = stripExt(track.name);
   document.getElementById('player-album-name').textContent = track.path.split('/').slice(0, -1).join(' / ');
+  document.getElementById('player-queue-position').textContent = state.playQueue.length > 1 ? `${state.playIndex + 1} of ${state.playQueue.length}` : '';
   player.src = `/files/${encodeURIPath(track.path)}`;
-  player.play();
+  player.play().catch(() => {});
   bar.classList.add('visible');
   // Re-render to show playing indicator
-  if (state.libraryData) renderLibrary();
+  if (state.libraryData && !document.getElementById('search-input').value.trim()) renderLibrary();
 }
+
+async function playLibraryScope(node, kind) {
+  if (!node) return;
+  let tracks;
+  if (kind === 'artist') {
+    await ensureArtistMetadata(node);
+    tracks = orderedAlbums(node).flatMap(orderedTracks);
+  } else {
+    await getAlbumMetadata(node);
+    tracks = orderedTracks(node);
+  }
+  if (!tracks.length) return showToast('No playable tracks found', 'error');
+  state.playQueue = tracks;
+  playTrack(tracks[0], 0);
+}
+
+function moveQueue(direction) {
+  const next = state.playIndex + direction;
+  if (next < 0 || next >= state.playQueue.length) return;
+  playTrack(state.playQueue[next], next);
+}
+
+document.getElementById('player').addEventListener('ended', () => moveQueue(1));
+document.getElementById('player-prev').addEventListener('click', () => moveQueue(-1));
+document.getElementById('player-next').addEventListener('click', () => moveQueue(1));
 
 document.getElementById('player-close').addEventListener('click', () => {
   document.getElementById('player').pause();
   document.getElementById('player-bar').classList.remove('visible');
   state.currentTrack = null;
-  if (state.libraryData) renderLibrary();
+  state.playQueue = [];
+  state.playIndex = -1;
+  if (state.libraryData && !document.getElementById('search-input').value.trim()) renderLibrary();
 });
 
 function encodeURIPath(p) {
@@ -949,6 +1024,53 @@ function formatSize(bytes) {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+const downloadConfirmationKey = 'music-client-download-confirmed-v1';
+let pendingClientDownload = null;
+
+function startClientDownload(path) {
+  const link = document.createElement('a');
+  link.href = `/api/library/download?path=${encodeURIComponent(path)}`;
+  link.download = '';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+function requestClientDownload(path, kind, name) {
+  if (localStorage.getItem(downloadConfirmationKey) === 'yes') return startClientDownload(path);
+  const fileType = kind === 'song' ? 'the original M4A file' : `a ZIP containing this ${kind}`;
+  document.getElementById('confirmation-message').textContent = `“${name}” will be downloaded to this device as ${fileType}.`;
+  pendingClientDownload = path;
+  document.getElementById('download-confirmation').hidden = false;
+}
+
+function closeDownloadConfirmation() {
+  pendingClientDownload = null;
+  document.getElementById('download-confirmation').hidden = true;
+}
+
+document.getElementById('confirmation-cancel').addEventListener('click', closeDownloadConfirmation);
+document.getElementById('confirmation-accept').addEventListener('click', () => {
+  const path = pendingClientDownload;
+  localStorage.setItem(downloadConfirmationKey, 'yes');
+  closeDownloadConfirmation();
+  updateConfirmationStatus();
+  if (path) startClientDownload(path);
+});
+
+function updateConfirmationStatus() {
+  const dismissed = localStorage.getItem(downloadConfirmationKey) === 'yes';
+  document.getElementById('confirmation-status').textContent = dismissed
+    ? 'The confirmation has been dismissed for this browser.'
+    : 'The confirmation dialog is enabled.';
+}
+
+document.getElementById('reset-download-confirmation').addEventListener('click', () => {
+  localStorage.removeItem(downloadConfirmationKey);
+  updateConfirmationStatus();
+  showToast('Download confirmation reset', 'success');
+});
 
 // Cookies / Settings
 async function loadCookieStatus() {
@@ -1006,42 +1128,117 @@ function showToast(msg, type = '') {
 }
 
 // Search
-let searchType = 'song';
+let searchType = 'artist';
 
 document.querySelectorAll('.type-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     searchType = btn.dataset.type;
-    if (document.getElementById('search-input').value.trim()) doSearch();
+    const currentQuery = document.getElementById('search-input').value.trim();
+    if (currentQuery && !/^https:\/\/music\.apple\.com\//i.test(currentQuery)) {
+      if (state.searchScope === 'apple') doAppleSearch();
+      else doLocalSearch();
+    }
+    else showArtists();
   });
 });
 
 document.getElementById('search-form').addEventListener('submit', e => {
   e.preventDefault();
-  doSearch();
+  doLocalSearch();
 });
 
-async function doSearch() {
+document.getElementById('apple-search-btn').addEventListener('click', doAppleSearch);
+
+function localMatches(q) {
+  const query = q.toLocaleLowerCase();
+  const artists = (state.libraryData || []).filter(node => node.type === 'dir');
+  if (searchType === 'artist') return artists.filter(node => node.name.toLocaleLowerCase().includes(query));
+  const albums = artists.flatMap(artist => (artist.children || []).filter(node => node.type === 'dir'));
+  if (searchType === 'album') return albums.filter(node => node.name.toLocaleLowerCase().includes(query) || node.path.toLocaleLowerCase().includes(query));
+  return artists.flatMap(collectTracks).filter(node => stripExt(node.name).toLocaleLowerCase().includes(query) || node.path.toLocaleLowerCase().includes(query));
+}
+
+function doLocalSearch() {
+  state.searchScope = 'local';
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) return showArtists();
+  const items = localMatches(q);
+  const content = document.getElementById('library-content');
+  document.getElementById('library-back').hidden = true;
+  document.getElementById('library-title').textContent = `Downloaded ${searchType === 'artist' ? 'Artists' : searchType === 'album' ? 'Albums' : 'Songs'}`;
+  document.getElementById('library-subtitle').textContent = `${items.length} result${items.length !== 1 ? 's' : ''} for “${q}”`;
+  if (!items.length) {
+    content.innerHTML = `<div class="search-fallback"><strong>No downloaded ${searchType}s found for “${escHtml(q)}”.</strong><button class="btn" id="search-apple-empty">Search Apple Music?</button></div>`;
+    document.getElementById('search-apple-empty').addEventListener('click', doAppleSearch);
+    return;
+  }
+  if (searchType === 'song') {
+    content.innerHTML = `<div class="track-list">${items.map((track, index) => `
+      <div class="track-row" data-path="${escHtml(track.path)}" data-name="${escHtml(track.name)}">
+        <span class="track-num">${index + 1}</span><span class="track-name">${escHtml(stripExt(track.name))}</span>
+        <span class="track-size">${formatSize(track.size)}</span>
+        <button class="track-dl client-download" data-path="${escHtml(track.path)}" data-name="${escHtml(track.name)}" data-kind="song">↓</button>
+      </div>`).join('')}</div>`;
+    content.querySelectorAll('.track-row').forEach(row => row.addEventListener('click', () => {
+      const track = findLibraryNode(row.dataset.path);
+      state.playQueue = [track];
+      playTrack(track, 0);
+    }));
+    content.querySelectorAll('.client-download').forEach(button => button.addEventListener('click', event => {
+      event.stopPropagation(); requestClientDownload(button.dataset.path, 'song', button.dataset.name);
+    }));
+  } else {
+    const kind = searchType === 'artist' ? 'artist' : 'album';
+    content.innerHTML = `<div class="library-grid">${items.map(node => libraryCardHtml(node, kind)).join('')}</div>`;
+    content.querySelectorAll('.library-card').forEach(card => card.addEventListener('click', () => kind === 'artist' ? showAlbums(card.dataset.path) : showAlbum(card.dataset.path)));
+    content.querySelectorAll('.library-play').forEach(button => button.addEventListener('click', async event => {
+      event.stopPropagation(); const card = button.closest('.library-card'); await playLibraryScope(findLibraryNode(card.dataset.path), kind);
+    }));
+    content.querySelectorAll('.library-download').forEach(button => button.addEventListener('click', event => {
+      event.stopPropagation(); const card = button.closest('.library-card'); requestClientDownload(card.dataset.path, kind, findLibraryNode(card.dataset.path)?.name || 'music');
+    }));
+  }
+}
+
+async function queueAppleUrl(url) {
+  try {
+    const res = await fetch('/api/queue', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Could not queue download');
+    showToast('Added to queue — view progress in Settings', 'success');
+  } catch (error) {
+    showToast(error.message || 'Could not queue download', 'error');
+  }
+}
+
+async function doAppleSearch() {
+  state.searchScope = 'apple';
   const q = document.getElementById('search-input').value.trim();
   if (!q) return;
-  const results = document.getElementById('search-results');
-  results.innerHTML = '<div class="search-loading"><span class="spinner"></span> Searching...</div>';
+  if (/^https:\/\/music\.apple\.com\//i.test(q)) return queueAppleUrl(q);
+  const content = document.getElementById('library-content');
+  document.getElementById('library-back').hidden = true;
+  document.getElementById('library-title').textContent = 'Apple Music';
+  document.getElementById('library-subtitle').textContent = `Searching for “${q}”`;
+  content.innerHTML = '<div class="search-loading"><span class="spinner"></span> Searching Apple Music…</div>';
   try {
     const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&type=${searchType}`);
     const data = await res.json();
     renderSearchResults(data.results || []);
-  } catch (e) {
-    results.innerHTML = '<div class="search-loading">Search failed — try again</div>';
+  } catch {
+    content.innerHTML = '<div class="search-loading">Search failed — try again</div>';
   }
 }
 
 function renderSearchResults(items) {
-  const results = document.getElementById('search-results');
+  const results = document.getElementById('library-content');
   if (!items.length) {
-    results.innerHTML = '<div class="search-loading">No results found</div>';
+    results.innerHTML = '<div class="search-loading">No Apple Music results found</div>';
     return;
   }
+  document.getElementById('library-subtitle').textContent = `${items.length} Apple Music result${items.length !== 1 ? 's' : ''}`;
   results.innerHTML = `<div class="result-grid">${items.map(item => resultCardHtml(item)).join('')}</div>`;
   results.querySelectorAll('.result-dl').forEach(btn => {
     btn.addEventListener('click', async e => {
@@ -1058,7 +1255,7 @@ function renderSearchResults(items) {
         if (res.ok) {
           btn.textContent = 'Queued!';
           btn.classList.add('queued');
-          showToast('Added to queue', 'success');
+          showToast('Added to queue — view progress in Settings', 'success');
         } else {
           const d = await res.json();
           btn.textContent = 'Download';
@@ -1102,6 +1299,8 @@ function resultCardHtml(item) {
 // Init
 renderJobs();
 connectWs();
+loadLibrary();
+updateConfirmationStatus();
 </script>
 </body>
 </html>

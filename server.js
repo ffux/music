@@ -12,6 +12,7 @@ const { execFile } = require('child_process');
 const DATA_DIR = process.env.DATA_DIR || '/data';
 const MUSIC_DIR = process.env.MUSIC_DIR || '/music';
 const DB_PATH = path.join(DATA_DIR, 'queue.db');
+const metadataCache = new Map();
 
 const app = express();
 const server = http.createServer(app);
@@ -191,6 +192,45 @@ app.get('/api/library/artwork', (req, res) => {
     res.setHeader('Cache-Control', 'public, max-age=86400');
     res.type('image/jpeg').send(stdout);
   });
+});
+
+app.get('/api/library/metadata', (req, res) => {
+  const relativePath = req.query.path;
+  if (typeof relativePath !== 'string' || !relativePath) {
+    return res.status(400).json({ error: 'Library path required' });
+  }
+  const libraryRoot = path.resolve(MUSIC_DIR);
+  const targetPath = path.resolve(libraryRoot, relativePath);
+  if (!targetPath.startsWith(`${libraryRoot}${path.sep}`)) {
+    return res.status(400).json({ error: 'Invalid library path' });
+  }
+  let realRoot;
+  let realTarget;
+  let stat;
+  try {
+    realRoot = fs.realpathSync(libraryRoot);
+    realTarget = fs.realpathSync(targetPath);
+    stat = fs.statSync(realTarget);
+  } catch {
+    return res.status(404).json({ error: 'Library item not found' });
+  }
+  if (!stat.isDirectory() || (realTarget !== realRoot && !realTarget.startsWith(`${realRoot}${path.sep}`))) {
+    return res.status(400).json({ error: 'Invalid library path' });
+  }
+  const cacheKey = `${realTarget}:${stat.mtimeMs}`;
+  if (metadataCache.has(cacheKey)) return res.json(metadataCache.get(cacheKey));
+
+  execFile('python3', [path.join(__dirname, 'metadata.py'), realTarget],
+    { maxBuffer: 8 * 1024 * 1024 }, (error, stdout) => {
+      if (error) return res.status(500).json({ error: 'Could not read library metadata' });
+      try {
+        const metadata = JSON.parse(stdout);
+        metadataCache.set(cacheKey, metadata);
+        res.json(metadata);
+      } catch {
+        res.status(500).json({ error: 'Could not read library metadata' });
+      }
+    });
 });
 
 // Download a library track directly or stream any library folder as a ZIP.
