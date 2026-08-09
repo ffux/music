@@ -51,6 +51,9 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      background: none;
+      border: none;
+      cursor: pointer;
     }
     .header-right {
       display: flex;
@@ -62,7 +65,7 @@
       align-items: center;
       gap: 4px;
     }
-    .nav-button, .settings-button {
+    .nav-button, .header-icon-button {
       background: none;
       border: none;
       color: var(--muted);
@@ -73,10 +76,10 @@
       font-weight: 500;
       transition: color 0.15s, background 0.15s;
     }
-    .nav-button:hover, .settings-button:hover { color: var(--text); background: var(--surface2); }
-    .nav-button.active, .settings-button.active { color: var(--accent2); background: rgba(124,106,247,0.15); }
-    .settings-button { font-size: 17px; padding: 5px 9px; }
-    .settings-button { position: relative; }
+    .nav-button:hover, .header-icon-button:hover { color: var(--text); background: var(--surface2); }
+    .nav-button.active, .header-icon-button.active { color: var(--accent2); background: rgba(124,106,247,0.15); }
+    .header-icon-button { position: relative; font-size: 17px; padding: 5px 9px; line-height: 1; }
+    .header-icon-button svg { width: 18px; height: 18px; display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     #active-badge { position: absolute; top: -3px; right: -4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 9px; background: var(--accent); color: white; font-size: 10px; line-height: 16px; }
     .mobile-nav { display: none; }
 
@@ -306,9 +309,6 @@
 
     /* Library */
     .library-browser { flex: 1; overflow-y: auto; padding: 28px 32px 96px; }
-    .library-page-heading { margin-bottom: 20px; }
-    .library-page-heading h1 { font-size: 24px; }
-    .library-page-heading p { color: var(--muted); font-size: 13px; margin-top: 3px; }
     .unified-search { display: flex; gap: 10px; max-width: 900px; margin-bottom: 12px; }
     .unified-search input { flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; outline: none; }
     .unified-search input:focus { border-color: var(--accent); }
@@ -372,10 +372,10 @@
     .track-dl { color: var(--muted); background: none; border: none; cursor: pointer; font-size: 16px; text-decoration: none; padding: 4px 6px; border-radius: 4px; transition: color 0.15s, background 0.15s; line-height: 1; }
     .track-dl:hover { color: var(--accent2); background: var(--surface2); }
 
-    /* Settings drawer */
+    /* Drawers */
     .settings-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.58); z-index: 89; }
-    .settings-drawer { position: fixed; z-index: 90; top: 0; right: 0; bottom: 0; width: min(520px, 100%); background: var(--bg); border-left: 1px solid var(--border); transform: translateX(100%); transition: transform .2s ease; overflow-y: auto; }
-    .settings-drawer.open { transform: translateX(0); }
+    .settings-drawer, .downloads-drawer { position: fixed; z-index: 90; top: 0; right: 0; bottom: 0; width: min(560px, 100%); background: var(--bg); border-left: 1px solid var(--border); transform: translateX(100%); transition: transform .2s ease; overflow-y: auto; }
+    .settings-drawer.open, .downloads-drawer.open { transform: translateX(0); }
     .drawer-header { position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; background: var(--surface); border-bottom: 1px solid var(--border); }
     .drawer-header h2 { font-size: 19px; }
     .drawer-header button { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; }
@@ -494,19 +494,19 @@
 <body>
 
 <header>
-  <div class="logo">♫ Music</div>
+  <button class="logo" id="library-home" aria-label="Open Library" title="Library">♫ Music</button>
   <div class="header-right">
-    <button class="settings-button" id="settings-toggle" aria-label="Settings" title="Settings">⚙<span id="active-badge" hidden>0</span></button>
+    <button class="header-icon-button" id="downloads-toggle" aria-label="Download History" title="Download History">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+      <span id="active-badge" hidden>0</span>
+    </button>
+    <button class="header-icon-button" id="settings-toggle" aria-label="Settings" title="Settings">⚙</button>
   </div>
 </header>
 
 <main>
   <div class="tab active" id="tab-library">
     <div class="library-browser">
-      <div class="library-page-heading">
-        <h1>Library</h1>
-        <p>Browse, play, and search your downloaded music.</p>
-      </div>
       <form class="unified-search" id="search-form">
         <input type="text" id="search-input" placeholder="Search your music…" autocomplete="off" spellcheck="false">
         <button type="submit" class="btn">Search</button>
@@ -530,10 +530,9 @@
 </main>
 
 <div class="settings-overlay" id="settings-overlay" hidden></div>
-<aside class="settings-drawer" id="settings-drawer" aria-hidden="true">
-  <div class="drawer-header"><h2>Settings</h2><button id="settings-close" aria-label="Close settings">✕</button></div>
+<aside class="downloads-drawer" id="downloads-drawer" aria-hidden="true">
+  <div class="drawer-header"><h2>Download History</h2><button id="downloads-close" aria-label="Close download history">✕</button></div>
   <section class="drawer-section">
-    <h3>Download History</h3>
     <p>Monitor active downloads and review completed jobs.</p>
     <div class="job-filters" role="group" aria-label="Filter download history">
       <button class="job-filter active" data-filter="active">Active <span id="active-count">0</span></button>
@@ -542,6 +541,9 @@
     </div>
     <div id="download-jobs"></div>
   </section>
+</aside>
+<aside class="settings-drawer" id="settings-drawer" aria-hidden="true">
+  <div class="drawer-header"><h2>Settings</h2><button id="settings-close" aria-label="Close settings">✕</button></div>
   <section class="drawer-section">
     <h3>Apple Music Cookies</h3>
     <p>Upload a Netscape-format cookies.txt exported while signed in to Apple Music.</p>
@@ -596,6 +598,10 @@ const state = {
   playQueue: [],
   playIndex: -1,
   searchScope: 'local',
+  searchActive: false,
+  libraryReturnView: null,
+  libraryReturnScroll: 0,
+  searchRequestId: 0,
   expandedJobLogs: new Set(),
   jobFilter: 'active',
 };
@@ -628,25 +634,34 @@ function handleWsMessage(msg) {
   }
 }
 
-function openSettings() {
-  document.getElementById('settings-overlay').hidden = false;
-  document.getElementById('settings-drawer').classList.add('open');
-  document.getElementById('settings-drawer').setAttribute('aria-hidden', 'false');
-  document.getElementById('settings-toggle').classList.add('active');
-  loadCookieStatus();
-  updateConfirmationStatus();
-}
-
-function closeSettings() {
-  document.getElementById('settings-drawer').classList.remove('open');
-  document.getElementById('settings-drawer').setAttribute('aria-hidden', 'true');
+function closeDrawers() {
+  document.querySelectorAll('.settings-drawer, .downloads-drawer').forEach(drawer => {
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
+  });
   document.getElementById('settings-overlay').hidden = true;
-  document.getElementById('settings-toggle').classList.remove('active');
+  document.querySelectorAll('.header-icon-button').forEach(button => button.classList.remove('active'));
 }
 
-document.getElementById('settings-toggle').addEventListener('click', openSettings);
-document.getElementById('settings-close').addEventListener('click', closeSettings);
-document.getElementById('settings-overlay').addEventListener('click', closeSettings);
+function openDrawer(name) {
+  closeDrawers();
+  document.getElementById('settings-overlay').hidden = false;
+  const drawer = document.getElementById(`${name}-drawer`);
+  drawer.classList.add('open');
+  drawer.setAttribute('aria-hidden', 'false');
+  document.getElementById(`${name}-toggle`).classList.add('active');
+  if (name === 'settings') {
+    loadCookieStatus();
+    updateConfirmationStatus();
+  }
+}
+
+document.getElementById('downloads-toggle').addEventListener('click', () => openDrawer('downloads'));
+document.getElementById('settings-toggle').addEventListener('click', () => openDrawer('settings'));
+document.getElementById('downloads-close').addEventListener('click', closeDrawers);
+document.getElementById('settings-close').addEventListener('click', closeDrawers);
+document.getElementById('settings-overlay').addEventListener('click', closeDrawers);
+document.addEventListener('keydown', event => { if (event.key === 'Escape') closeDrawers(); });
 
 document.querySelectorAll('.job-filter').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -742,7 +757,8 @@ async function loadLibrary({ silent = false } = {}) {
     const res = await fetch('/api/library');
     if (!res.ok) throw new Error('Library request failed');
     state.libraryData = await res.json();
-    renderLibrary();
+    if (!state.searchActive) renderLibrary();
+    else if (state.searchScope === 'local') doLocalSearch();
     return true;
   } catch (e) {
     if (!silent) {
@@ -859,6 +875,7 @@ function renderLibrary() {
 
   if (!state.libraryData?.length) {
     back.hidden = true;
+    back.textContent = '‹ Back';
     title.textContent = 'Artists';
     subtitle.textContent = 'Browse your downloaded music';
     content.innerHTML = '<div class="library-empty">No music downloaded yet</div>';
@@ -868,6 +885,7 @@ function renderLibrary() {
   if (view.level === 'artists') {
     const artists = state.libraryData.filter(node => node.type === 'dir');
     back.hidden = true;
+    back.textContent = '‹ Back';
     title.textContent = 'Artists';
     subtitle.textContent = `${artists.length} artist${artists.length !== 1 ? 's' : ''}`;
     content.innerHTML = `<div class="library-grid">${artists.map(node => libraryCardHtml(node, 'artist')).join('')}</div>`;
@@ -876,6 +894,7 @@ function renderLibrary() {
     if (!artist) return showArtists();
     const albums = orderedAlbums(artist);
     back.hidden = false;
+    back.textContent = '‹ Back';
     title.textContent = artist.name;
     subtitle.textContent = `${albums.length} album${albums.length !== 1 ? 's' : ''}`;
     content.innerHTML = albums.length
@@ -886,6 +905,7 @@ function renderLibrary() {
     if (!album) return showAlbums(view.artistPath);
     const files = orderedTracks(album);
     back.hidden = false;
+    back.textContent = '‹ Back';
     title.textContent = album.name;
     subtitle.textContent = `${files.length} track${files.length !== 1 ? 's' : ''}`;
     content.innerHTML = files.length ? `<div class="track-list">${files.map((f, i) => {
@@ -933,12 +953,14 @@ function renderLibrary() {
 }
 
 function showArtists() {
+  state.searchActive = false;
   state.searchScope = 'local';
   state.libraryView = { level: 'artists', artistPath: null, albumPath: null };
   renderLibrary();
 }
 
 function showAlbums(artistPath) {
+  state.searchActive = false;
   state.libraryView = { level: 'albums', artistPath, albumPath: null };
   renderLibrary();
   const artist = findLibraryNode(artistPath);
@@ -948,6 +970,7 @@ function showAlbums(artistPath) {
 }
 
 function showAlbum(albumPath) {
+  state.searchActive = false;
   const artistPath = albumPath.split('/')[0];
   state.libraryView = { level: 'tracks', artistPath, albumPath };
   renderLibrary();
@@ -958,8 +981,15 @@ function showAlbum(albumPath) {
 }
 
 document.getElementById('library-back').addEventListener('click', () => {
-  if (state.libraryView.level === 'tracks') showAlbums(state.libraryView.artistPath);
+  if (state.searchActive) returnToLibrary();
+  else if (state.libraryView.level === 'tracks') showAlbums(state.libraryView.artistPath);
   else showArtists();
+});
+
+document.getElementById('library-home').addEventListener('click', () => {
+  document.getElementById('search-input').value = '';
+  showArtists();
+  document.querySelector('.library-browser').scrollTop = 0;
 });
 
 function playTrack(track, index = null) {
@@ -1130,6 +1160,28 @@ function showToast(msg, type = '') {
 // Search
 let searchType = 'artist';
 
+function beginSearch(scope) {
+  if (!state.searchActive) {
+    state.libraryReturnView = { ...state.libraryView };
+    state.libraryReturnScroll = document.querySelector('.library-browser').scrollTop;
+  }
+  state.searchActive = true;
+  state.searchScope = scope;
+  const back = document.getElementById('library-back');
+  back.hidden = false;
+  back.textContent = '‹ Library';
+}
+
+function returnToLibrary() {
+  state.searchActive = false;
+  state.searchScope = 'local';
+  state.searchRequestId += 1;
+  if (state.libraryReturnView) state.libraryView = { ...state.libraryReturnView };
+  const scrollTop = state.libraryReturnScroll;
+  renderLibrary();
+  requestAnimationFrame(() => { document.querySelector('.library-browser').scrollTop = scrollTop; });
+}
+
 document.querySelectorAll('.type-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
@@ -1161,14 +1213,14 @@ function localMatches(q) {
 }
 
 function doLocalSearch() {
-  state.searchScope = 'local';
   const q = document.getElementById('search-input').value.trim();
   if (!q) return showArtists();
+  beginSearch('local');
+  state.searchRequestId += 1;
   const items = localMatches(q);
   const content = document.getElementById('library-content');
-  document.getElementById('library-back').hidden = true;
-  document.getElementById('library-title').textContent = `Downloaded ${searchType === 'artist' ? 'Artists' : searchType === 'album' ? 'Albums' : 'Songs'}`;
-  document.getElementById('library-subtitle').textContent = `${items.length} result${items.length !== 1 ? 's' : ''} for “${q}”`;
+  document.getElementById('library-title').textContent = `Library results for “${q}”`;
+  document.getElementById('library-subtitle').textContent = `${items.length} downloaded ${searchType}${items.length !== 1 ? 's' : ''}`;
   if (!items.length) {
     content.innerHTML = `<div class="search-fallback"><strong>No downloaded ${searchType}s found for “${escHtml(q)}”.</strong><button class="btn" id="search-apple-empty">Search Apple Music?</button></div>`;
     document.getElementById('search-apple-empty').addEventListener('click', doAppleSearch);
@@ -1207,27 +1259,29 @@ async function queueAppleUrl(url) {
     const res = await fetch('/api/queue', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Could not queue download');
-    showToast('Added to queue — view progress in Settings', 'success');
+    showToast('Added to queue — view progress in Download History', 'success');
   } catch (error) {
     showToast(error.message || 'Could not queue download', 'error');
   }
 }
 
 async function doAppleSearch() {
-  state.searchScope = 'apple';
   const q = document.getElementById('search-input').value.trim();
   if (!q) return;
   if (/^https:\/\/music\.apple\.com\//i.test(q)) return queueAppleUrl(q);
+  beginSearch('apple');
+  const requestId = ++state.searchRequestId;
   const content = document.getElementById('library-content');
-  document.getElementById('library-back').hidden = true;
-  document.getElementById('library-title').textContent = 'Apple Music';
+  document.getElementById('library-title').textContent = `Apple Music results for “${q}”`;
   document.getElementById('library-subtitle').textContent = `Searching for “${q}”`;
   content.innerHTML = '<div class="search-loading"><span class="spinner"></span> Searching Apple Music…</div>';
   try {
     const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&type=${searchType}`);
     const data = await res.json();
+    if (!state.searchActive || state.searchScope !== 'apple' || requestId !== state.searchRequestId) return;
     renderSearchResults(data.results || []);
   } catch {
+    if (!state.searchActive || requestId !== state.searchRequestId) return;
     content.innerHTML = '<div class="search-loading">Search failed — try again</div>';
   }
 }
@@ -1255,7 +1309,7 @@ function renderSearchResults(items) {
         if (res.ok) {
           btn.textContent = 'Queued!';
           btn.classList.add('queued');
-          showToast('Added to queue — view progress in Settings', 'success');
+          showToast('Added to queue — view progress in Download History', 'success');
         } else {
           const d = await res.json();
           btn.textContent = 'Download';
