@@ -1299,7 +1299,7 @@ function renderSearchResults(items) {
       e.stopPropagation();
       const url = btn.dataset.url;
       btn.disabled = true;
-      btn.textContent = 'Queuing...';
+      btn.textContent = 'Sending to server…';
       try {
         const res = await fetch('/api/queue', {
           method: 'POST',
@@ -1307,17 +1307,17 @@ function renderSearchResults(items) {
           body: JSON.stringify({ url })
         });
         if (res.ok) {
-          btn.textContent = 'Queued!';
+          btn.textContent = 'Queued on server';
           btn.classList.add('queued');
           showToast('Added to queue — view progress in Download History', 'success');
         } else {
           const d = await res.json();
-          btn.textContent = 'Download';
+          btn.textContent = 'Download to server';
           btn.disabled = false;
           showToast(d.error || 'Failed', 'error');
         }
       } catch {
-        btn.textContent = 'Download';
+        btn.textContent = 'Download to server';
         btn.disabled = false;
         showToast('Connection error', 'error');
       }
@@ -1344,7 +1344,7 @@ function resultCardHtml(item) {
       <div class="result-info">
         <div class="result-title" title="${title}">${title}</div>
         <div class="result-sub">${sub || type}</div>
-        ${url ? `<button class="result-dl" data-url="${escHtml(url)}">Download</button>` : '<button class="result-dl" disabled>No link</button>'}
+        ${url ? `<button class="result-dl" data-url="${escHtml(url)}">Download to server</button>` : '<button class="result-dl" disabled>No link</button>'}
       </div>
     </div>
   `;
