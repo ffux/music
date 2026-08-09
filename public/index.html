@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
   <title>Music</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -21,15 +21,23 @@
       --warning: #fbbf24;
     }
 
+    html, body { height: 100%; }
     body {
       background: var(--bg);
       color: var(--text);
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       font-size: 14px;
       line-height: 1.5;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+      overflow: hidden;
+    }
+    .app-shell {
+      height: 100vh;
+      height: 100svh;
+      height: 100dvh;
+      height: var(--app-height, 100dvh);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      overflow: hidden;
     }
 
     /* Header */
@@ -118,13 +126,17 @@
     #player-bar {
       background: var(--surface);
       border-top: 1px solid var(--border);
-      padding: 10px 24px;
+      padding: 10px 24px calc(10px + env(safe-area-inset-bottom, 0px));
       display: none;
+    }
+    #player-bar.visible { display: block; }
+    .player-bar-inner {
+      width: min(100%, 1100px);
+      margin: 0 auto;
+      display: flex;
       align-items: center;
       gap: 16px;
-      flex-shrink: 0;
     }
-    #player-bar.visible { display: flex; }
     #player-title {
       font-size: 13px;
       color: var(--text);
@@ -137,6 +149,8 @@
     #player-title span { color: var(--muted); font-size: 12px; display: block; }
     audio#player {
       flex: 2;
+      min-width: 0;
+      width: 100%;
       height: 32px;
       accent-color: var(--accent);
     }
@@ -153,12 +167,13 @@
 
     /* Main content */
     main {
-      flex: 1;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
     }
-    .tab { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+    .tab { display: none; min-height: 100%; flex-direction: column; }
     .tab.active { display: flex; }
 
     /* Download tab */
@@ -308,7 +323,7 @@
     .empty-state p { font-size: 13px; }
 
     /* Library */
-    .library-browser { flex: 1; overflow-y: auto; padding: 28px 32px 96px; }
+    .library-browser { flex: 1; padding: 28px 32px; }
     .unified-search { display: flex; gap: 10px; max-width: 900px; margin-bottom: 12px; }
     .unified-search input { flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; outline: none; }
     .unified-search input:focus { border-color: var(--accent); }
@@ -479,19 +494,21 @@
       .job-header { flex-wrap: wrap; }
       .job-url { flex-basis: calc(100% - 30px); }
       .job-meta { margin-left: auto; }
-      .library-browser { padding: 20px 16px 86px; }
+      .library-browser { padding: 20px 16px; }
       .library-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
       .library-toolbar { margin-bottom: 16px; }
       .track-row { padding: 10px 9px; gap: 8px; }
       .track-num { width: 20px; }
       .settings-panel { padding: 24px 16px; }
       .file-input-row { flex-wrap: wrap; }
-      #player-bar { padding: 8px 12px; gap: 8px; }
+      #player-bar { padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px)); }
+      .player-bar-inner { gap: 8px; }
       #player-title { display: none; }
     }
   </style>
 </head>
 <body>
+<div class="app-shell">
 
 <header>
   <button class="logo" id="library-home" aria-label="Open Library" title="Library">♫ Music</button>
@@ -529,6 +546,22 @@
   </div>
 </main>
 
+<!-- Player bar: final app-shell row, kept in normal document flow -->
+<div id="player-bar">
+  <div class="player-bar-inner">
+    <button class="player-skip" id="player-prev" title="Previous track">⏮</button>
+    <div id="player-title">
+      <strong id="player-track-name"></strong>
+      <span id="player-album-name"></span>
+      <span id="player-queue-position"></span>
+    </div>
+    <audio id="player" controls></audio>
+    <button class="player-skip" id="player-next" title="Next track">⏭</button>
+    <button id="player-close" title="Close player">✕</button>
+  </div>
+</div>
+</div>
+
 <div class="settings-overlay" id="settings-overlay" hidden></div>
 <aside class="downloads-drawer" id="downloads-drawer" aria-hidden="true">
   <div class="drawer-header"><h2>Download History</h2><button id="downloads-close" aria-label="Close download history">✕</button></div>
@@ -562,19 +595,6 @@
   </section>
 </aside>
 
-<!-- Player bar -->
-<div id="player-bar">
-  <button class="player-skip" id="player-prev" title="Previous track">⏮</button>
-  <div id="player-title">
-    <strong id="player-track-name"></strong>
-    <span id="player-album-name"></span>
-    <span id="player-queue-position"></span>
-  </div>
-  <audio id="player" controls></audio>
-  <button class="player-skip" id="player-next" title="Next track">⏭</button>
-  <button id="player-close" title="Close player">✕</button>
-</div>
-
 <div id="toast"></div>
 
 <div class="modal-backdrop" id="download-confirmation" hidden>
@@ -605,6 +625,30 @@ const state = {
   expandedJobLogs: new Set(),
   jobFilter: 'active',
 };
+
+// Some mobile engines resize only the visual viewport while browser chrome or
+// the software keyboard animates. Use that height only while it differs from
+// the layout viewport; CSS dynamic viewport units remain the default path.
+let viewportResizeFrame;
+function syncAppShellHeight() {
+  cancelAnimationFrame(viewportResizeFrame);
+  viewportResizeFrame = requestAnimationFrame(() => {
+    const viewport = window.visualViewport;
+    const root = document.documentElement;
+    if (!viewport || viewport.scale !== 1 || Math.abs(root.clientHeight - viewport.height) < 1) {
+      root.style.removeProperty('--app-height');
+      return;
+    }
+    root.style.setProperty('--app-height', `${Math.round(viewport.height)}px`);
+  });
+}
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', syncAppShellHeight, { passive: true });
+  window.visualViewport.addEventListener('scroll', syncAppShellHeight, { passive: true });
+  window.addEventListener('resize', syncAppShellHeight, { passive: true });
+  syncAppShellHeight();
+}
 
 // WebSocket
 let ws;
