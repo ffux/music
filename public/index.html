@@ -302,76 +302,59 @@
     .empty-state p { font-size: 13px; }
 
     /* Library */
-    .library-layout {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
+    .library-browser { flex: 1; overflow-y: auto; padding: 28px 32px 96px; }
+    .library-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; min-height: 42px; }
+    .library-heading { min-width: 0; }
+    .library-heading h2 { font-size: 21px; line-height: 1.2; }
+    .library-heading p { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .library-back {
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+      border-radius: 7px; padding: 7px 10px; cursor: pointer; font-size: 12px; flex-shrink: 0;
     }
-    .library-tree {
-      width: 280px;
-      flex-shrink: 0;
-      border-right: 1px solid var(--border);
-      overflow-y: auto;
-      padding: 16px 0;
+    .library-back:hover { border-color: var(--accent); color: var(--accent2); }
+    .library-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 16px;
     }
-    .tree-item {
-      padding: 5px 16px;
-      cursor: pointer;
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      user-select: none;
-      transition: background 0.1s;
+    .library-card {
+      min-width: 0; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden; cursor: pointer; transition: transform .15s, border-color .15s;
     }
-    .tree-item:hover { background: var(--surface2); }
-    .tree-item.selected { background: rgba(124,106,247,0.15); color: var(--accent2); }
-    .tree-icon { font-size: 14px; flex-shrink: 0; }
-    .tree-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .tree-download {
-      color: var(--muted);
-      font-size: 14px;
-      text-decoration: none;
-      padding: 3px 5px;
-      border-radius: 4px;
-      line-height: 1;
-      flex-shrink: 0;
-      opacity: 0.6;
-      transition: color 0.15s, background 0.15s, opacity 0.15s;
+    .library-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+    .library-art { aspect-ratio: 1; background: var(--surface2); position: relative; overflow: hidden; }
+    .library-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .library-art img.art-missing { display: none; }
+    .library-art::before {
+      content: '♫'; position: absolute; inset: 0; display: grid; place-items: center;
+      color: var(--muted); font-size: 42px;
     }
-    .tree-item:hover .tree-download, .tree-download:focus { opacity: 1; }
-    .tree-download:hover { color: var(--accent2); background: var(--surface2); }
-    .tree-children { padding-left: 16px; }
-    .tree-dir { font-weight: 500; color: var(--text); }
-    .tree-file { color: var(--muted); }
-    .tree-item.playing { color: var(--success); }
+    .library-card-body { padding: 11px 12px 12px; }
+    .library-card-title { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .library-card-meta { color: var(--muted); font-size: 11px; margin-top: 3px; }
+    .library-card-actions { display: flex; justify-content: flex-end; margin-top: 9px; }
+    .library-download {
+      color: var(--accent2); background: rgba(124,106,247,.12); text-decoration: none;
+      border-radius: 6px; padding: 5px 8px; font-size: 11px; font-weight: 600;
+    }
+    .library-download:hover { background: rgba(124,106,247,.22); }
     .library-empty {
       text-align: center;
       padding: 40px 16px;
       color: var(--muted);
       font-size: 12px;
     }
-
-    .track-panel {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .track-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px 24px;
-    }
+    .track-list { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
     .track-row {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 9px 12px;
-      border-radius: 7px;
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
       cursor: pointer;
       transition: background 0.1s;
     }
+    .track-row:last-child { border-bottom: none; }
     .track-row:hover { background: var(--surface2); }
     .track-row.playing { background: rgba(124,106,247,0.12); }
     .track-num { width: 24px; text-align: right; color: var(--muted); font-size: 12px; }
@@ -380,15 +363,6 @@
     .play-icon { font-size: 14px; color: var(--accent2); }
     .track-dl { color: var(--muted); font-size: 16px; text-decoration: none; padding: 4px 6px; border-radius: 4px; transition: color 0.15s, background 0.15s; line-height: 1; }
     .track-dl:hover { color: var(--accent2); background: var(--surface2); }
-    .panel-title {
-      padding: 16px 24px 8px;
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text);
-      border-bottom: 1px solid var(--border);
-    }
-    .library-back { display: none; background: none; border: none; color: var(--accent2); font-size: 13px; cursor: pointer; margin-bottom: 6px; }
-    .panel-subtitle { color: var(--muted); font-size: 12px; font-weight: 400; margin-top: 2px; }
 
     /* Settings */
     .settings-panel {
@@ -490,13 +464,11 @@
       }
       .mobile-nav .nav-button { border-radius: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 10px; padding: 4px; }
       .mobile-nav .nav-icon { font-size: 17px; }
-      .library-tree { width: 100%; border-right: none; }
-      .track-panel { width: 100%; }
-      .library-layout:not(.show-tracks) .track-panel { display: none; }
-      .library-layout.show-tracks .library-tree { display: none; }
-      .library-back { display: block; }
-      .track-list { padding: 12px 8px; }
-      .panel-title { padding: 14px 16px 10px; }
+      .library-browser { padding: 20px 16px 86px; }
+      .library-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .library-toolbar { margin-bottom: 16px; }
+      .track-row { padding: 10px 9px; gap: 8px; }
+      .track-num { width: 20px; }
       .settings-panel { padding: 24px 16px; }
       .file-input-row { flex-wrap: wrap; }
       #player-bar { padding: 8px 12px; gap: 8px; }
@@ -565,18 +537,15 @@
 
   <!-- Library tab -->
   <div class="tab" id="tab-library">
-    <div class="library-layout">
-      <div class="library-tree" id="library-tree">
-        <div class="library-empty">Loading library...</div>
-      </div>
-      <div class="track-panel">
-        <div class="panel-title" id="track-panel-title">
-          <button class="library-back" id="library-back">‹ Folders</button>
-          <span id="track-panel-name">Select an album</span>
-          <div class="panel-subtitle" id="track-panel-sub"></div>
+    <div class="library-browser">
+      <div class="library-toolbar">
+        <button class="library-back" id="library-back" hidden>‹ Back</button>
+        <div class="library-heading">
+          <h2 id="library-title">Artists</h2>
+          <p id="library-subtitle">Browse your downloaded music</p>
         </div>
-        <div class="track-list" id="track-list"></div>
       </div>
+      <div id="library-content"><div class="library-empty">Loading library...</div></div>
     </div>
   </div>
 
@@ -623,8 +592,7 @@ const state = {
   jobs: {},
   currentTrack: null,
   libraryData: null,
-  selectedNode: null,
-  expandedDirs: new Set(),
+  libraryView: { level: 'artists', artistPath: null, albumPath: null },
   expandedJobLogs: new Set(),
   jobFilter: 'active',
 };
@@ -790,18 +758,17 @@ function escHtml(s) {
 // Library
 async function loadLibrary({ silent = false } = {}) {
   if (!silent) {
-    document.getElementById('library-tree').innerHTML = '<div class="library-empty">Loading...</div>';
+    document.getElementById('library-content').innerHTML = '<div class="library-empty">Loading...</div>';
   }
   try {
     const res = await fetch('/api/library');
     if (!res.ok) throw new Error('Library request failed');
     state.libraryData = await res.json();
-    renderTree();
-    if (state.selectedNode) showTracksForDir(state.selectedNode);
+    renderLibrary();
     return true;
   } catch (e) {
     if (!silent) {
-      document.getElementById('library-tree').innerHTML = '<div class="library-empty">Failed to load library</div>';
+      document.getElementById('library-content').innerHTML = '<div class="library-empty">Failed to load library</div>';
     }
     return false;
   }
@@ -818,115 +785,135 @@ function scheduleLibraryRefresh() {
   }, 350);
 }
 
-function renderTree() {
-  const tree = document.getElementById('library-tree');
-  if (!state.libraryData || state.libraryData.length === 0) {
-    tree.innerHTML = '<div class="library-empty">No music downloaded yet</div>';
-    return;
-  }
-  tree.innerHTML = buildTreeHtml(state.libraryData, 0);
-  tree.querySelectorAll('.tree-item').forEach(el => {
-    el.addEventListener('click', () => onTreeClick(el));
-  });
-  tree.querySelectorAll('.tree-download').forEach(link => {
-    link.addEventListener('click', event => event.stopPropagation());
-  });
-}
-
-function buildTreeHtml(nodes, depth) {
-  return nodes.map(node => {
-    if (node.type === 'dir') {
-      const expanded = state.expandedDirs.has(node.path);
-      const selected = state.selectedNode === node.path;
-      const icon = expanded ? '▾' : '▸';
-      const children = expanded ? `<div class="tree-children">${buildTreeHtml(node.children, depth + 1)}</div>` : '';
-      return `
-        <div class="tree-item tree-dir${selected ? ' selected' : ''}" data-path="${escHtml(node.path)}" data-type="dir">
-          <span class="tree-icon">${icon}</span>
-          <span class="tree-label">${escHtml(node.name)}</span>
-          <a class="tree-download" href="/api/library/download?path=${encodeURIComponent(node.path)}" download title="Download ${escHtml(node.name)} as ZIP" aria-label="Download ${escHtml(node.name)} as ZIP">⬇</a>
-        </div>
-        ${children}
-      `;
-    }
-    const isPlaying = state.currentTrack && state.currentTrack.path === node.path;
-    return `
-      <div class="tree-item tree-file${isPlaying ? ' playing' : ''}" data-path="${escHtml(node.path)}" data-type="file" data-name="${escHtml(node.name)}">
-        <span class="tree-icon">${isPlaying ? '♪' : '♩'}</span>
-        <span class="tree-label">${escHtml(node.name)}</span>
-        <a class="tree-download" href="/api/library/download?path=${encodeURIComponent(node.path)}" download title="Download ${escHtml(node.name)}" aria-label="Download ${escHtml(node.name)}">⬇</a>
-      </div>
-    `;
-  }).join('');
-}
-
-function onTreeClick(el) {
-  const path = el.dataset.path;
-  const type = el.dataset.type;
-  if (type === 'dir') {
-    state.selectedNode = path;
-    if (state.expandedDirs.has(path)) {
-      state.expandedDirs.delete(path);
-    } else {
-      state.expandedDirs.add(path);
-    }
-    renderTree();
-    showTracksForDir(path);
-  } else {
-    playTrack({ path, name: el.dataset.name });
-  }
-}
-
-function showTracksForDir(dirPath) {
-  function findNode(nodes, p) {
-    for (const n of nodes) {
-      if (n.path === p) return n;
-      if (n.type === 'dir' && n.children) {
-        const found = findNode(n.children, p);
-        if (found) return found;
-      }
+function findLibraryNode(path) {
+  function find(nodes) {
+    for (const node of nodes || []) {
+      if (node.path === path) return node;
+      const match = node.type === 'dir' ? find(node.children) : null;
+      if (match) return match;
     }
     return null;
   }
-  const node = findNode(state.libraryData, dirPath);
-  if (!node) return;
+  return find(state.libraryData);
+}
 
-  const files = node.children ? node.children.filter(c => c.type === 'file') : [];
-  const title = node.name;
-  if (files.length > 0) {
-    document.querySelector('.library-layout').classList.add('show-tracks');
-  }
-  document.getElementById('track-panel-name').textContent = title;
-  document.getElementById('track-panel-sub').textContent = `${files.length} track${files.length !== 1 ? 's' : ''}`;
+function countTracks(node) {
+  if (!node) return 0;
+  if (node.type === 'file') return 1;
+  return (node.children || []).reduce((total, child) => total + countTracks(child), 0);
+}
 
-  const list = document.getElementById('track-list');
-  if (files.length === 0) {
-    list.innerHTML = '<div style="padding:24px;color:var(--muted);font-size:13px">No tracks</div>';
+function collectTracks(node) {
+  if (!node) return [];
+  if (node.type === 'file') return [node];
+  return (node.children || []).flatMap(collectTracks);
+}
+
+function libraryCardHtml(node, kind) {
+  const count = kind === 'artist'
+    ? (node.children || []).filter(child => child.type === 'dir').length
+    : countTracks(node);
+  const unit = kind === 'artist' ? `album${count !== 1 ? 's' : ''}` : `track${count !== 1 ? 's' : ''}`;
+  const artwork = `/api/library/artwork?path=${encodeURIComponent(node.path)}`;
+  return `
+    <article class="library-card" data-path="${escHtml(node.path)}" data-kind="${kind}" tabindex="0">
+      <div class="library-art"><img src="${artwork}" alt="" loading="lazy" onerror="this.classList.add('art-missing')"></div>
+      <div class="library-card-body">
+        <div class="library-card-title" title="${escHtml(node.name)}">${escHtml(node.name)}</div>
+        <div class="library-card-meta">${count} ${unit}</div>
+        <div class="library-card-actions">
+          <a class="library-download" href="/api/library/download?path=${encodeURIComponent(node.path)}" download>Download ZIP</a>
+        </div>
+      </div>
+    </article>`;
+}
+
+function renderLibrary() {
+  const content = document.getElementById('library-content');
+  const title = document.getElementById('library-title');
+  const subtitle = document.getElementById('library-subtitle');
+  const back = document.getElementById('library-back');
+  const view = state.libraryView;
+
+  if (!state.libraryData?.length) {
+    back.hidden = true;
+    title.textContent = 'Artists';
+    subtitle.textContent = 'Browse your downloaded music';
+    content.innerHTML = '<div class="library-empty">No music downloaded yet</div>';
     return;
   }
 
-  list.innerHTML = files.map((f, i) => {
-    const isPlaying = state.currentTrack && state.currentTrack.path === f.path;
-    const size = formatSize(f.size);
-    return `
+  if (view.level === 'artists') {
+    const artists = state.libraryData.filter(node => node.type === 'dir');
+    back.hidden = true;
+    title.textContent = 'Artists';
+    subtitle.textContent = `${artists.length} artist${artists.length !== 1 ? 's' : ''}`;
+    content.innerHTML = `<div class="library-grid">${artists.map(node => libraryCardHtml(node, 'artist')).join('')}</div>`;
+  } else if (view.level === 'albums') {
+    const artist = findLibraryNode(view.artistPath);
+    if (!artist) return showArtists();
+    const albums = (artist.children || []).filter(node => node.type === 'dir');
+    back.hidden = false;
+    title.textContent = artist.name;
+    subtitle.textContent = `${albums.length} album${albums.length !== 1 ? 's' : ''}`;
+    content.innerHTML = albums.length
+      ? `<div class="library-grid">${albums.map(node => libraryCardHtml(node, 'album')).join('')}</div>`
+      : '<div class="library-empty">No albums found</div>';
+  } else {
+    const album = findLibraryNode(view.albumPath);
+    if (!album) return showAlbums(view.artistPath);
+    const files = collectTracks(album);
+    back.hidden = false;
+    title.textContent = album.name;
+    subtitle.textContent = `${files.length} track${files.length !== 1 ? 's' : ''}`;
+    content.innerHTML = files.length ? `<div class="track-list">${files.map((f, i) => {
+      const isPlaying = state.currentTrack && state.currentTrack.path === f.path;
+      const size = formatSize(f.size);
+      return `
       <div class="track-row${isPlaying ? ' playing' : ''}" data-path="${escHtml(f.path)}" data-name="${escHtml(f.name)}" style="cursor:pointer">
         <span class="track-num">${isPlaying ? '<span class="play-icon">▶</span>' : i + 1}</span>
         <span class="track-name">${escHtml(stripExt(f.name))}</span>
         <span class="track-size">${size}</span>
-        <a class="track-dl" href="/files/${encodeURIPath(f.path)}" download="${escHtml(f.name)}" title="Download" onclick="event.stopPropagation()">⬇</a>
+        <a class="track-dl" href="/api/library/download?path=${encodeURIComponent(f.path)}" download title="Download ${escHtml(f.name)}" aria-label="Download ${escHtml(f.name)}" onclick="event.stopPropagation()">⬇</a>
       </div>
     `;
-  }).join('');
+    }).join('')}</div>` : '<div class="library-empty">No tracks found</div>';
+  }
 
-  list.querySelectorAll('.track-row').forEach(row => {
+  content.querySelectorAll('.library-card').forEach(card => {
+    const open = () => card.dataset.kind === 'artist' ? showAlbums(card.dataset.path) : showAlbum(card.dataset.path);
+    card.addEventListener('click', open);
+    card.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); }
+    });
+  });
+  content.querySelectorAll('.library-download').forEach(link => link.addEventListener('click', event => event.stopPropagation()));
+  content.querySelectorAll('.track-row').forEach(row => {
     row.addEventListener('click', () => {
       playTrack({ path: row.dataset.path, name: row.dataset.name });
     });
   });
 }
 
+function showArtists() {
+  state.libraryView = { level: 'artists', artistPath: null, albumPath: null };
+  renderLibrary();
+}
+
+function showAlbums(artistPath) {
+  state.libraryView = { level: 'albums', artistPath, albumPath: null };
+  renderLibrary();
+}
+
+function showAlbum(albumPath) {
+  const artistPath = albumPath.split('/')[0];
+  state.libraryView = { level: 'tracks', artistPath, albumPath };
+  renderLibrary();
+}
+
 document.getElementById('library-back').addEventListener('click', () => {
-  document.querySelector('.library-layout').classList.remove('show-tracks');
+  if (state.libraryView.level === 'tracks') showAlbums(state.libraryView.artistPath);
+  else showArtists();
 });
 
 function playTrack(track) {
@@ -939,14 +926,14 @@ function playTrack(track) {
   player.play();
   bar.classList.add('visible');
   // Re-render to show playing indicator
-  if (state.libraryData) renderTree();
+  if (state.libraryData) renderLibrary();
 }
 
 document.getElementById('player-close').addEventListener('click', () => {
   document.getElementById('player').pause();
   document.getElementById('player-bar').classList.remove('visible');
   state.currentTrack = null;
-  if (state.libraryData) renderTree();
+  if (state.libraryData) renderLibrary();
 });
 
 function encodeURIPath(p) {

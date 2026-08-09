@@ -6,6 +6,8 @@ const archiver = require('archiver');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+const { execFile } = require('child_process');
 
 const DATA_DIR = process.env.DATA_DIR || '/data';
 const MUSIC_DIR = process.env.MUSIC_DIR || '/music';
@@ -116,6 +118,79 @@ app.get('/api/library', (req, res) => {
     return result.sort((a, b) => a.name.localeCompare(b.name));
   }
   res.json(scanDir(MUSIC_DIR));
+});
+
+// Extract and cache the embedded artwork from the first M4A in a library item.
+app.get('/api/library/artwork', (req, res) => {
+  const relativePath = req.query.path;
+  if (typeof relativePath !== 'string' || !relativePath) {
+    return res.status(400).json({ error: 'Library path required' });
+  }
+
+  const libraryRoot = path.resolve(MUSIC_DIR);
+  const targetPath = path.resolve(libraryRoot, relativePath);
+  if (!targetPath.startsWith(`${libraryRoot}${path.sep}`)) {
+    return res.status(400).json({ error: 'Invalid library path' });
+  }
+
+  let realRoot;
+  let realTarget;
+  try {
+    realRoot = fs.realpathSync(libraryRoot);
+    realTarget = fs.realpathSync(targetPath);
+  } catch {
+    return res.status(404).json({ error: 'Library item not found' });
+  }
+  if (realTarget !== realRoot && !realTarget.startsWith(`${realRoot}${path.sep}`)) {
+    return res.status(400).json({ error: 'Invalid library path' });
+  }
+
+  function findM4a(itemPath) {
+    const stat = fs.lstatSync(itemPath);
+    if (stat.isSymbolicLink()) return null;
+    if (stat.isFile()) return /\.m4a$/i.test(itemPath) ? itemPath : null;
+    if (!stat.isDirectory()) return null;
+    const entries = fs.readdirSync(itemPath, { withFileTypes: true })
+      .filter(entry => !entry.name.startsWith('.'))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    for (const entry of entries) {
+      const match = findM4a(path.join(itemPath, entry.name));
+      if (match) return match;
+    }
+    return null;
+  }
+
+  let mediaPath;
+  try {
+    mediaPath = findM4a(realTarget);
+  } catch {
+    return res.status(404).json({ error: 'Artwork not found' });
+  }
+  if (!mediaPath) return res.status(404).json({ error: 'Artwork not found' });
+
+  const stat = fs.statSync(mediaPath);
+  const cacheDir = path.join(DATA_DIR, 'artwork-cache');
+  const cacheKey = crypto.createHash('sha256')
+    .update(`${mediaPath}:${stat.size}:${stat.mtimeMs}`)
+    .digest('hex');
+  const cachePath = path.join(cacheDir, `${cacheKey}.jpg`);
+  if (fs.existsSync(cachePath)) {
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.type('image/jpeg').sendFile(cachePath);
+  }
+
+  fs.mkdirSync(cacheDir, { recursive: true });
+  execFile('ffmpeg', [
+    '-v', 'error', '-i', mediaPath, '-map', '0:v:0', '-frames:v', '1',
+    '-f', 'image2pipe', '-vcodec', 'mjpeg', 'pipe:1'
+  ], { encoding: null, maxBuffer: 12 * 1024 * 1024 }, (error, stdout) => {
+    if (error || !stdout?.length) {
+      return res.status(404).json({ error: 'Artwork not found' });
+    }
+    try { fs.writeFileSync(cachePath, stdout); } catch {}
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.type('image/jpeg').send(stdout);
+  });
 });
 
 // Download a library track directly or stream any library folder as a ZIP.
