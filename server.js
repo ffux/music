@@ -112,7 +112,7 @@ app.get('/api/library', (req, res) => {
           }
         } else if (/\.(m4a|mp3|flac|aac|opus)$/i.test(entry.name)) {
           const stat = fs.statSync(fullPath);
-          result.push({ type: 'file', name: entry.name, path: relPath, size: stat.size });
+          result.push({ type: 'file', name: entry.name, path: relPath, size: stat.size, modifiedAt: stat.mtimeMs });
         }
       }
     } catch (e) {}

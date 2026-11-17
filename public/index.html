@@ -37,7 +37,33 @@
       height: var(--app-height, 100dvh);
       display: grid;
       grid-template-rows: auto minmax(0, 1fr) auto;
+      grid-template-columns: 216px minmax(0, 1fr);
       overflow: hidden;
+    }
+
+    header { grid-column: 1 / -1; }
+    main { grid-column: 2; grid-row: 2; min-width: 0; }
+    #player-bar { grid-column: 1 / -1; grid-row: 3; }
+    .library-sidebar { grid-column: 1; grid-row: 2; min-height: 0; overflow-y: auto; padding: 24px 12px; background: var(--surface); border-right: 1px solid var(--border); }
+    .sidebar-label { color: var(--muted); font-size: 11px; font-weight: 600; padding: 0 12px 8px; letter-spacing: .03em; }
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
+    .library-nav-item { display: flex; align-items: center; gap: 10px; width: 100%; border: none; border-radius: 7px; padding: 10px 12px; background: none; color: var(--text); text-align: left; font: inherit; cursor: pointer; }
+    .library-nav-item svg { width: 19px; height: 19px; flex-shrink: 0; fill: none; stroke: var(--accent2); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .library-nav-item:hover { background: var(--surface2); }
+    .library-nav-item[aria-current="page"] { background: rgba(124,106,247,.2); color: var(--accent2); font-weight: 600; }
+    .library-nav-item:focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; }
+    .nav-mobile-label { display: none; }
+    .track-name small { display: block; color: var(--muted); font-size: 11px; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .library-card-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    @media (max-width: 700px) {
+      .app-shell { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto; }
+      .library-sidebar { grid-column: 1; grid-row: 2; padding: 7px 12px; border-right: none; border-bottom: 1px solid var(--border); overflow: visible; }
+      main { grid-column: 1; grid-row: 3; }
+      #player-bar { grid-row: 4; }
+      .sidebar-label, .nav-desktop-label { display: none; }
+      .nav-mobile-label { display: inline; }
+      .sidebar-nav { flex-direction: row; gap: 4px; }
+      .library-nav-item { flex: 1; min-width: 0; flex-direction: column; gap: 3px; justify-content: center; text-align: center; padding: 6px 3px; font-size: 11px; }
     }
 
     /* Header */
@@ -525,6 +551,11 @@
   </div>
 </header>
 
+<aside class="library-sidebar"><p class="sidebar-label">Library</p><nav class="sidebar-nav" aria-label="Library"><button class="library-nav-item" data-library-section="recent" aria-label="Recently Added"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="nav-desktop-label">Recently Added</span><span class="nav-mobile-label">Recent</span></button>
+<button class="library-nav-item" data-library-section="artists" aria-label="Artists"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg><span>Artists</span></button>
+<button class="library-nav-item" data-library-section="all-albums" aria-label="Albums"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg><span>Albums</span></button>
+<button class="library-nav-item" data-library-section="songs" aria-label="Songs"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13M9 8l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/></svg><span>Songs</span></button>
+</nav></aside>
 <main>
   <div class="tab active" id="tab-library">
     <div class="library-browser">
@@ -542,7 +573,7 @@
       <div class="library-toolbar">
         <button class="library-back" id="library-back" hidden>‹ Back</button>
         <div class="library-heading">
-          <h2 id="library-title">Artists</h2>
+          <h2 id="library-title">Recently Added</h2>
           <p id="library-subtitle">Browse your downloaded music</p>
         </div>
       </div>
@@ -618,7 +649,9 @@ const state = {
   jobs: {},
   currentTrack: null,
   libraryData: null,
-  libraryView: { level: 'artists', artistPath: null, albumPath: null },
+  librarySection: 'recent',
+  libraryTrail: [],
+  libraryView: { level: 'recent', artistPath: null, albumPath: null },
   albumMetadata: {},
   playQueue: [],
   playIndex: -1,
@@ -806,7 +839,7 @@ async function loadLibrary({ silent = false } = {}) {
     const res = await fetch('/api/library');
     if (!res.ok) throw new Error('Library request failed');
     state.libraryData = await res.json();
-    if (!state.searchActive) renderLibrary();
+    if (!state.searchActive) { renderLibrary(); if (state.libraryView.level === 'songs') hydrateSongView(); }
     else if (state.searchScope === 'local') doLocalSearch();
     return true;
   } catch (e) {
@@ -854,7 +887,10 @@ function collectTracks(node) {
 
 async function getAlbumMetadata(album) {
   if (!album) return { releaseDate: null, tracks: {} };
-  if (state.albumMetadata[album.path]) return state.albumMetadata[album.path];
+  if (state.albumMetadata[album.path]) {
+    for (const track of collectTracks(album)) track.fidelity = state.albumMetadata[album.path].tracks?.[track.path.slice(album.path.length + 1)];
+    return state.albumMetadata[album.path];
+  }
   try {
     const res = await fetch(`/api/library/metadata?path=${encodeURIComponent(album.path)}`);
     if (!res.ok) throw new Error('metadata unavailable');
@@ -910,7 +946,7 @@ function libraryCardHtml(node, kind) {
       <div class="library-art"><img src="${artwork}" alt="" loading="lazy" onerror="this.classList.add('art-missing')"></div>
       <div class="library-card-body">
         <div class="library-card-title" title="${escHtml(node.name)}">${escHtml(node.name)}</div>
-        <div class="library-card-meta">${count} ${unit}</div>
+        <div class="library-card-meta">${kind === 'album' ? escHtml(node.path.split('/')[0]) + ' · ' : ''}${count} ${unit}</div>
         <div class="library-card-actions">
           <button class="library-play" data-action="play">Play</button>
           <button class="library-download" data-action="download" title="Download" aria-label="Download ${escHtml(node.name)}">${downloadIcon()}</button>
@@ -919,29 +955,80 @@ function libraryCardHtml(node, kind) {
     </article>`;
 }
 
+function allLibraryAlbums() {
+  return (state.libraryData || []).filter(node => node.type === 'dir').flatMap(artist =>
+    (artist.children || []).filter(node => node.type === 'dir'));
+}
+
+function latestTrackTime(node) {
+  return Math.max(0, ...collectTracks(node).map(track => Number(track.modifiedAt) || 0));
+}
+
+function rootLibraryItems(level) {
+  if (level === 'artists') return (state.libraryData || []).filter(node => node.type === 'dir');
+  if (level === 'songs') return (state.libraryData || []).flatMap(collectTracks).sort((a,b) => naturalCompare(stripExt(a.name), stripExt(b.name)) || naturalCompare(a.path,b.path));
+  return allLibraryAlbums().sort((a,b) => (level === 'recent' ? latestTrackTime(b) - latestTrackTime(a) : 0) || naturalCompare(a.name,b.name) || naturalCompare(a.path,b.path));
+}
+
+function syncLibraryNav() {
+  document.querySelectorAll('[data-library-section]').forEach(button => {
+    if (button.dataset.librarySection === state.librarySection) button.setAttribute('aria-current', 'page');
+    else button.removeAttribute('aria-current');
+  });
+}
+
+let songMetadataLoading = false;
+async function hydrateSongView() {
+  if (songMetadataLoading) return;
+  songMetadataLoading = true;
+  try {
+    const albums = allLibraryAlbums();
+    let next = 0;
+    await Promise.all(Array.from({length: Math.min(4, albums.length)}, async () => {
+      while (next < albums.length) await getAlbumMetadata(albums[next++]);
+    }));
+    if (!state.searchActive && state.libraryView.level === 'songs') renderLibrary();
+  } finally { songMetadataLoading = false; }
+}
+
+function trackListHtml(files, withContext = false) {
+  return `<div class="track-list">${files.map((track,index) => {
+    const playing = state.currentTrack?.path === track.path;
+    return `<div class="track-row${playing ? ' playing' : ''}" data-path="${escHtml(track.path)}" tabindex="0" role="button" aria-label="Play ${escHtml(stripExt(track.name))}">
+      <span class="track-num">${playing ? '<span class="play-icon">▶</span>' : index + 1}</span>
+      <span class="track-name">${escHtml(stripExt(track.name))}${withContext ? `<small>${escHtml(track.path.split('/').slice(0,-1).join(' · '))}</small>` : ''}</span>
+      <span class="track-fidelity">${escHtml(formatFidelity(track))}</span>
+      <button class="track-dl client-download" data-path="${escHtml(track.path)}" data-name="${escHtml(track.name)}" data-kind="song" title="Download ${escHtml(track.name)}" aria-label="Download ${escHtml(track.name)}">${downloadIcon()}</button>
+    </div>`;
+  }).join('')}</div>`;
+}
+
 function renderLibrary() {
   const content = document.getElementById('library-content');
   const title = document.getElementById('library-title');
   const subtitle = document.getElementById('library-subtitle');
   const back = document.getElementById('library-back');
   const view = state.libraryView;
+  syncLibraryNav();
 
   if (!state.libraryData?.length) {
     back.hidden = true;
     back.textContent = '‹ Back';
-    title.textContent = 'Artists';
+    title.textContent = ({recent:'Recently Added',artists:'Artists','all-albums':'Albums',songs:'Songs'})[state.librarySection];
     subtitle.textContent = 'Browse your downloaded music';
     content.innerHTML = '<div class="library-empty">No music downloaded yet</div>';
     return;
   }
 
-  if (view.level === 'artists') {
-    const artists = state.libraryData.filter(node => node.type === 'dir');
+  if (['recent','artists','all-albums','songs'].includes(view.level)) {
+    const items = rootLibraryItems(view.level);
     back.hidden = true;
-    back.textContent = '‹ Back';
-    title.textContent = 'Artists';
-    subtitle.textContent = `${artists.length} artist${artists.length !== 1 ? 's' : ''}`;
-    content.innerHTML = `<div class="library-grid">${artists.map(node => libraryCardHtml(node, 'artist')).join('')}</div>`;
+    title.textContent = ({recent:'Recently Added',artists:'Artists','all-albums':'Albums',songs:'Songs'})[view.level];
+    const unit = view.level === 'artists' ? 'artist' : view.level === 'songs' ? 'song' : 'album';
+    subtitle.textContent = `${items.length} ${unit}${items.length !== 1 ? 's' : ''}${view.level === 'recent' ? ' · Sorted by latest file date' : ''}`;
+    content.innerHTML = !items.length ? '<div class="library-empty">No music found</div>' : view.level === 'songs'
+      ? trackListHtml(items, true)
+      : `<div class="library-grid">${items.map(node => libraryCardHtml(node, view.level === 'artists' ? 'artist' : 'album')).join('')}</div>`;
   } else if (view.level === 'albums') {
     const artist = findLibraryNode(view.artistPath);
     if (!artist) return showArtists();
@@ -961,24 +1048,14 @@ function renderLibrary() {
     back.textContent = '‹ Back';
     title.textContent = album.name;
     subtitle.textContent = `${files.length} track${files.length !== 1 ? 's' : ''}`;
-    content.innerHTML = files.length ? `<div class="track-list">${files.map((f, i) => {
-      const isPlaying = state.currentTrack && state.currentTrack.path === f.path;
-      const fidelity = formatFidelity(f);
-      return `
-      <div class="track-row${isPlaying ? ' playing' : ''}" data-path="${escHtml(f.path)}" data-name="${escHtml(f.name)}" style="cursor:pointer">
-        <span class="track-num">${isPlaying ? '<span class="play-icon">▶</span>' : i + 1}</span>
-        <span class="track-name">${escHtml(stripExt(f.name))}</span>
-        <span class="track-fidelity">${escHtml(fidelity)}</span>
-        <button class="track-dl client-download" data-path="${escHtml(f.path)}" data-name="${escHtml(f.name)}" data-kind="song" title="Download ${escHtml(f.name)}" aria-label="Download ${escHtml(f.name)}">${downloadIcon()}</button>
-      </div>
-    `;
-    }).join('')}</div>` : '<div class="library-empty">No tracks found</div>';
+    content.innerHTML = files.length ? trackListHtml(files) : '<div class="library-empty">No tracks found</div>';
   }
 
   content.querySelectorAll('.library-card').forEach(card => {
     const open = () => card.dataset.kind === 'artist' ? showAlbums(card.dataset.path) : showAlbum(card.dataset.path);
     card.addEventListener('click', open);
     card.addEventListener('keydown', event => {
+      if (event.target !== card) return;
       if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); }
     });
   });
@@ -997,6 +1074,9 @@ function renderLibrary() {
     requestClientDownload(button.dataset.path, button.dataset.kind, button.dataset.name);
   }));
   content.querySelectorAll('.track-row').forEach(row => {
+    row.addEventListener('keydown', event => {
+      if (event.target === row && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); row.click(); }
+    });
     row.addEventListener('click', () => {
       const track = findLibraryNode(row.dataset.path);
       state.playQueue = [track];
@@ -1005,14 +1085,27 @@ function renderLibrary() {
   });
 }
 
-function showArtists() {
+function showRoot(section) {
+  if (!['recent','artists','all-albums','songs'].includes(section)) section = 'recent';
   state.searchActive = false;
   state.searchScope = 'local';
-  state.libraryView = { level: 'artists', artistPath: null, albumPath: null };
+  state.searchRequestId += 1;
+  state.librarySection = section;
+  state.libraryTrail = [];
+  state.libraryView = { level: section, artistPath: null, albumPath: null };
+  document.getElementById('search-input').value = '';
+  closeDrawers();
   renderLibrary();
+  document.querySelector('main').scrollTop = 0;
+  if (section === 'songs') hydrateSongView();
 }
 
+function showArtists() { showRoot('artists'); }
+
+document.querySelectorAll('[data-library-section]').forEach(button => button.addEventListener('click', () => showRoot(button.dataset.librarySection)));
+
 function showAlbums(artistPath) {
+  state.libraryTrail.push({...state.libraryView});
   state.searchActive = false;
   state.libraryView = { level: 'albums', artistPath, albumPath: null };
   renderLibrary();
@@ -1023,6 +1116,7 @@ function showAlbums(artistPath) {
 }
 
 function showAlbum(albumPath) {
+  state.libraryTrail.push({...state.libraryView});
   state.searchActive = false;
   const artistPath = albumPath.split('/')[0];
   state.libraryView = { level: 'tracks', artistPath, albumPath };
@@ -1035,14 +1129,14 @@ function showAlbum(albumPath) {
 
 document.getElementById('library-back').addEventListener('click', () => {
   if (state.searchActive) returnToLibrary();
-  else if (state.libraryView.level === 'tracks') showAlbums(state.libraryView.artistPath);
-  else showArtists();
+  else if (state.libraryTrail.length) { state.libraryView = state.libraryTrail.pop(); renderLibrary(); }
+  else showRoot(state.librarySection);
 });
 
 document.getElementById('library-home').addEventListener('click', () => {
   document.getElementById('search-input').value = '';
-  showArtists();
-  document.querySelector('.library-browser').scrollTop = 0;
+  showRoot('recent');
+  document.querySelector('main').scrollTop = 0;
 });
 
 function playTrack(track, index = null) {
@@ -1221,7 +1315,7 @@ let searchType = 'artist';
 function beginSearch(scope) {
   if (!state.searchActive) {
     state.libraryReturnView = { ...state.libraryView };
-    state.libraryReturnScroll = document.querySelector('.library-browser').scrollTop;
+    state.libraryReturnScroll = document.querySelector('main').scrollTop;
   }
   state.searchActive = true;
   state.searchScope = scope;
@@ -1237,7 +1331,7 @@ function returnToLibrary() {
   if (state.libraryReturnView) state.libraryView = { ...state.libraryReturnView };
   const scrollTop = state.libraryReturnScroll;
   renderLibrary();
-  requestAnimationFrame(() => { document.querySelector('.library-browser').scrollTop = scrollTop; });
+  requestAnimationFrame(() => { document.querySelector('main').scrollTop = scrollTop; });
 }
 
 document.querySelectorAll('.type-btn').forEach(btn => {
@@ -1250,7 +1344,7 @@ document.querySelectorAll('.type-btn').forEach(btn => {
       if (state.searchScope === 'apple') doAppleSearch();
       else doLocalSearch();
     }
-    else showArtists();
+    else showRoot(state.librarySection);
   });
 });
 
@@ -1272,7 +1366,7 @@ function localMatches(q) {
 
 async function doLocalSearch() {
   const q = document.getElementById('search-input').value.trim();
-  if (!q) return showArtists();
+  if (!q) return showRoot(state.librarySection);
   beginSearch('local');
   state.searchRequestId += 1;
   const items = localMatches(q);
