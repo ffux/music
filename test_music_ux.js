@@ -4,13 +4,13 @@ new vm.Script(script);
 const elements=new Map(),listeners=new Map();
 function element(id){if(!elements.has(id))elements.set(id,{id,value:'',hidden:false,textContent:'',innerHTML:'',style:{},dataset:{},src:'',currentTime:0,offsetHeight:200,classList:{add(){},remove(){},toggle(){}},setAttribute(k,v){this[k]=v},getAttribute(k){return this[k]},removeAttribute(k){delete this[k]},addEventListener(event,fn){listeners.set(id+':'+event,fn)},querySelectorAll(){return[]},querySelector(){return null},insertAdjacentHTML(where,text){this.innerHTML+=text},play(){return Promise.resolve()},pause(){},load(){},focus(){},contains(){return false}});return elements.get(id)}
 const doc={getElementById:element,querySelector:element,querySelectorAll(){return[]},addEventListener(){},documentElement:{style:{setProperty(){}}}};
-let fetches=[];
-const context=vm.createContext({console,document:doc,window:{addEventListener(){},innerHeight:900,innerWidth:1200,visualViewport:null},localStorage:{getItem(){return null}},requestAnimationFrame(){return 1},cancelAnimationFrame(){},setTimeout(){return 1},clearTimeout(){},URL,fetch:async(url)=>{fetches.push(url);throw Error('Unexpected network call '+url)}});
+let fetches=[]; const timers=new Map(); let timerId=0;
+const context=vm.createContext({console,document:doc,window:{addEventListener(){},innerHeight:900,innerWidth:1200,visualViewport:null},localStorage:{getItem(){return null}},requestAnimationFrame(){return 1},cancelAnimationFrame(){},setTimeout(fn){const id=++timerId;timers.set(id,fn);return id},clearTimeout(id){timers.delete(id)},URL,fetch:async(url)=>{fetches.push(url);throw Error('Unexpected network call '+url)}});
 vm.runInContext(script.slice(0,script.indexOf('// Init\n')),context);
 const evaluate=source=>vm.runInContext(source,context);
 const data=[{type:'dir',name:'Remi Wolf',path:'Remi Wolf',children:[{type:'dir',name:"You're A Dog! - EP",path:"Remi Wolf/You're A Dog! - EP",children:[{type:'file',name:'01 Sauce.m4a',path:"Remi Wolf/You're A Dog! - EP/01 Sauce.m4a",fidelity:{songId:1,albumId:10,artistId:100,title:'Sauce',artist:'Remi Wolf',codec:'ALAC',sampleRate:44100,bitDepth:24,duration:230}},{type:'file',name:'03 Doctor.m4a',path:"Remi Wolf/You're A Dog! - EP/03 Doctor.m4a",fidelity:{songId:2,albumId:10,artistId:100,title:'Doctor',artist:'Remi Wolf',codec:'ALAC',sampleRate:44100,bitDepth:24,duration:170}},{type:'file',name:'04 Guy.m4a',path:"Remi Wolf/You're A Dog! - EP/04 Guy.m4a",fidelity:{songId:3,albumId:10,artistId:100,title:'Guy',artist:'Remi Wolf',codec:'AAC',sampleRate:44100,duration:163}}]}]}];
 context.fixture=data;evaluate('state.libraryData=fixture;state.libraryIndexReady=true;state.albumMetadata[fixture[0].children[0].path]={tracks:{},album:{}}');
-const tracks=data[0].children[0].children;context.tracks=tracks;
+const tracks=data[0].children[0].children;context.tracks=tracks; const originalFidelity=tracks.map(track=>({...track.fidelity}));
 assert.equal(evaluate('libraryPresence({resultType:"song",trackId:1}).complete'),true);
 assert.equal(evaluate('libraryPresence({resultType:"album",collectionId:10,trackCount:6}).complete'),false);
 assert.match(evaluate('libraryPresence({resultType:"album",collectionId:10,trackCount:6}).label'),/3 of 6/);
@@ -27,6 +27,33 @@ assert.equal(tracks.length,3);
 (async()=>{
   element('search-input').value='Remi Wolf';await evaluate('doLocalSearch()');assert.deepEqual(fetches,[]);assert.match(element('library-content').innerHTML,/Artists/);assert.match(element('library-content').innerHTML,/Search Apple Music/);
   element('search-input').value='No Such Song';await evaluate('doLocalSearch()');assert.deepEqual(fetches,[]);assert.match(element('library-content').innerHTML,/Nothing found in your library/);
+  // Typing coalesces locally; clearing and navigation invalidate pending work.
+  timers.clear(); element('search-panel').hidden=false;
+  for(const query of ['R','Re','Remi']) {element('search-input').value=query; listeners.get('search-input:input')({});}
+  assert.equal(timers.size,1); [...timers.values()][0](); timers.clear();
+  assert.match(element('library-subtitle').textContent,/Remi/); assert.deepEqual(fetches,[]);
+  element('search-input').value='No Such Song'; listeners.get('search-input:input')({});
+  const staleTyping=[...timers.values()][0];
+  element('search-input').value=''; listeners.get('search-input:input')({});
+  assert.equal(timers.size,0); staleTyping(); assert.match(element('library-content').innerHTML,/Find artists/);
+  element('search-input').value='Remi'; listeners.get('search-input:input')({});
+  const beforeNavigation=element('library-content').innerHTML; evaluate('state.searchRequestId++;');
+  [...timers.values()][0](); timers.clear(); assert.equal(element('library-content').innerHTML,beforeNavigation);
+  // An older asynchronous Apple response cannot replace a newly typed local query.
+  let finishApple; context.fetch=()=>new Promise(resolve=>{finishApple=resolve});
+  element('search-input').value='old'; const pendingApple=evaluate('doAppleSearch()');
+  element('search-input').value='Remi'; listeners.get('search-input:input')({});
+  [...timers.values()][0](); timers.clear();
+  finishApple({ok:true,json:async()=>({results:[{trackName:'STALE APPLE RESULT'}]})}); await pendingApple;
+  assert(!element('library-content').innerHTML.includes('STALE APPLE RESULT')); assert.match(element('library-subtitle').textContent,/Remi/);
+  // Clearing while local quality metadata is in flight keeps the empty screen.
+  evaluate('delete state.albumMetadata[fixture[0].children[0].path]');
+  let finishMetadata; context.fetch=()=>new Promise(resolve=>{finishMetadata=resolve});
+  element('search-input').value='Remi'; const pendingLocal=evaluate('doLocalSearch()');
+  element('search-input').value=''; listeners.get('search-input:input')({});
+  finishMetadata({ok:true,json:async()=>({tracks:{},album:{}})}); await pendingLocal;
+  assert.match(element('library-content').innerHTML,/Find artists/);
+  tracks.forEach((track,index)=>{track.fidelity=originalFidelity[index]});
   assert(!html.includes('New downloads prefer the highest available ALAC'));
   assert(html.includes('id="search-panel" hidden'));
   assert.equal(evaluate('formatTime(230)'),'3:50');

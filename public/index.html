@@ -1555,7 +1555,20 @@ document.querySelectorAll('.type-btn').forEach(button=>button.addEventListener('
   document.querySelectorAll('.type-btn').forEach(item=>item.classList.remove('active'));button.classList.add('active');searchType=button.dataset.type;
   if(document.getElementById('search-input').value.trim()){if(state.searchScope==='apple')doAppleSearch();else doLocalSearch();}
 }));
-document.getElementById('search-form').addEventListener('submit',event=>{event.preventDefault();doLocalSearch();});
+// Invalidate older local/Apple work immediately; coalesce typing locally only.
+let librarySearchTimer;
+function scheduleLibrarySearch(event) {
+  clearTimeout(librarySearchTimer);
+  const requestId = ++state.searchRequestId;
+  if (event?.isComposing) return;
+  if (!document.getElementById('search-input').value.trim()) return doLocalSearch();
+  librarySearchTimer = setTimeout(() => {
+    if (requestId === state.searchRequestId && !document.getElementById('search-panel').hidden) doLocalSearch();
+  }, 120);
+}
+document.getElementById('search-input').addEventListener('input', scheduleLibrarySearch);
+document.getElementById('search-input').addEventListener('compositionend', scheduleLibrarySearch);
+document.getElementById('search-form').addEventListener('submit',event=>{event.preventDefault();clearTimeout(librarySearchTimer);doLocalSearch();});
 document.getElementById('apple-search-btn').addEventListener('click',doAppleSearch);
 function localMatches(q,type=searchType){
   const query=q.toLocaleLowerCase(),artists=(state.libraryData||[]).filter(node=>node.type==='dir');
