@@ -66,3 +66,45 @@ format; existing files and the wrapper session volume can remain untouched.
 
 - https://github.com/glomatico/gamdl/blob/3.x/README.md
 - https://github.com/glomatico/wrapper-v2/tree/100e0a864e883e03a3ac450a780dd9563fff5271
+
+## Independent release lifecycle
+
+Configuration stays in this repository; the containers have separate lifecycles.
+A push to music's `main` builds only the root Dockerfile. Neither that Dockerfile,
+the app startup nor the webhook calls `wrapper/manage.py`. A normal UI release
+therefore cannot build or restart the companion.
+
+Use a durable checkout outside `deployments/`, with an explicitly reviewed
+music commit checked out. Export `WRAPPER_SOURCE_DIR` pointing at the prepared,
+pinned upstream source. These commands are operator actions, not webhook hooks:
+
+```sh
+python3 wrapper/manage.py build     # build only, no startup
+python3 wrapper/manage.py apply     # explicit companion rollout
+python3 wrapper/manage.py status    # service status + HTTP liveness
+python3 wrapper/manage.py rollback  # restore preceding image/config snapshot
+python3 wrapper/manage.py stop      # keep session data and release history
+```
+
+The fixed Compose project is `music-wrapper`; its session volume has the explicit
+name `music-wrapper-session`. Both survive app rebuilds and source checkout moves.
+Do not run `compose down -v` or prune that volume. Before upgrading an authenticated
+wrapper, stop it and back up the session volume privately. Image rollback does not
+undo a change to the session database format; preserve the pre-upgrade backup.
+
+`apply` requires an already-built local image and committed wrapper configuration.
+It snapshots Compose and the exact image ID beneath `/var/lib/music-wrapper/releases`,
+then starts only `music-wrapper` with builds and pulls disabled. It waits for HTTP
+liveness before recording the current release. An unsuccessful update restores the
+previous recorded release; an unsuccessful first start stops the candidate. Retain
+old images locally for rollback; the app's image cleanup does not target them.
+
+Liveness deliberately permits a signed-out wrapper so first-time sign-in is
+possible. It does not prove ALAC readiness: the worker separately requires
+playback readiness and authentication, and the release gate still requires an
+actual preview download and playback check. No credentials are written to release
+manifests. A host-side lock rejects simultaneous apply, rollback, and stop operations.
+
+Validate lifecycle behavior with `python3 -m unittest test_wrapper_lifecycle`.
+This uses mocked Docker calls and temporary release directories; no service starts.
+The companion lifecycle and application release are independently reversible.

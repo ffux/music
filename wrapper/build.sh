@@ -8,4 +8,5 @@ git -C "$WRAPPER_SOURCE_DIR" diff --quiet
 git -C "$WRAPPER_SOURCE_DIR" diff --cached --quiet
 # No service startup, account login, or library access.
 cd "$(dirname "$0")"
-docker compose build music-wrapper
+unset MUSIC_WRAPPER_IMAGE
+docker compose --project-name music-wrapper build music-wrapper

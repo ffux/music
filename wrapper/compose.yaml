@@ -1,7 +1,7 @@
 # Companion service only. The music app remains managed by vibe-deploy.
 services:
   music-wrapper:
-    image: music-wrapper:100e0a8
+    image: ${MUSIC_WRAPPER_IMAGE:-music-wrapper:100e0a8}
     build:
       context: ${WRAPPER_SOURCE_DIR:?Set the reviewed wrapper-v2 checkout path}
       args:
@@ -28,6 +28,7 @@ services:
         aliases: [music-wrapper]
 volumes:
   wrapper-session:
+    name: music-wrapper-session
 networks:
   web:
     external: true
