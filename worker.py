@@ -45,9 +45,9 @@ def downloader_settings():
     if enabled not in ('true', 'false', '1', '0'):
         raise ValueError('MUSIC_USE_WRAPPER must be true or false')
     use_wrapper = enabled in ('true', '1')
-    codec = os.environ.get('MUSIC_SONG_CODEC_PRIORITY', 'alac')
-    if codec not in ('aac-web', 'alac', 'alac,aac-web'):
-        raise ValueError('MUSIC_SONG_CODEC_PRIORITY must be aac-web, alac, or alac,aac-web')
+    codec = os.environ.get('MUSIC_SONG_CODEC_PRIORITY', 'alac,aac')
+    if codec not in ('aac-web', 'alac', 'alac,aac'):
+        raise ValueError('MUSIC_SONG_CODEC_PRIORITY must be aac-web, alac, or alac,aac')
     if 'alac' in codec and not use_wrapper:
         raise ValueError('ALAC requires MUSIC_USE_WRAPPER=true')
     wrapper_url = os.environ.get('MUSIC_WRAPPER_URL', 'http://music-wrapper')
@@ -89,12 +89,14 @@ def check_wrapper_ready(settings):
 
 def downloader_reported_errors(line):
     summary = re.search(r'Finished with (\d+) error\(s\)', line)
-    return bool(summary and int(summary.group(1)) > 0)
+    unavailable = any(term in line.lower() for term in ('format is not available', 'decryption is not available', 'not streamable'))
+    return bool(summary and int(summary.group(1)) > 0) or unavailable
 
 
 def build_command(url, settings=None):
     settings = settings or downloader_settings()
-    cmd = ['gamdl', '--no-config-file', '--output-path', settings['output'],
+    executable = ['python3', os.path.join(os.path.dirname(__file__), 'gamdl_runner.py')] if settings['codec'] == 'alac,aac' else ['gamdl']
+    cmd = executable + ['--no-config-file', '--output-path', settings['output'],
            '--song-codec-priority', settings['codec']]
     if settings['use_wrapper']:
         cmd += ['--use-wrapper', '--wrapper-url', settings['wrapper_url'],
@@ -176,7 +178,12 @@ def run_job(job_id, url):
     status = 'done'
     try:
         settings = downloader_settings()
-        append_log(conn, job_id, 'Quality policy: highest available ALAC requested; source resolution varies. No AAC fallback. Existing files are kept and may be skipped, not upgraded.' if settings['codec'] == 'alac' else f"Quality policy: {settings['codec']}")
+        if settings['codec'] == 'alac,aac':
+            append_log(conn, job_id, 'Quality policy: highest available ALAC, then highest AAC only when a valid source playlist has no ALAC. Authentication, network and storage failures remain errors. Existing files are kept.')
+        elif settings['codec'] == 'alac':
+            append_log(conn, job_id, 'Quality policy: highest available ALAC; no AAC fallback. Source resolution varies. Existing files are kept.')
+        else:
+            append_log(conn, job_id, f"Quality policy: {settings['codec']}")
         check_wrapper_ready(settings)
         cmd = build_command(url, settings)
         append_log(conn, job_id, f'$ {" ".join(cmd)}')
@@ -203,7 +210,7 @@ def run_job(job_id, url):
             status = 'error'
             append_log(conn, job_id, f'[exited with code {proc.returncode}]')
         if status == 'error':
-            append_log(conn, job_id, 'Download incomplete. Check the errors above; lossless availability is not guaranteed for every item.')
+            append_log(conn, job_id, 'Download incomplete. Check the errors above; availability or download failure remains unresolved; see the actual file quality for completed tracks.')
     except FileNotFoundError:
         msg = 'Error: gamdl not found. Check installation.'
         print(msg, flush=True)

@@ -16,10 +16,10 @@ class WrapperTests(unittest.TestCase):
         self.env.start()
         self.addCleanup(self.env.stop)
 
-    def test_default_requests_strict_alac_without_overwrite(self):
+    def test_default_requests_guarded_alac_aac_without_overwrite(self):
         command = worker.build_command('https://music.apple.com/us/album/test/123')
         self.assertIn('--no-config-file', command)
-        self.assertEqual(command[command.index('--song-codec-priority') + 1], 'alac')
+        self.assertEqual(command[command.index('--song-codec-priority') + 1], 'alac,aac')
         self.assertIn('--use-wrapper', command)
         self.assertNotIn('--overwrite', command)
 
@@ -106,6 +106,8 @@ class WrapperTests(unittest.TestCase):
         self.assertTrue(worker.downloader_reported_errors('Finished with 2 error(s)'))
         self.assertFalse(worker.downloader_reported_errors('Finished with 0 error(s)'))
         self.assertFalse(worker.downloader_reported_errors('Downloading track'))
+        self.assertTrue(worker.downloader_reported_errors('Requested format is not available'))
+        self.assertTrue(worker.downloader_reported_errors('Decryption is not available'))
 
 
 if __name__ == '__main__':
