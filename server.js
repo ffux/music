@@ -61,8 +61,17 @@ app.get('/api/wrapper/status', async (req, res) => {
   res.json(await wrapperStatus());
 });
 
+// Destructive library operations reuse and verify the existing Access session.
+const { installDeleteRoutes } = require('./delete-routes');
+const isDeletionBusy=installDeleteRoutes(app,{
+  musicDir:MUSIC_DIR,
+  hasActiveJobs:()=>!db||db.prepare("SELECT COUNT(*) AS count FROM jobs WHERE status IN ('pending','running')").get().count>0,
+  onDeleted:scope=>{metadataCache.clear();broadcast({type:'library_deleted',path:scope});},
+});
+
 // Queue a download
 app.post('/api/queue', (req, res) => {
+  if(isDeletionBusy())return res.status(409).json({error:'Wait for the library deletion to finish'});
   if (!db) return res.status(503).json({ error: 'Database not ready' });
   const { url } = req.body;
   if (!url || !url.includes('music.apple.com')) {

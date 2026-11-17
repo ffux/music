@@ -849,6 +849,7 @@
       .album-hero:not(.artist-hero) .hero-actions .btn-secondary { color: #f5f5f7 !important; }
       #more-menu button { min-height: 44px; }
     }
+    #more-menu .menu-danger { color: #ff637d; }
   </style>
 </head>
 <body>
@@ -1046,6 +1047,7 @@ function connectWs() {
 }
 
 function handleWsMessage(msg) {
+  if(msg.type==='library_deleted'){applyDeletedScope(msg.path);reloadAfterDeletion();return;}
   if (msg.type === 'init') {
     state.jobs = {};
     msg.jobs.forEach(j => state.jobs[j.id] = j);
@@ -1555,7 +1557,7 @@ function openMoreMenu(anchor, actions) {
   const menu = document.getElementById('more-menu');
   const mobileDialog=document.getElementById('mobile-now-playing');
   (anchor.id==='mobile-now-more'?mobileDialog:document.body).appendChild(menu);
-  menu.innerHTML = actions.map((action,index) => `<button role="menuitem" data-action="${index}">${escHtml(action.label)}</button>`).join('');
+  menu.innerHTML = actions.map((action,index) => `<button role="menuitem" data-action="${index}"${action.danger?' class="menu-danger"':''}>${escHtml(action.label)}</button>`).join('');
   menu.hidden = false;
   const rect = anchor.getBoundingClientRect();
   menu.style.left = `${Math.max(10,Math.min(rect.right - 230,window.innerWidth - 240))}px`;
@@ -1592,8 +1594,52 @@ function localMore(anchor,node) {
   actions.push({label:kind==='song'?'Download original to this device':`Download ${kind} ZIP to this device`,run:()=>requestClientDownload(node.path,kind,node.name)});
   if (kind === 'song') { const album=albumForTrack(node); if (album) actions.push({label:'Go to Album',run:()=>showAlbum(album.path)}); }
   if (kind !== 'artist') actions.push({label:'Go to Artist',run:()=>showAlbums(node.path.split('/')[0])});
+  actions.push({label:'Delete from server…',danger:true,run:()=>deleteFromServer(node)});
   openMoreMenu(anchor,actions);
 }
+let deleteRequestPending=false;
+function applyDeletedScope(scope){
+  if(typeof scope!=='string'||!scope)return;
+  const affected=track=>track.path===scope||track.path.startsWith(scope+'/');
+  const currentRemoved=state.currentTrack&&affected(state.currentTrack);
+  if(currentRemoved){
+    const audio=document.getElementById('player');audio.pause();audio.removeAttribute('src');audio.load();
+    state.playQueue=state.playQueue.slice(state.playIndex+1).filter(track=>!affected(track));state.currentTrack=null;state.playIndex=-1;
+    if(!document.getElementById('mobile-now-playing').hidden)closeMobilePlayer();
+    document.getElementById('player-track-name').textContent='Queue ready';document.getElementById('player-album-name').textContent='Choose a song in Up Next';
+    if(!state.playQueue.length)document.getElementById('player-bar').classList.remove('visible');
+  }else{
+    state.playQueue=state.playQueue.filter(track=>!affected(track));
+    state.playIndex=state.currentTrack?state.playQueue.findIndex(track=>track.queueId===state.currentTrack.queueId):-1;
+  }
+  const ids=new Set(state.playQueue.map(track=>track.queueId));state.playQueueBase=state.playQueueBase.filter(track=>ids.has(track.queueId));
+  state.libraryTrail=[];state.albumMetadata={};state.libraryIndexReady=false;state.libraryIndexFailed=false;renderPlaybackQueue();
+}
+async function reloadAfterDeletion(){
+  state.albumMetadata={};state.libraryIndexReady=false;state.libraryIndexFailed=false;
+  if(!await loadLibrary({silent:true})){showToast('Refresh the library to check the deletion result.','error');return;}
+  const existing=new Set((state.libraryData||[]).flatMap(collectTracks).map(track=>track.path));
+  for(const track of [...state.playQueue])if(!existing.has(track.path))applyDeletedScope(track.path);
+}
+async function deleteFromServer(node){
+  if(!node||deleteRequestPending)return;
+  const kind=node.type==='file'?'song':node.path.includes('/')?'album':'artist';
+  const options=body=>({method:'POST',headers:{'Content-Type':'application/json','X-Music-Action':'delete'},body:JSON.stringify(body)});
+  deleteRequestPending=true;
+  try{
+    const preview=await fetch('/api/library/delete/preview',options({path:node.path,kind})),summary=await preview.json();
+    if(!preview.ok)throw new Error(summary.error||'Could not review deletion');
+    if(!window.confirm(`Delete ${kind} “${summary.name}” from server?\n\nPermanently removes ${summary.songs} song${summary.songs===1?'':'s'} (${summary.files} file${summary.files===1?'':'s'}, including associated artwork) under “${summary.path}”.\n\nThis cannot be undone. Downloaded copies on your devices are kept.`))return;
+    try{
+      const response=await fetch('/api/library/delete',options({token:summary.token,confirmed:true})),result=await response.json();
+      if(result.ok||result.deletedFiles>0)applyDeletedScope(summary.path);
+      if(!response.ok)throw new Error(result.error||'Deletion did not finish. Refresh the library.');
+      showToast('Deleted from server','success');
+    }finally{await reloadAfterDeletion();}
+  }catch(error){showToast(error.message||'Deletion unavailable. Reload and try again.','error');}
+  finally{deleteRequestPending=false;}
+}
+
 function shuffled(items) {
   const result = [...items];
   for (let index=result.length-1;index>0;index--) { const target=Math.floor(Math.random()*(index+1)); [result[index],result[target]]=[result[target],result[index]]; }
@@ -1982,6 +2028,7 @@ function catalogueMore(anchor,item){
   if(presence.track){actions.push({label:'Play Next (downloaded file)',run:()=>enqueueTracks([presence.track],true)},{label:'Add downloaded file to Playback Queue',run:()=>enqueueTracks([presence.track])},{label:'Download original to this device',run:()=>requestClientDownload(presence.track.path,'song',presence.track.name)});}
   if(presence.node&&!presence.track)actions.push({label:'Play downloaded songs next',run:async()=>enqueueTracks(await tracksForNode(presence.node),true)},{label:'Add downloaded songs to Playback Queue',run:async()=>enqueueTracks(await tracksForNode(presence.node))},{label:`Download ${catalogueKind(item)} ZIP to this device (downloaded songs only)`,run:()=>requestClientDownload(presence.node.path,catalogueKind(item),presence.node.name)});
   if(presence.node)actions.push({label:'Open downloaded '+(catalogueKind(item)==='artist'?'artist':'album'),run:()=>catalogueKind(item)==='artist'?showAlbums(presence.node.path):showAlbum(presence.node.path)});
+  if(presence.track||presence.node)actions.push({label:'Delete downloaded '+(presence.track?'song':catalogueKind(item))+' from server…',danger:true,run:()=>deleteFromServer(presence.track||presence.node)});
   actions.push({label:'Open in Apple Music',run:()=>window.open(catalogueUrl(item),'_blank','noopener,noreferrer')});openMoreMenu(anchor,actions);
 }
 async function queueAppleUrl(url){

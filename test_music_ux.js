@@ -87,5 +87,13 @@ assert.equal(tracks.length,3);
   evaluate('closeMobilePlayer()');listeners.get('player-bar:click')({target:{closest:()=>({})}});assert.equal(element('mobile-now-playing').hidden,true);
   listeners.get('player-bar:click')({target:{closest:()=>null}});assert.equal(element('mobile-now-playing').hidden,false);
   evaluate('closeMobilePlayer()');let prevented=false;listeners.get('mobile-player-summary:keydown')({target:element('mobile-player-summary'),key:'Enter',preventDefault(){prevented=true}});assert(prevented);assert.equal(element('mobile-now-playing').hidden,false);
+  // Every delete attempt gets a new explicit confirmation, independent of device-download preferences.
+  let confirmations=0,deletePosts=0;context.window.confirm=message=>{confirmations++;assert.match(message,/Permanently removes/);assert.match(message,/cannot be undone/);assert.match(message,/01 Sauce.m4a/);return false;};
+  context.fetch=async(url,options)=>{assert.equal(url,'/api/library/delete/preview');deletePosts++;assert.equal(options.headers['X-Music-Action'],'delete');return{ok:true,json:async()=>({name:'01 Sauce.m4a',path:tracks[0].path,kind:'song',songs:1,files:1,token:'fixture-preview'})}};
+  await evaluate('deleteFromServer(tracks[0])');await evaluate('deleteFromServer(tracks[0])');assert.equal(confirmations,2);assert.equal(deletePosts,2);
+  evaluate('startPlaybackQueue(tracks,0,false)');const survivorId=evaluate('state.playQueue[2].queueId');
+  evaluate('applyDeletedScope(tracks[0].path)');assert.equal(evaluate('state.currentTrack'),null);assert.equal(evaluate('state.playQueue.length'),2);assert.equal(evaluate('state.playIndex'),-1);assert.equal(evaluate('state.playQueue[1].queueId'),survivorId);
+  evaluate('startPlaybackQueue(tracks,0,false);applyDeletedScope(tracks[2].path)');assert.equal(evaluate('state.currentTrack.path'),tracks[0].path);assert.equal(evaluate('state.playIndex'),0);assert.equal(evaluate('state.playQueue.length'),2);
+  evaluate('applyDeletedScope(fixture[0].path)');assert.equal(evaluate('state.playQueue.length'),0);assert.equal(evaluate('state.currentTrack'),null);
   console.log('Search locality, edition-aware status, partial albums, album continuation, queue insertion, repeat, shuffle restoration, quality labels and policy-text removal passed');
 })().catch(error=>{console.error(error);process.exitCode=1});

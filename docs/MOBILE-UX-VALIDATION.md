@@ -12,8 +12,6 @@ Artist search lacked portraits because the iTunes search response does not provi
 
 Validation: JavaScript syntax/navigation/search/queue tests; primary-save/menu-download routing tests; mocked image identity/error/cache/concurrency tests; 29 existing Python download/wrapper tests; desktop and 390x844 / 360x800 browser checks against the supplied references; AAC playback, pause, expanded presentation, queue continuation and Escape behavior. No real library deletion or test download was performed.
 
-## Delete from server remains blocked
+## Confirmed deletion follow-up
 
-No file-delete route or control is introduced. Express currently has no in-app authenticated principal verification; it relies on the outer Cloudflare gate. The Access team issuer and app audience were not found in repository/deployment configuration. Unauthenticated external probes returned HTTP 403 without usable Access application identifiers. Permanent deletion must not be exposed based only on assumed edge protection or an unverified request header.
-
-Before enabling deletion, establish and verify the Access JWT issuer/audience (or an equivalent authenticated operator boundary). Then implement explicit confirmation on every operation, short-lived scope-bound confirmation tokens, path/descendant/symlink protections, active-download conflict handling, and playback/library cleanup. Test exclusively on disposable fixtures. These controls have not yet been implemented or tested; existing files remain untouched.
+The authorization configuration blocker was resolved by inspecting the actual Cloudflare Access browser redirect. Confirmation-gated deletion now verifies the existing session without adding another login or changing network settings. See [DELETE-VALIDATION.md](DELETE-VALIDATION.md) for boundaries, scope controls, fixture tests and live-check limits.
