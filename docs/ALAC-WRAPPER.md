@@ -108,3 +108,22 @@ manifests. A host-side lock rejects simultaneous apply, rollback, and stop opera
 Validate lifecycle behavior with `python3 -m unittest test_wrapper_lifecycle`.
 This uses mocked Docker calls and temporary release directories; no service starts.
 The companion lifecycle and application release are independently reversible.
+
+## Private interactive sign-in
+
+After the companion is started, run this from your own Mac terminal:
+
+```sh
+ssh -t root@192.168.50.210 'python3 /root/music-alac-review/music/wrapper/login.py'
+```
+
+The helper runs on the VM and contacts the wrapper through host loopback. Apple
+ID, password and verification code are prompted with terminal echo disabled;
+they are not passed as shell arguments or written into source. Do not paste
+credentials into chat. Account/session response bodies are never printed.
+
+Runtime validation on 17 November 2026: the isolated companion started through
+`wrapper/manage.py apply`; `/health` reported `status=ok`. `/me` confirmed
+`loader_ok=true`, `initialized=true`, and `playback_ready=true`. Account state was
+`logged_out`. Production music app configuration and storage mounts were unchanged.
+Authentication and an ALAC preview download remain unverified.
