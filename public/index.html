@@ -358,7 +358,7 @@
     .library-play:hover { opacity: .86; }
     .library-download {
       color: var(--accent2); background: rgba(124,106,247,.12); border: none; cursor: pointer;
-      border-radius: 6px; padding: 5px 10px; font-size: 16px; font-weight: 600;
+      border-radius: 999px; width: 36px; min-height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .library-download:hover { background: rgba(124,106,247,.22); }
     .library-empty {
@@ -382,9 +382,10 @@
     .track-row.playing { background: rgba(124,106,247,0.12); }
     .track-num { width: 24px; text-align: right; color: var(--muted); font-size: 12px; }
     .track-name { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .track-size { color: var(--muted); font-size: 11px; white-space: nowrap; }
+    .track-fidelity { color: var(--muted); font-size: 11px; white-space: nowrap; }
     .play-icon { font-size: 14px; color: var(--accent2); }
-    .track-dl { color: var(--muted); background: none; border: none; cursor: pointer; font-size: 16px; text-decoration: none; padding: 4px 6px; border-radius: 4px; transition: color 0.15s, background 0.15s; line-height: 1; }
+    .track-dl { color: var(--accent2); background: rgba(124,106,247,.12); border: none; cursor: pointer; width: 36px; height: 30px; padding: 0; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; transition: color 0.15s, background 0.15s; }
+    .download-icon { width: 16px; height: 16px; display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     .track-dl:hover { color: var(--accent2); background: var(--surface2); }
 
     /* Drawers */
@@ -497,7 +498,10 @@
       .library-browser { padding: 20px 16px; }
       .library-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
       .library-toolbar { margin-bottom: 16px; }
-      .track-row { padding: 10px 9px; gap: 8px; }
+      .track-row { padding: 10px 9px; gap: 4px 8px; display: grid; grid-template-columns: 24px minmax(0, 1fr) 36px; }
+      .track-num { grid-row: 1 / 3; }
+      .track-fidelity { grid-column: 2; grid-row: 2; }
+      .track-dl { grid-column: 3; grid-row: 1 / 3; }
       .track-num { width: 20px; }
       .settings-panel { padding: 24px 16px; }
       .file-input-row { flex-wrap: wrap; }
@@ -848,11 +852,15 @@ function collectTracks(node) {
 }
 
 async function getAlbumMetadata(album) {
+  if (!album) return { releaseDate: null, tracks: {} };
   if (state.albumMetadata[album.path]) return state.albumMetadata[album.path];
   try {
     const res = await fetch(`/api/library/metadata?path=${encodeURIComponent(album.path)}`);
     if (!res.ok) throw new Error('metadata unavailable');
     state.albumMetadata[album.path] = await res.json();
+    for (const track of collectTracks(album)) {
+      track.fidelity = state.albumMetadata[album.path].tracks?.[track.path.slice(album.path.length + 1)];
+    }
   } catch {
     state.albumMetadata[album.path] = { releaseDate: null, tracks: {} };
   }
@@ -904,7 +912,7 @@ function libraryCardHtml(node, kind) {
         <div class="library-card-meta">${count} ${unit}</div>
         <div class="library-card-actions">
           <button class="library-play" data-action="play">Play</button>
-          <button class="library-download" data-action="download" title="Download" aria-label="Download ${escHtml(node.name)}">↓</button>
+          <button class="library-download" data-action="download" title="Download" aria-label="Download ${escHtml(node.name)}">${downloadIcon()}</button>
         </div>
       </div>
     </article>`;
@@ -954,13 +962,13 @@ function renderLibrary() {
     subtitle.textContent = `${files.length} track${files.length !== 1 ? 's' : ''}`;
     content.innerHTML = files.length ? `<div class="track-list">${files.map((f, i) => {
       const isPlaying = state.currentTrack && state.currentTrack.path === f.path;
-      const size = formatSize(f.size);
+      const fidelity = formatFidelity(f);
       return `
       <div class="track-row${isPlaying ? ' playing' : ''}" data-path="${escHtml(f.path)}" data-name="${escHtml(f.name)}" style="cursor:pointer">
         <span class="track-num">${isPlaying ? '<span class="play-icon">▶</span>' : i + 1}</span>
         <span class="track-name">${escHtml(stripExt(f.name))}</span>
-        <span class="track-size">${size}</span>
-        <button class="track-dl client-download" data-path="${escHtml(f.path)}" data-name="${escHtml(f.name)}" data-kind="song" title="Download ${escHtml(f.name)}" aria-label="Download ${escHtml(f.name)}">↓</button>
+        <span class="track-fidelity">${escHtml(fidelity)}</span>
+        <button class="track-dl client-download" data-path="${escHtml(f.path)}" data-name="${escHtml(f.name)}" data-kind="song" title="Download ${escHtml(f.name)}" aria-label="Download ${escHtml(f.name)}">${downloadIcon()}</button>
       </div>
     `;
     }).join('')}</div>` : '<div class="library-empty">No tracks found</div>';
@@ -1093,10 +1101,15 @@ function stripExt(name) {
   return name.replace(/\.[^.]+$/, '');
 }
 
-function formatSize(bytes) {
-  if (!bytes) return '';
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+function downloadIcon() {
+  return '<svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 16v5h14v-5"/></svg>';
+}
+
+function formatFidelity(track) {
+  const info = track.fidelity;
+  if (!info?.codec) return 'Quality unavailable';
+  const resolution = [info.bitDepth ? `${info.bitDepth}-bit` : '', info.sampleRate ? `${info.sampleRate / 1000} kHz` : ''].filter(Boolean).join('/');
+  return [resolution, info.codec].filter(Boolean).join(' ');
 }
 
 const downloadConfirmationKey = 'music-client-download-confirmed-v1';
@@ -1256,7 +1269,7 @@ function localMatches(q) {
   return artists.flatMap(collectTracks).filter(node => stripExt(node.name).toLocaleLowerCase().includes(query) || node.path.toLocaleLowerCase().includes(query));
 }
 
-function doLocalSearch() {
+async function doLocalSearch() {
   const q = document.getElementById('search-input').value.trim();
   if (!q) return showArtists();
   beginSearch('local');
@@ -1271,11 +1284,15 @@ function doLocalSearch() {
     return;
   }
   if (searchType === 'song') {
+    const requestId = state.searchRequestId;
+    const albums = [...new Set(items.map(track => track.path.split('/').slice(0, 2).join('/')))];
+    await Promise.all(albums.map(albumPath => getAlbumMetadata(findLibraryNode(albumPath))));
+    if (state.searchRequestId !== requestId || !state.searchActive) return;
     content.innerHTML = `<div class="track-list">${items.map((track, index) => `
       <div class="track-row" data-path="${escHtml(track.path)}" data-name="${escHtml(track.name)}">
         <span class="track-num">${index + 1}</span><span class="track-name">${escHtml(stripExt(track.name))}</span>
-        <span class="track-size">${formatSize(track.size)}</span>
-        <button class="track-dl client-download" data-path="${escHtml(track.path)}" data-name="${escHtml(track.name)}" data-kind="song">↓</button>
+        <span class="track-fidelity">${escHtml(formatFidelity(track))}</span>
+        <button class="track-dl client-download" data-path="${escHtml(track.path)}" data-name="${escHtml(track.name)}" data-kind="song" title="Download ${escHtml(track.name)}" aria-label="Download ${escHtml(track.name)}">${downloadIcon()}</button>
       </div>`).join('')}</div>`;
     content.querySelectorAll('.track-row').forEach(row => row.addEventListener('click', () => {
       const track = findLibraryNode(row.dataset.path);
