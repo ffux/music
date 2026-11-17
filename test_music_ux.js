@@ -1,0 +1,36 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+const html=fs.readFileSync(process.argv[2]||'public/index.html','utf8'),script=html.match(/<script>([\s\S]*)<\/script>/)[1];
+new vm.Script(script);
+const elements=new Map(),listeners=new Map();
+function element(id){if(!elements.has(id))elements.set(id,{id,value:'',hidden:false,textContent:'',innerHTML:'',style:{},dataset:{},src:'',currentTime:0,offsetHeight:200,classList:{add(){},remove(){},toggle(){}},setAttribute(k,v){this[k]=v},getAttribute(k){return this[k]},removeAttribute(k){delete this[k]},addEventListener(event,fn){listeners.set(id+':'+event,fn)},querySelectorAll(){return[]},querySelector(){return null},insertAdjacentHTML(where,text){this.innerHTML+=text},play(){return Promise.resolve()},pause(){},load(){},focus(){},contains(){return false}});return elements.get(id)}
+const doc={getElementById:element,querySelector:element,querySelectorAll(){return[]},addEventListener(){},documentElement:{style:{setProperty(){}}}};
+let fetches=[];
+const context=vm.createContext({console,document:doc,window:{addEventListener(){},innerHeight:900,innerWidth:1200,visualViewport:null},localStorage:{getItem(){return null}},requestAnimationFrame(){return 1},cancelAnimationFrame(){},setTimeout(){return 1},clearTimeout(){},URL,fetch:async(url)=>{fetches.push(url);throw Error('Unexpected network call '+url)}});
+vm.runInContext(script.slice(0,script.indexOf('// Init\n')),context);
+const evaluate=source=>vm.runInContext(source,context);
+const data=[{type:'dir',name:'Remi Wolf',path:'Remi Wolf',children:[{type:'dir',name:"You're A Dog! - EP",path:"Remi Wolf/You're A Dog! - EP",children:[{type:'file',name:'01 Sauce.m4a',path:"Remi Wolf/You're A Dog! - EP/01 Sauce.m4a",fidelity:{songId:1,albumId:10,artistId:100,title:'Sauce',artist:'Remi Wolf',codec:'ALAC',sampleRate:44100,bitDepth:24,duration:230}},{type:'file',name:'03 Doctor.m4a',path:"Remi Wolf/You're A Dog! - EP/03 Doctor.m4a",fidelity:{songId:2,albumId:10,artistId:100,title:'Doctor',artist:'Remi Wolf',codec:'ALAC',sampleRate:44100,bitDepth:24,duration:170}},{type:'file',name:'04 Guy.m4a',path:"Remi Wolf/You're A Dog! - EP/04 Guy.m4a",fidelity:{songId:3,albumId:10,artistId:100,title:'Guy',artist:'Remi Wolf',codec:'AAC',sampleRate:44100,duration:163}}]}]}];
+context.fixture=data;evaluate('state.libraryData=fixture;state.libraryIndexReady=true;state.albumMetadata[fixture[0].children[0].path]={tracks:{},album:{}}');
+const tracks=data[0].children[0].children;context.tracks=tracks;
+assert.equal(evaluate('libraryPresence({resultType:"song",trackId:1}).complete'),true);
+assert.equal(evaluate('libraryPresence({resultType:"album",collectionId:10,trackCount:6}).complete'),false);
+assert.match(evaluate('libraryPresence({resultType:"album",collectionId:10,trackCount:6}).label'),/3 of 6/);
+assert.equal(evaluate('libraryPresence({resultType:"album",collectionId:10,trackCount:3}).complete'),true);
+assert.equal(evaluate('libraryPresence({resultType:"song",trackId:999,trackName:"New song",artistName:"Someone else"}).complete'),false);
+assert.equal(evaluate('libraryPresence({resultType:"song",trackId:999,trackName:"Guy",artistName:"Remi Wolf"}).alternate'),true);
+evaluate('startPlaybackQueue(tracks,1,false)');assert.equal(evaluate('state.playIndex'),1);assert.equal(evaluate('state.currentTrack.fidelity.title'),'Doctor');
+evaluate('moveQueue(1,true)');assert.equal(evaluate('state.currentTrack.fidelity.title'),'Guy');
+evaluate('state.repeat="all";moveQueue(1,true)');assert.equal(evaluate('state.currentTrack.fidelity.title'),'Sauce');
+evaluate('state.repeat="one";moveQueue(1,true)');assert.equal(evaluate('state.currentTrack.fidelity.title'),'Sauce');
+evaluate('state.repeat="off";enqueueTracks([tracks[2]],true)');assert.equal(evaluate('state.playQueue[1].fidelity.title'),'Guy');assert.equal(evaluate('new Set(state.playQueue.map(item=>item.queueId)).size'),4);
+const before=JSON.stringify(Array.from(evaluate('state.playQueue.map(item=>item.queueId)')));listeners.get('player-shuffle:click')();assert.equal(evaluate('state.shuffle'),true);listeners.get('player-shuffle:click')();assert.equal(evaluate('state.shuffle'),false);assert.equal(JSON.stringify(Array.from(evaluate('state.playQueue.map(item=>item.queueId)'))),before);
+assert.equal(tracks.length,3);
+(async()=>{
+  element('search-input').value='Remi Wolf';await evaluate('doLocalSearch()');assert.deepEqual(fetches,[]);assert.match(element('library-content').innerHTML,/Artists/);assert.match(element('library-content').innerHTML,/Search Apple Music/);
+  element('search-input').value='No Such Song';await evaluate('doLocalSearch()');assert.deepEqual(fetches,[]);assert.match(element('library-content').innerHTML,/Nothing found in your library/);
+  assert(!html.includes('New downloads prefer the highest available ALAC'));
+  assert(html.includes('id="search-panel" hidden'));
+  assert.equal(evaluate('formatTime(230)'),'3:50');
+  assert.equal(evaluate('formatFidelity(tracks[0])'),'24-bit/44.1 kHz ALAC');
+  assert.equal(evaluate('formatFidelity(tracks[2])'),'44.1 kHz AAC');
+  console.log('Search locality, edition-aware status, partial albums, album continuation, queue insertion, repeat, shuffle restoration, quality labels and policy-text removal passed');
+})().catch(error=>{console.error(error);process.exitCode=1});

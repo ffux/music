@@ -5,7 +5,7 @@ new vm.Script(script);
 function definition(name){const start=script.indexOf('function '+name+'(');assert(start>=0);const ends=[script.indexOf('\nfunction ',start+1),script.indexOf('\nasync function ',start+1)].filter(x=>x>start);return script.slice(start,Math.min(...ends));}
 const fixture=[{type:'dir',name:'Z',path:'Z',children:[{type:'dir',name:'Alpha',path:'Z/Alpha',children:[{type:'file',name:'Zulu.m4a',path:'Z/Alpha/Zulu.m4a',modifiedAt:10},{type:'file',name:'Beta.m4a',path:'Z/Alpha/Beta.m4a',modifiedAt:30}]}]},{type:'dir',name:'A',path:'A',children:[{type:'dir',name:'Beta',path:'A/Beta',children:[{type:'file',name:'Alpha.m4a',path:'A/Beta/Alpha.m4a',modifiedAt:20}]}]}];
 const before=JSON.stringify(fixture),context=vm.createContext({state:{libraryData:fixture}});
-for(const name of ['collectTracks','naturalCompare','stripExt','allLibraryAlbums','latestTrackTime','rootLibraryItems'])vm.runInContext(definition(name),context);
+for(const name of ['collectTracks','naturalCompare','stripExt','trackTitle','allLibraryAlbums','latestTrackTime','rootLibraryItems'])vm.runInContext(definition(name),context);
 const paths=level=>Array.from(context.rootLibraryItems(level),x=>x.path);
 assert.deepEqual(paths('recent'),['Z/Alpha','A/Beta']);
 assert.deepEqual(paths('all-albums'),['Z/Alpha','A/Beta']);

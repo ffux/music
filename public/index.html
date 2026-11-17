@@ -46,6 +46,7 @@
     #player-bar { grid-column: 1 / -1; grid-row: 3; }
     .library-sidebar { grid-column: 1; grid-row: 2; min-height: 0; overflow-y: auto; padding: 24px 12px; background: var(--surface); border-right: 1px solid var(--border); }
     .sidebar-label { color: var(--muted); font-size: 11px; font-weight: 600; padding: 0 12px 8px; letter-spacing: .03em; }
+    .search-nav { margin-bottom: 18px; }
     .sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
     .library-nav-item { display: flex; align-items: center; gap: 10px; width: 100%; border: none; border-radius: 7px; padding: 10px 12px; background: none; color: var(--text); text-align: left; font: inherit; cursor: pointer; }
     .library-nav-item svg { width: 19px; height: 19px; flex-shrink: 0; fill: none; stroke: var(--accent2); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
@@ -57,12 +58,13 @@
     .library-card-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     @media (max-width: 700px) {
       .app-shell { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto; }
-      .library-sidebar { grid-column: 1; grid-row: 2; padding: 7px 12px; border-right: none; border-bottom: 1px solid var(--border); overflow: visible; }
+      .library-sidebar { display: flex; align-items: stretch; grid-column: 1; grid-row: 2; padding: 7px 12px; border-right: none; border-bottom: 1px solid var(--border); overflow: visible; }
       main { grid-column: 1; grid-row: 3; }
       #player-bar { grid-row: 4; }
       .sidebar-label, .nav-desktop-label { display: none; }
       .nav-mobile-label { display: inline; }
-      .sidebar-nav { flex-direction: row; gap: 4px; }
+      .search-nav { flex: 1; width: auto; margin: 0 4px 0 0; }
+      .sidebar-nav { flex: 4; flex-direction: row; gap: 4px; }
       .library-nav-item { flex: 1; min-width: 0; flex-direction: column; gap: 3px; justify-content: center; text-align: center; padding: 6px 3px; font-size: 11px; }
     }
 
@@ -535,6 +537,69 @@
       .player-bar-inner { gap: 8px; }
       #player-title { display: none; }
     }
+
+    .card-library-badge { position:absolute;top:8px;right:8px;padding:3px 8px;border-radius:20px;background:#111d;color:var(--text);font-size:13px; }
+    .album-hero { display: flex; gap: 24px; align-items: center; margin: 0 0 24px; }
+    .album-hero-art { width: 180px; height: 180px; object-fit: cover; border-radius: 12px; background: var(--surface2); flex-shrink: 0; }
+    .album-hero h2 { font-size: 27px; line-height: 1.2; margin: 6px 0; }
+    .album-hero p, .catalogue-note { color: var(--muted); font-size: 12px; margin: 6px 0; }
+    .album-hero .eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+    .text-link { border: 0; background: none; color: var(--accent2); font: inherit; cursor: pointer; text-align: left; }
+    .hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .more-button { display: inline-flex; justify-content: center; align-items: center; flex-shrink: 0; width: 32px; height: 30px; border: 0; border-radius: 20px; color: var(--muted); background: var(--surface2); cursor: pointer; font-weight: 700; }
+    #more-menu { position: fixed; z-index: 150; width: 230px; max-width: calc(100vw - 20px); padding: 5px; background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; box-shadow: 0 10px 35px #0008; }
+    #more-menu button, #more-menu a { display: block; width: 100%; padding: 10px; border: 0; border-radius: 5px; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; text-decoration: none; }
+    #more-menu button:hover, #more-menu button:focus-visible, #more-menu a:hover { background: rgba(124,106,247,.2); outline: none; }
+    .search-section { margin: 24px 0; }
+    .search-section h3 { font-size: 17px; margin-bottom: 12px; }
+    .search-cta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 18px; margin-top: 24px; border: 1px solid var(--border); border-radius: 10px; color: var(--muted); }
+    .downloaded-badge { color: var(--muted); font-size: 11px; margin: 6px 0; }
+    .downloaded-badge.has-local { color: var(--success); }
+    .album-copyright { color: var(--muted); font-size: 11px; margin: 18px 0; }
+    .catalogue-open { display: block; text-align: left; width: 100%; color: inherit; background: none; border: 0; cursor: pointer; font: inherit; }
+    .result-card:focus-within { border-color: var(--accent); }
+    .result-dl { margin-top: 8px; }
+    .catalogue-track { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border); }
+    .catalogue-track .text-link { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .catalogue-track small { display: block; color: var(--muted); }
+    .catalogue-track .btn { font-size: 11px; padding: 7px 10px; }
+    .player-now { display: flex; align-items: center; gap: 10px; max-width: 1100px; margin: 0 auto 8px; }
+    .player-now #player-title { display: block; flex: 1; }
+    #player-artwork { border-radius: 6px; background: var(--surface2); object-fit: cover; }
+    .player-action { border: 0; border-radius: 6px; padding: 6px 8px; background: none; color: var(--muted); cursor: pointer; white-space: nowrap; }
+    .player-action[aria-pressed="true"] { background: rgba(124,106,247,.2); color: var(--accent2); }
+    .playback-drawer { position: fixed; z-index: 90; top: 0; right: 0; bottom: 0; width: min(480px,100%); background: var(--bg); border-left: 1px solid var(--border); transform: translateX(100%); transition: transform .2s; overflow-y: auto; }
+    .playback-drawer.open { transform: translateX(0); }
+    .queue-item { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding: 10px 0; }
+    .queue-item .text-link { flex: 1; color: var(--text); min-width: 0; }
+    .queue-item small { display: block; color: var(--muted); font-size: 11px; }
+    .queue-current { color: var(--accent2); font-size: 12px; margin: 12px 0; }
+    @media(max-width:700px) {
+      .album-hero { display: grid; grid-template-columns: 108px minmax(0,1fr); gap: 6px 14px; align-items: start; }
+      .album-hero > .album-hero-art { grid-column: 1; grid-row: 1 / span 4; }
+      .album-hero-content { display: contents; }
+      .album-hero-content > * { grid-column: 2; margin: 0; }
+      .album-hero-content > .hero-actions { grid-column: 1 / -1; margin-top: 12px; }
+      .album-hero-art { width: 108px; height: 108px; }
+      .album-hero h2 { font-size: 21px; }
+      .album-hero .hero-actions { margin-top: 10px; }
+      .track-row { grid-template-columns: 20px minmax(0,1fr) 32px 28px; gap: 4px 6px; }
+      .track-row > .more-button { grid-column: 4; grid-row: 1 / 3; width: 28px; }
+      .track-dl { width: 32px; }
+      .player-now #player-title { display: block; font-size: 12px; }
+      .player-now { gap: 5px; }
+      .player-action { padding: 5px; font-size: 12px; }
+      .player-bar-inner { gap: 5px; }
+      .catalogue-track { display: grid; grid-template-columns: 20px minmax(0,1fr) 32px 32px 28px; gap: 4px 5px; padding: 10px 8px; }
+      .catalogue-track > .track-num { grid-column: 1; grid-row: 1 / 3; }
+      .catalogue-track > .catalogue-open { grid-column: 2; grid-row: 1; }
+      .catalogue-track > .downloaded-badge { grid-column: 2; grid-row: 2; max-width: none; margin: 0; }
+      .catalogue-track > .catalog-row-play { grid-column: 3; grid-row: 1 / 3; }
+      .catalogue-track > .catalog-save, .catalogue-track > .catalog-device { grid-column: 4; grid-row: 1 / 3; }
+      .catalogue-track > .more-button { grid-column: 5; grid-row: 1 / 3; width: 28px; }
+
+    }
+
   </style>
 </head>
 <body>
@@ -551,7 +616,7 @@
   </div>
 </header>
 
-<aside class="library-sidebar"><p class="sidebar-label">Library</p><nav class="sidebar-nav" aria-label="Library"><button class="library-nav-item" data-library-section="recent" aria-label="Recently Added"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="nav-desktop-label">Recently Added</span><span class="nav-mobile-label">Recent</span></button>
+<aside class="library-sidebar"><button class="library-nav-item search-nav" data-library-section="search" aria-label="Search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/></svg><span>Search</span></button><p class="sidebar-label">Library</p><nav class="sidebar-nav" aria-label="Library"><button class="library-nav-item" data-library-section="recent" aria-label="Recently Added"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="nav-desktop-label">Recently Added</span><span class="nav-mobile-label">Recent</span></button>
 <button class="library-nav-item" data-library-section="artists" aria-label="Artists"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg><span>Artists</span></button>
 <button class="library-nav-item" data-library-section="all-albums" aria-label="Albums"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg><span>Albums</span></button>
 <button class="library-nav-item" data-library-section="songs" aria-label="Songs"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13M9 8l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/></svg><span>Songs</span></button>
@@ -559,17 +624,19 @@
 <main>
   <div class="tab active" id="tab-library">
     <div class="library-browser">
+      <section id="search-panel" hidden>
       <form class="unified-search" id="search-form">
         <input type="text" id="search-input" placeholder="Search your music…" autocomplete="off" spellcheck="false">
         <button type="submit" class="btn">Search</button>
         <button type="button" class="btn btn-secondary" id="apple-search-btn">Search Apple Music</button>
       </form>
       <div class="search-types" role="group" aria-label="Search type">
+        <button class="type-btn active" data-type="all">All</button>
         <button class="type-btn" data-type="song">Songs</button>
         <button class="type-btn" data-type="album">Albums</button>
-        <button class="type-btn active" data-type="artist">Artists</button>
+        <button class="type-btn" data-type="artist">Artists</button>
       </div>
-      <p style="color:var(--muted);font-size:12px;margin-bottom:16px">New downloads prefer the highest available ALAC, then AAC when no lossless stream is offered. Resolution varies; track labels show actual file quality. Existing files are kept.</p>
+      </section>
       <div class="library-toolbar">
         <button class="library-back" id="library-back" hidden>‹ Back</button>
         <div class="library-heading">
@@ -584,16 +651,19 @@
 
 <!-- Player bar: final app-shell row, kept in normal document flow -->
 <div id="player-bar">
+  <div class="player-now">
+    <img id="player-artwork" alt="" width="42" height="42">
+    <div id="player-title"><strong id="player-track-name"></strong><span id="player-album-name"></span><span id="player-queue-position"></span></div>
+    <button class="player-action" id="player-more" aria-label="More for current track" aria-haspopup="menu">•••</button>
+    <button class="player-action" id="playback-queue-toggle" aria-label="Show playback queue">Up Next</button>
+    <button class="player-action" id="player-close" aria-label="Close player">✕</button>
+  </div>
   <div class="player-bar-inner">
+    <button class="player-action" id="player-shuffle" aria-label="Shuffle off" aria-pressed="false">⇄</button>
     <button class="player-skip" id="player-prev" title="Previous track">⏮</button>
-    <div id="player-title">
-      <strong id="player-track-name"></strong>
-      <span id="player-album-name"></span>
-      <span id="player-queue-position"></span>
-    </div>
-    <audio id="player" controls></audio>
+    <audio id="player" controls preload="metadata"></audio>
     <button class="player-skip" id="player-next" title="Next track">⏭</button>
-    <button id="player-close" title="Close player">✕</button>
+    <button class="player-action" id="player-repeat" aria-label="Repeat off" aria-pressed="false">↻</button>
   </div>
 </div>
 </div>
@@ -631,6 +701,11 @@
   </section>
 </aside>
 
+<aside class="playback-drawer" id="playback-drawer" aria-hidden="true" aria-label="Playback queue">
+  <div class="drawer-header"><h2>Up Next</h2><button id="playback-close" aria-label="Close playback queue">✕</button></div>
+  <section class="drawer-section"><p>Playback queue · separate from Download History</p><div id="playback-list"></div><button class="btn btn-secondary" id="clear-upcoming">Clear upcoming</button></section>
+</aside>
+<div id="more-menu" role="menu" hidden></div>
 <div id="toast"></div>
 
 <div class="modal-backdrop" id="download-confirmation" hidden>
@@ -647,6 +722,14 @@
 <script>
 const state = {
   jobs: {},
+  shuffle: false,
+  repeat: 'off',
+  playQueueBase: [],
+  queueSequence: 0,
+  catalogueView: null,
+  catalogueTrail: [],
+  libraryIndexReady: false,
+  libraryIndexFailed: false,
   currentTrack: null,
   libraryData: null,
   librarySection: 'recent',
@@ -717,7 +800,7 @@ function handleWsMessage(msg) {
 }
 
 function closeDrawers() {
-  document.querySelectorAll('.settings-drawer, .downloads-drawer').forEach(drawer => {
+  document.querySelectorAll('.settings-drawer, .downloads-drawer, .playback-drawer').forEach(drawer => {
     drawer.classList.remove('open');
     drawer.setAttribute('aria-hidden', 'true');
   });
@@ -839,8 +922,15 @@ async function loadLibrary({ silent = false } = {}) {
     const res = await fetch('/api/library');
     if (!res.ok) throw new Error('Library request failed');
     state.libraryData = await res.json();
+    state.libraryIndexReady = false; state.libraryIndexFailed = false;
+    for (const album of allLibraryAlbums()) {
+      const cached = state.albumMetadata[album.path];
+      if (cached && collectTracks(album).some(track => !cached.tracks?.[track.path.slice(album.path.length + 1)])) delete state.albumMetadata[album.path];
+      else if (cached) await getAlbumMetadata(album);
+    }
     if (!state.searchActive) { renderLibrary(); if (state.libraryView.level === 'songs') hydrateSongView(); }
     else if (state.searchScope === 'local') doLocalSearch();
+    else if (state.catalogueView) renderCatalogue();
     return true;
   } catch (e) {
     if (!silent) {
@@ -935,24 +1025,9 @@ async function ensureArtistMetadata(artist) {
   await Promise.all((artist.children || []).filter(node => node.type === 'dir').map(getAlbumMetadata));
 }
 
-function libraryCardHtml(node, kind) {
-  const count = kind === 'artist'
-    ? (node.children || []).filter(child => child.type === 'dir').length
-    : countTracks(node);
-  const unit = kind === 'artist' ? `album${count !== 1 ? 's' : ''}` : `track${count !== 1 ? 's' : ''}`;
-  const artwork = `/api/library/artwork?path=${encodeURIComponent(node.path)}`;
-  return `
-    <article class="library-card" data-path="${escHtml(node.path)}" data-kind="${kind}" tabindex="0">
-      <div class="library-art"><img src="${artwork}" alt="" loading="lazy" onerror="this.classList.add('art-missing')"></div>
-      <div class="library-card-body">
-        <div class="library-card-title" title="${escHtml(node.name)}">${escHtml(node.name)}</div>
-        <div class="library-card-meta">${kind === 'album' ? escHtml(node.path.split('/')[0]) + ' · ' : ''}${count} ${unit}</div>
-        <div class="library-card-actions">
-          <button class="library-play" data-action="play">Play</button>
-          <button class="library-download" data-action="download" title="Download" aria-label="Download ${escHtml(node.name)}">${downloadIcon()}</button>
-        </div>
-      </div>
-    </article>`;
+function libraryCardHtml(node,kind) {
+  const artwork=`/api/library/artwork?path=${encodeURIComponent(node.path)}`;
+  return `<article class="library-card" data-path="${escHtml(node.path)}" data-kind="${kind}" tabindex="0" aria-label="Open ${escHtml(node.name)}"><div class="library-art"><img src="${artwork}" alt="" loading="lazy" onerror="this.classList.add('art-missing')"></div><div class="library-card-body"><div class="library-card-title">${escHtml(node.name)}</div>${kind==='album'?`<div class="library-card-meta">${escHtml(node.path.split('/')[0])}</div>`:''}</div></article>`;
 }
 
 function allLibraryAlbums() {
@@ -966,7 +1041,7 @@ function latestTrackTime(node) {
 
 function rootLibraryItems(level) {
   if (level === 'artists') return (state.libraryData || []).filter(node => node.type === 'dir');
-  if (level === 'songs') return (state.libraryData || []).flatMap(collectTracks).sort((a,b) => naturalCompare(stripExt(a.name), stripExt(b.name)) || naturalCompare(a.path,b.path));
+  if (level === 'songs') return (state.libraryData || []).flatMap(collectTracks).sort((a,b) => naturalCompare(trackTitle(a), trackTitle(b)) || naturalCompare(a.path,b.path));
   return allLibraryAlbums().sort((a,b) => (level === 'recent' ? latestTrackTime(b) - latestTrackTime(a) : 0) || naturalCompare(a.name,b.name) || naturalCompare(a.path,b.path));
 }
 
@@ -994,11 +1069,12 @@ async function hydrateSongView() {
 function trackListHtml(files, withContext = false) {
   return `<div class="track-list">${files.map((track,index) => {
     const playing = state.currentTrack?.path === track.path;
-    return `<div class="track-row${playing ? ' playing' : ''}" data-path="${escHtml(track.path)}" tabindex="0" role="button" aria-label="Play ${escHtml(stripExt(track.name))}">
+    return `<div class="track-row${playing ? ' playing' : ''}" data-path="${escHtml(track.path)}" tabindex="0" role="button" aria-label="Play ${escHtml(trackTitle(track))}">
       <span class="track-num">${playing ? '<span class="play-icon">▶</span>' : index + 1}</span>
-      <span class="track-name">${escHtml(stripExt(track.name))}${withContext ? `<small>${escHtml(track.path.split('/').slice(0,-1).join(' · '))}</small>` : ''}</span>
-      <span class="track-fidelity">${escHtml(formatFidelity(track))}</span>
+      <span class="track-name">${escHtml(trackTitle(track))}${withContext ? `<small>${escHtml(track.path.split('/').slice(0,-1).join(' · '))}</small>` : ''}</span>
+      <span class="track-fidelity">${escHtml(formatFidelity(track))}${track.fidelity?.duration ? ` · ${formatTime(track.fidelity.duration)}` : ''}</span>
       <button class="track-dl client-download" data-path="${escHtml(track.path)}" data-name="${escHtml(track.name)}" data-kind="song" title="Download ${escHtml(track.name)}" aria-label="Download ${escHtml(track.name)}">${downloadIcon()}</button>
+      <button class="more-button track-more" data-path="${escHtml(track.path)}" aria-label="More for ${escHtml(trackTitle(track))}" aria-haspopup="menu">•••</button>
     </div>`;
   }).join('')}</div>`;
 }
@@ -1010,6 +1086,8 @@ function renderLibrary() {
   const back = document.getElementById('library-back');
   const view = state.libraryView;
   syncLibraryNav();
+  document.getElementById('search-panel').hidden = true;
+  document.querySelector('.library-heading').hidden = ['tracks','albums'].includes(view.level);
 
   if (!state.libraryData?.length) {
     back.hidden = true;
@@ -1051,6 +1129,29 @@ function renderLibrary() {
     content.innerHTML = files.length ? trackListHtml(files) : '<div class="library-empty">No tracks found</div>';
   }
 
+  if (view.level === 'albums') {
+    const artist=findLibraryNode(view.artistPath);
+    content.insertAdjacentHTML('afterbegin', localArtistHeader(artist));
+    content.querySelector('.artist-play')?.addEventListener('click',()=>playLibraryScope(artist,'artist'));
+    content.querySelector('.artist-shuffle')?.addEventListener('click',()=>playLibraryScope(artist,'artist',true));
+    content.querySelector('.artist-download')?.addEventListener('click',()=>requestClientDownload(artist.path,'artist',artist.name));
+    content.querySelector('.artist-more')?.addEventListener('click',event=>localMore(event.currentTarget,artist));
+  }
+  if (view.level === 'tracks') {
+    const album = findLibraryNode(view.albumPath);
+    content.insertAdjacentHTML('afterbegin', localAlbumHeader(album));
+    const copyright=state.albumMetadata[album.path]?.album?.copyright;
+    if(copyright)content.insertAdjacentHTML('beforeend',`<p class="album-copyright">${escHtml(copyright)}</p>`);
+    content.querySelector('.album-play')?.addEventListener('click', () => playLibraryScope(album, 'album'));
+    content.querySelector('.album-shuffle')?.addEventListener('click', () => playLibraryScope(album, 'album', true));
+    content.querySelector('.album-artist')?.addEventListener('click', () => showAlbums(view.artistPath));
+    content.querySelector('.album-download')?.addEventListener('click',()=>requestClientDownload(album.path,'album',album.name));
+    content.querySelector('.album-more')?.addEventListener('click', event => localMore(event.currentTarget, album));
+  }
+  bindLibraryContent(content);
+}
+
+function bindLibraryContent(content) {
   content.querySelectorAll('.library-card').forEach(card => {
     const open = () => card.dataset.kind === 'artist' ? showAlbums(card.dataset.path) : showAlbum(card.dataset.path);
     card.addEventListener('click', open);
@@ -1063,6 +1164,9 @@ function renderLibrary() {
     event.stopPropagation();
     const card = button.closest('.library-card');
     await playLibraryScope(findLibraryNode(card.dataset.path), card.dataset.kind);
+  }));
+  content.querySelectorAll('.library-more').forEach(button => button.addEventListener('click', event => {
+    event.stopPropagation(); localMore(button, findLibraryNode(button.closest('.library-card').dataset.path));
   }));
   content.querySelectorAll('.library-download').forEach(button => button.addEventListener('click', event => {
     event.stopPropagation();
@@ -1079,17 +1183,22 @@ function renderLibrary() {
     });
     row.addEventListener('click', () => {
       const track = findLibraryNode(row.dataset.path);
-      state.playQueue = [track];
-      playTrack(track, 0);
+      playFromAlbum(track);
     });
   });
+
+  content.querySelectorAll('.track-more').forEach(button => button.addEventListener('click', event => {
+    event.stopPropagation(); localMore(button, findLibraryNode(button.dataset.path));
+  }));
 }
 
 function showRoot(section) {
+  if(section === 'search') return showSearchScreen();
   if (!['recent','artists','all-albums','songs'].includes(section)) section = 'recent';
   state.searchActive = false;
   state.searchScope = 'local';
   state.searchRequestId += 1;
+  state.catalogueView = null; state.catalogueTrail = [];
   state.librarySection = section;
   state.libraryTrail = [];
   state.libraryView = { level: section, artistPath: null, albumPath: null };
@@ -1105,7 +1214,8 @@ function showArtists() { showRoot('artists'); }
 document.querySelectorAll('[data-library-section]').forEach(button => button.addEventListener('click', () => showRoot(button.dataset.librarySection)));
 
 function showAlbums(artistPath) {
-  state.libraryTrail.push({...state.libraryView});
+  state.catalogueView = null; state.catalogueTrail = []; state.searchRequestId++;
+  state.libraryTrail.push(state.searchActive && state.searchScope === 'local' ? {searchResult:true,query:document.getElementById('search-input').value,type:searchType,view:{...state.libraryView}} : {...state.libraryView});
   state.searchActive = false;
   state.libraryView = { level: 'albums', artistPath, albumPath: null };
   renderLibrary();
@@ -1116,7 +1226,8 @@ function showAlbums(artistPath) {
 }
 
 function showAlbum(albumPath) {
-  state.libraryTrail.push({...state.libraryView});
+  state.catalogueView = null; state.catalogueTrail = []; state.searchRequestId++;
+  state.libraryTrail.push(state.searchActive && state.searchScope === 'local' ? {searchResult:true,query:document.getElementById('search-input').value,type:searchType,view:{...state.libraryView}} : {...state.libraryView});
   state.searchActive = false;
   const artistPath = albumPath.split('/')[0];
   state.libraryView = { level: 'tracks', artistPath, albumPath };
@@ -1128,8 +1239,13 @@ function showAlbum(albumPath) {
 }
 
 document.getElementById('library-back').addEventListener('click', () => {
-  if (state.searchActive) returnToLibrary();
-  else if (state.libraryTrail.length) { state.libraryView = state.libraryTrail.pop(); renderLibrary(); }
+  if (state.searchActive && state.searchScope === 'apple' && state.catalogueTrail.length) { state.searchRequestId++; state.catalogueView = state.catalogueTrail.pop(); renderCatalogue(); }
+  else if (state.searchActive) returnToLibrary();
+  else if (state.libraryTrail.length) {
+    const previous=state.libraryTrail.pop();
+    if(previous.searchResult){state.libraryView=previous.view;state.searchActive=true;state.searchScope='local';state.librarySection='search';searchType=previous.type;document.getElementById('search-input').value=previous.query;doLocalSearch();}
+    else { state.libraryView=previous;renderLibrary(); }
+  }
   else showRoot(state.librarySection);
 });
 
@@ -1139,54 +1255,173 @@ document.getElementById('library-home').addEventListener('click', () => {
   document.querySelector('main').scrollTop = 0;
 });
 
-function playTrack(track, index = null) {
-  if (index !== null) state.playIndex = index;
-  state.currentTrack = track;
-  const player = document.getElementById('player');
-  const bar = document.getElementById('player-bar');
-  document.getElementById('player-track-name').textContent = stripExt(track.name);
-  document.getElementById('player-album-name').textContent = track.path.split('/').slice(0, -1).join(' / ');
-  document.getElementById('player-queue-position').textContent = state.playQueue.length > 1 ? `${state.playIndex + 1} of ${state.playQueue.length}` : '';
-  player.src = `/files/${encodeURIPath(track.path)}`;
-  player.play().catch(() => {});
-  bar.classList.add('visible');
-  // Re-render to show playing indicator
-  if (state.libraryData && !document.getElementById('search-input').value.trim()) renderLibrary();
+function trackTitle(track) {
+  return track?.fidelity?.title || stripExt(track?.name || '').replace(/^\d+(?:-\d+)?[ ._-]+/, '');
 }
-
-async function playLibraryScope(node, kind) {
-  if (!node) return;
-  let tracks;
-  if (kind === 'artist') {
-    await ensureArtistMetadata(node);
-    tracks = orderedAlbums(node).flatMap(orderedTracks);
-  } else {
-    await getAlbumMetadata(node);
-    tracks = orderedTracks(node);
-  }
-  if (!tracks.length) return showToast('No playable tracks found', 'error');
-  state.playQueue = tracks;
-  playTrack(tracks[0], 0);
+function formatTime(seconds) {
+  seconds = Math.max(0, Math.round(Number(seconds) || 0));
+  const hours = Math.floor(seconds / 3600), minutes = Math.floor(seconds / 60) % 60, remainder = seconds % 60;
+  return hours ? `${hours}:${String(minutes).padStart(2,'0')}:${String(remainder).padStart(2,'0')}` : `${minutes}:${String(remainder).padStart(2,'0')}`;
 }
-
-function moveQueue(direction) {
-  const next = state.playIndex + direction;
-  if (next < 0 || next >= state.playQueue.length) return;
-  playTrack(state.playQueue[next], next);
+function albumForTrack(track) { return allLibraryAlbums().find(album => track.path.startsWith(album.path + '/')); }
+function localAlbumHeader(album) {
+  if (!album) return '';
+  const metadata = state.albumMetadata[album.path] || {}, info = metadata.album || {}, tracks = orderedTracks(album);
+  const duration = tracks.reduce((sum,track) => sum + (track.fidelity?.duration || 0),0);
+  const details = [metadata.releaseDate?.slice(0,4),info.genre,`${tracks.length} downloaded song${tracks.length !== 1 ? 's' : ''}`,duration ? formatTime(duration) : ''].filter(Boolean).join(' · ');
+  return `<section class="album-hero"><img class="album-hero-art" src="/api/library/artwork?path=${encodeURIComponent(album.path)}" alt="Album artwork"><div class="album-hero-content"><p class="eyebrow">In your library</p><h2>${escHtml(info.title || album.name)}</h2><button class="text-link album-artist">${escHtml(info.artist || album.path.split('/')[0])}</button><p>${escHtml(details)}</p><div class="hero-actions"><button class="btn album-play">Play</button><button class="btn btn-secondary album-shuffle">Shuffle</button><button class="track-dl album-download" aria-label="Download album ZIP to this device" title="Download album ZIP to this device">${downloadIcon()}</button><button class="more-button album-more" aria-label="More for album" aria-haspopup="menu">•••</button></div></div></section>`;
 }
-
-document.getElementById('player').addEventListener('ended', () => moveQueue(1));
-document.getElementById('player-prev').addEventListener('click', () => moveQueue(-1));
-document.getElementById('player-next').addEventListener('click', () => moveQueue(1));
-
-document.getElementById('player-close').addEventListener('click', () => {
-  document.getElementById('player').pause();
-  document.getElementById('player-bar').classList.remove('visible');
-  state.currentTrack = null;
-  state.playQueue = [];
-  state.playIndex = -1;
-  if (state.libraryData && !document.getElementById('search-input').value.trim()) renderLibrary();
+function localArtistHeader(artist) {
+  if(!artist)return '';
+  return `<section class="album-hero"><img class="album-hero-art" src="/api/library/artwork?path=${encodeURIComponent(artist.path)}" alt="Artist library artwork"><div class="album-hero-content"><p class="eyebrow">In your library · Artist</p><h2>${escHtml(artist.name)}</h2><p>${orderedAlbums(artist).length} downloaded album${orderedAlbums(artist).length!==1?'s':''} · ${countTracks(artist)} songs</p><div class="hero-actions"><button class="btn artist-play">Play</button><button class="btn btn-secondary artist-shuffle">Shuffle</button><button class="track-dl artist-download" aria-label="Download artist ZIP to this device" title="Download artist ZIP to this device">${downloadIcon()}</button><button class="more-button artist-more" aria-label="More for artist" aria-haspopup="menu">•••</button></div></div></section>`;
+}
+let moreAnchor = null;
+function closeMoreMenu() {
+  const menu = document.getElementById('more-menu'); menu.hidden = true;
+  if (moreAnchor) moreAnchor.setAttribute('aria-expanded','false');
+}
+function openMoreMenu(anchor, actions) {
+  closeMoreMenu(); moreAnchor = anchor; anchor.setAttribute('aria-expanded','true');
+  const menu = document.getElementById('more-menu');
+  menu.innerHTML = actions.map((action,index) => `<button role="menuitem" data-action="${index}">${escHtml(action.label)}</button>`).join('');
+  menu.hidden = false;
+  const rect = anchor.getBoundingClientRect();
+  menu.style.left = `${Math.max(10,Math.min(rect.right - 230,window.innerWidth - 240))}px`;
+  menu.style.top = `${Math.max(10,Math.min(rect.bottom + 5,window.innerHeight - menu.offsetHeight - 10))}px`;
+  menu.querySelectorAll('button').forEach((button,index) => button.addEventListener('click', async () => {
+    closeMoreMenu();
+    try { await actions[index].run(); } catch { showToast('Could not complete that action. Please try again.','error'); }
+  }));
+  menu.querySelector('button')?.focus();
+}
+document.addEventListener('click', event => {
+  if (!document.getElementById('more-menu').contains(event.target) && !moreAnchor?.contains(event.target)) closeMoreMenu();
 });
+document.getElementById('more-menu').addEventListener('keydown', event => {
+  const buttons = [...event.currentTarget.querySelectorAll('button')], index = buttons.indexOf(document.activeElement);
+  if (event.key === 'Escape') { closeMoreMenu(); moreAnchor?.focus(); }
+  if (['ArrowDown','ArrowUp'].includes(event.key)) { event.preventDefault(); buttons[(index + (event.key === 'ArrowDown' ? 1 : buttons.length-1)) % buttons.length]?.focus(); }
+});
+async function tracksForNode(node) {
+  if (!node) return [];
+  if (node.type === 'file') return [node];
+  const isArtist = !node.path.includes('/');
+  if (isArtist) { await ensureArtistMetadata(node); return orderedAlbums(node).flatMap(orderedTracks); }
+  await getAlbumMetadata(node); return orderedTracks(node);
+}
+function localMore(anchor,node) {
+  if (!node) return;
+  const kind = node.type === 'file' ? 'song' : node.path.includes('/') ? 'album' : 'artist';
+  const actions = [
+    {label:'Play Next',run: async () => enqueueTracks(await tracksForNode(node), true)},
+    {label:'Add to Playback Queue',run: async () => enqueueTracks(await tracksForNode(node), false)},
+  ];
+  if(anchor.id==='player-more')actions.push({label:'Download original to this device',run:()=>requestClientDownload(node.path,kind,node.name)});
+  if (kind === 'song') { const album=albumForTrack(node); if (album) actions.push({label:'Go to Album',run:()=>showAlbum(album.path)}); }
+  if (kind !== 'artist') actions.push({label:'Go to Artist',run:()=>showAlbums(node.path.split('/')[0])});
+  openMoreMenu(anchor,actions);
+}
+function shuffled(items) {
+  const result = [...items];
+  for (let index=result.length-1;index>0;index--) { const target=Math.floor(Math.random()*(index+1)); [result[index],result[target]]=[result[target],result[index]]; }
+  return result;
+}
+function queueEntries(tracks) { return tracks.map(track => ({...track,queueId:++state.queueSequence})); }
+function startPlaybackQueue(tracks,index=0,shuffle=state.shuffle,randomStart=false) {
+  if (!tracks.length) return showToast('No downloaded tracks to play','error');
+  const entries=queueEntries(tracks); state.playQueueBase=[...entries]; state.shuffle=shuffle;
+  if (shuffle) { state.playQueue = randomStart ? shuffled(entries) : [entries[index],...shuffled(entries.filter((_,position)=>position!==index))]; index=0; }
+  else state.playQueue=entries;
+  playTrack(state.playQueue[index],index);
+}
+async function playFromAlbum(track) {
+  const album=albumForTrack(track);
+  if (album) await getAlbumMetadata(album);
+  const tracks=album ? orderedTracks(album) : [track];
+  startPlaybackQueue(tracks,Math.max(0,tracks.findIndex(item=>item.path===track.path)));
+}
+function playTrack(track,index=null) {
+  if (!track) return;
+  if (index !== null) state.playIndex=index;
+  state.currentTrack=track;
+  const player=document.getElementById('player');
+  document.getElementById('player-track-name').textContent=trackTitle(track);
+  document.getElementById('player-album-name').textContent=track.path.split('/').slice(0,-1).join(' · ');
+  const album=albumForTrack(track);
+  document.getElementById('player-artwork').src=`/api/library/artwork?path=${encodeURIComponent(album?.path || track.path)}`;
+  player.src=`/files/${encodeURIPath(track.path)}`;
+  player.play().catch(()=>showToast('This browser could not play the original file. You can download it to this device.','error'));
+  document.getElementById('player-bar').classList.add('visible');
+  renderPlaybackQueue();
+  if (state.libraryData && !state.searchActive) renderLibrary();
+}
+async function playLibraryScope(node,kind,shuffle=false) {
+  const tracks=await tracksForNode(node);
+  startPlaybackQueue(tracks,0,shuffle || state.shuffle,shuffle);
+}
+function enqueueTracks(tracks,next=false) {
+  if (!tracks.length) return;
+  const entries=queueEntries(tracks);
+  if (next) {
+    state.playQueue.splice(state.playIndex+1,0,...entries);
+    const baseIndex=state.currentTrack ? state.playQueueBase.findIndex(item=>item.queueId===state.currentTrack.queueId)+1 : 0;
+    state.playQueueBase.splice(baseIndex,0,...entries);
+  } else { state.playQueue.push(...entries); state.playQueueBase.push(...entries); }
+  if (!state.currentTrack) {
+    document.getElementById('player-track-name').textContent='Queue ready';
+    document.getElementById('player-album-name').textContent='Choose a song in Up Next';
+    document.getElementById('player-bar').classList.add('visible');
+    openPlaybackQueue();
+  }
+  renderPlaybackQueue(); showToast(next ? 'Added to Play Next' : 'Added to playback queue','success');
+}
+function moveQueue(direction,ended=false) {
+  if (!state.playQueue.length) return;
+  if (ended && state.repeat==='one') return playTrack(state.playQueue[state.playIndex],state.playIndex);
+  if (!ended && direction<0 && document.getElementById('player').currentTime>3) { document.getElementById('player').currentTime=0; return; }
+  let next=state.playIndex+direction;
+  if (next>=state.playQueue.length && state.repeat==='all') next=0;
+  if (next<0 || next>=state.playQueue.length) return;
+  playTrack(state.playQueue[next],next);
+}
+function renderPlaybackQueue() {
+  const remaining=state.playQueue.slice(state.playIndex+1);
+  document.getElementById('player-queue-position').textContent=state.currentTrack ? `${state.playIndex+1} of ${state.playQueue.length}` : `${remaining.length} queued`;
+  document.getElementById('playback-queue-toggle').textContent=`Up Next${remaining.length ? ` (${remaining.length})` : ''}`;
+  const shuffle=document.getElementById('player-shuffle'),repeat=document.getElementById('player-repeat');
+  shuffle.setAttribute('aria-pressed',String(state.shuffle)); shuffle.setAttribute('aria-label',`Shuffle ${state.shuffle?'on':'off'}`);
+  repeat.setAttribute('aria-pressed',String(state.repeat!=='off')); repeat.setAttribute('aria-label',`Repeat ${state.repeat}`); repeat.textContent=state.repeat==='one'?'↻1':'↻';
+  const list=document.getElementById('playback-list');
+  list.innerHTML=(state.currentTrack ? `<p class="queue-current">Now Playing · ${escHtml(trackTitle(state.currentTrack))}</p>` : '') + (remaining.length ? `<h3>${state.currentTrack?'Coming Up':'Queued'}</h3>`+remaining.map(item=>`<div class="queue-item"><button class="text-link" data-queue-play="${item.queueId}">${escHtml(trackTitle(item))}<small>${escHtml(item.path.split('/').slice(0,-1).join(' · '))}</small></button><button class="more-button" data-queue-remove="${item.queueId}" aria-label="Remove ${escHtml(trackTitle(item))} from playback queue">×</button></div>`).join('') : '<p class="catalogue-note">Nothing else queued.</p>');
+  list.querySelectorAll('[data-queue-play]').forEach(button=>button.addEventListener('click',()=>{const index=state.playQueue.findIndex(item=>item.queueId===Number(button.dataset.queuePlay));playTrack(state.playQueue[index],index);}));
+  list.querySelectorAll('[data-queue-remove]').forEach(button=>button.addEventListener('click',()=>{const id=Number(button.dataset.queueRemove);state.playQueue=state.playQueue.filter(item=>item.queueId!==id);state.playQueueBase=state.playQueueBase.filter(item=>item.queueId!==id);renderPlaybackQueue();}));
+  document.getElementById('clear-upcoming').disabled=!remaining.length;
+}
+function openPlaybackQueue() {
+  closeDrawers();renderPlaybackQueue();document.getElementById('settings-overlay').hidden=false;
+  const drawer=document.getElementById('playback-drawer');drawer.classList.add('open');drawer.setAttribute('aria-hidden','false');
+}
+document.getElementById('playback-queue-toggle').addEventListener('click',openPlaybackQueue);
+document.getElementById('playback-close').addEventListener('click',closeDrawers);
+document.getElementById('clear-upcoming').addEventListener('click',()=>{state.playQueue=state.playQueue.slice(0,state.playIndex+1);const ids=new Set(state.playQueue.map(item=>item.queueId));state.playQueueBase=state.playQueueBase.filter(item=>ids.has(item.queueId));renderPlaybackQueue();});
+document.getElementById('player-shuffle').addEventListener('click',()=>{
+  state.shuffle=!state.shuffle;
+  const played=state.playQueue.slice(0,state.playIndex+1),pending=state.playQueue.slice(state.playIndex+1);
+  const order=new Map(state.playQueueBase.map((item,index)=>[item.queueId,index]));
+  state.playQueue=[...played,...(state.shuffle?shuffled(pending):pending.sort((a,b)=>order.get(a.queueId)-order.get(b.queueId)))];renderPlaybackQueue();
+});
+document.getElementById('player-repeat').addEventListener('click',()=>{state.repeat=({off:'all',all:'one',one:'off'})[state.repeat];renderPlaybackQueue();});
+document.getElementById('player-more').addEventListener('click',event=>localMore(event.currentTarget,state.currentTrack));
+document.getElementById('player').addEventListener('ended',()=>moveQueue(1,true));
+document.getElementById('player').addEventListener('error',()=>{if(state.currentTrack)showToast('Playback unavailable for this file in this browser. The original is still available to download.','error');});
+document.getElementById('player-prev').addEventListener('click',()=>moveQueue(-1));
+document.getElementById('player-next').addEventListener('click',()=>moveQueue(1));
+document.getElementById('player-close').addEventListener('click',()=>{
+  const player=document.getElementById('player');player.pause();player.removeAttribute('src');player.load();
+  document.getElementById('player-bar').classList.remove('visible');state.currentTrack=null;state.playQueue=[];state.playQueueBase=[];state.playIndex=-1;renderPlaybackQueue();
+  if(!state.searchActive)renderLibrary();
+});
+
 
 function encodeURIPath(p) {
   return p.split('/').map(encodeURIComponent).join('/');
@@ -1309,202 +1544,197 @@ function showToast(msg, type = '') {
   toastTimer = setTimeout(() => el.className = '', 3000);
 }
 
-// Search
-let searchType = 'artist';
-
+// Library search stays local until the user explicitly chooses Apple Music.
+let searchType='all';
+function showSearchScreen(){
+  if(!state.searchActive){state.libraryReturnView={...state.libraryView};state.libraryReturnSection=state.librarySection;state.libraryReturnScroll=document.querySelector('main').scrollTop;}
+  state.searchActive=true;state.searchScope='local';state.librarySection='search';state.searchRequestId++;state.catalogueView=null;state.catalogueTrail=[];
+  closeDrawers();syncLibraryNav();document.getElementById('search-panel').hidden=false;document.querySelector('.library-heading').hidden=false;
+  document.getElementById('library-title').textContent='Search';document.getElementById('library-subtitle').textContent='Your downloaded library';document.getElementById('library-back').hidden=true;
+  document.getElementById('library-content').innerHTML='<div class="library-empty">Find artists, albums and songs in your library.</div>';
+  document.querySelector('main').scrollTop=0;document.getElementById('search-input').focus();
+}
 function beginSearch(scope) {
-  if (!state.searchActive) {
-    state.libraryReturnView = { ...state.libraryView };
-    state.libraryReturnScroll = document.querySelector('main').scrollTop;
+  if(!state.searchActive){state.libraryReturnView={...state.libraryView};state.libraryReturnSection=state.librarySection;state.libraryReturnScroll=document.querySelector('main').scrollTop;}
+  state.searchActive=true;state.searchScope=scope;state.librarySection='search';syncLibraryNav();document.getElementById('search-panel').hidden=false;
+  document.querySelector('.library-heading').hidden=false;
+  const back=document.getElementById('library-back');back.hidden=false;back.textContent='‹ Library';
+}
+function returnToLibrary(){state.searchActive=false;state.searchScope='local';state.searchRequestId++;state.catalogueView=null;state.catalogueTrail=[];if(state.libraryReturnView)state.libraryView={...state.libraryReturnView};state.librarySection=state.libraryReturnSection||'recent';renderLibrary();requestAnimationFrame(()=>{document.querySelector('main').scrollTop=state.libraryReturnScroll;});}
+document.querySelectorAll('.type-btn').forEach(button=>button.addEventListener('click',()=>{
+  document.querySelectorAll('.type-btn').forEach(item=>item.classList.remove('active'));button.classList.add('active');searchType=button.dataset.type;
+  if(document.getElementById('search-input').value.trim()){if(state.searchScope==='apple')doAppleSearch();else doLocalSearch();}
+}));
+document.getElementById('search-form').addEventListener('submit',event=>{event.preventDefault();doLocalSearch();});
+document.getElementById('apple-search-btn').addEventListener('click',doAppleSearch);
+function localMatches(q,type=searchType){
+  const query=q.toLocaleLowerCase(),artists=(state.libraryData||[]).filter(node=>node.type==='dir');
+  if(type==='artist')return artists.filter(node=>node.name.toLocaleLowerCase().includes(query));
+  if(type==='album')return allLibraryAlbums().filter(node=>node.path.toLocaleLowerCase().includes(query));
+  return (state.libraryData||[]).flatMap(collectTracks).filter(track=>(trackTitle(track)+' '+track.path).toLocaleLowerCase().includes(query));
+}
+async function doLocalSearch(){
+  const q=document.getElementById('search-input').value.trim();if(!q)return showSearchScreen();
+  beginSearch('local');document.querySelectorAll('.type-btn').forEach(button=>button.classList.toggle('active',button.dataset.type===searchType));state.catalogueView=null;state.catalogueTrail=[];const requestId=++state.searchRequestId;
+  const types=searchType==='all'?['artist','album','song']:[searchType],groups=types.map(type=>({type,items:localMatches(q,type)}));
+  document.getElementById('library-title').textContent=`Search your library`;
+  const total=groups.reduce((sum,group)=>sum+group.items.length,0);
+  document.getElementById('library-subtitle').textContent=`${total} library result${total!==1?'s':''} for “${q}”`;
+  const content=document.getElementById('library-content');
+  const cta=`<div class="search-cta"><span>${total?'Still looking?':'Nothing found in your library.'}</span><button class="btn" id="search-apple-empty">Search Apple Music for “${escHtml(q)}”</button></div>`;
+  content.innerHTML=groups.filter(group=>group.items.length).map(group=>`<section class="search-section"><h3>${({artist:'Artists',album:'Albums',song:'Songs'})[group.type]} · ${group.items.length}</h3>${group.type==='song'?trackListHtml(group.items,true):`<div class="library-grid">${group.items.map(node=>libraryCardHtml(node,group.type)).join('')}</div>`}</section>`).join('')+cta;
+  bindLibraryContent(content);document.getElementById('search-apple-empty').addEventListener('click',doAppleSearch);
+  const songs=groups.find(group=>group.type==='song')?.items || [];
+  if(songs.some(track=>{const album=albumForTrack(track);return album&&!state.albumMetadata[album.path];})){
+    const albums=[...new Set(songs.map(albumForTrack).filter(Boolean))];
+    await Promise.all(albums.map(getAlbumMetadata));
+    if(state.searchActive&&state.searchScope==='local'&&requestId===state.searchRequestId)doLocalSearch();
   }
-  state.searchActive = true;
-  state.searchScope = scope;
-  const back = document.getElementById('library-back');
-  back.hidden = false;
-  back.textContent = '‹ Library';
+}
+let libraryIndexPromise=null;
+async function ensureLibraryIndex(){
+  if(state.libraryIndexReady)return;
+  if(libraryIndexPromise)return libraryIndexPromise;
+  libraryIndexPromise=(async()=>{
+    if(!state.libraryData && !await loadLibrary({silent:true}))throw new Error('Library unavailable');
+    const library=state.libraryData,albums=allLibraryAlbums();let next=0;
+    await Promise.all(Array.from({length:Math.min(4,albums.length)},async()=>{while(next<albums.length)await getAlbumMetadata(albums[next++]);}));
+    state.libraryIndexReady=state.libraryData===library;
+  })().finally(()=>{libraryIndexPromise=null;});
+  return libraryIndexPromise;
+}
+function catalogueKind(item){return item.resultType || (item.wrapperType==='artist'?'artist':item.wrapperType==='collection'?'album':'song');}
+function catalogueId(item){return catalogueKind(item)==='artist'?item.artistId:catalogueKind(item)==='album'?item.collectionId:item.trackId;}
+function catalogueUrl(item){const kind=catalogueKind(item),id=catalogueId(item);return kind==='song'&&item.collectionId?`https://music.apple.com/us/album/${item.collectionId}?i=${id}`:`https://music.apple.com/us/${kind}/${id}`;}
+function catalogueTitle(item){return catalogueKind(item)==='artist'?item.artistName:catalogueKind(item)==='album'?item.collectionName:item.trackName;}
+function libraryPresence(item){
+  if(!state.libraryIndexReady)return{label:state.libraryIndexFailed?'Download status unavailable':'Checking downloads…',complete:false};
+  const files=(state.libraryData||[]).flatMap(collectTracks),kind=catalogueKind(item),id=String(catalogueId(item));
+  const normal=value=>String(value||'').normalize('NFKD').toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu,'');
+  if(kind==='song'){
+    const track=files.find(file=>String(file.fidelity?.songId)===id);
+    const alternate=!track&&files.find(file=>normal(file.fidelity?.title||trackTitle(file))===normal(item.trackName)&&normal(file.fidelity?.artist||file.path.split('/')[0])===normal(item.artistName));
+    if(alternate)return{label:'Possible local version · '+formatFidelity(alternate),complete:false,track:alternate,node:albumForTrack(alternate),alternate:true};
+    return track?{label:'Downloaded · '+formatFidelity(track),complete:true,track,node:albumForTrack(track)}:{label:files.some(file=>!file.fidelity?.songId)?'Download status unknown':'Not downloaded',complete:false};
+  }
+  const matches=files.filter(file=>String(file.fidelity?.[kind==='album'?'albumId':'artistId'])===id);
+  const count=new Set(matches.map(file=>file.fidelity.songId||file.path)).size;
+  if(!count&&kind==='album') {
+    const node=allLibraryAlbums().find(album=>normal(state.albumMetadata[album.path]?.album?.title||album.name)===normal(item.collectionName)&&normal(state.albumMetadata[album.path]?.album?.artist||album.path.split('/')[0])===normal(item.artistName));
+    if(node)return{label:`Other edition in library · ${countTracks(node)} downloaded songs`,complete:false,node,alternate:true};
+  }
+  if(!count&&kind==='artist') {
+    const normal=value=>String(value||'').normalize('NFKD').toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu,'');
+    const node=(state.libraryData||[]).find(value=>value.type==='dir'&&normal(value.name)===normal(item.artistName));
+    if(node)return{label:`Possible library artist · ${countTracks(node)} downloaded songs`,complete:false,node};
+  }
+  if(!count)return{label:files.some(file=>!file.fidelity?.songId)?'Download status unknown':'Not downloaded',complete:false};
+  const node=kind==='album'?albumForTrack(matches[0]):findLibraryNode(matches[0].path.split('/')[0]);
+  const complete=kind==='album'&&Number(item.trackCount)>0&&count>=Number(item.trackCount);
+  return{label:kind==='album'&&item.trackCount?`${count} of ${item.trackCount} songs downloaded`:`${count} downloaded song${count!==1?'s':''}`,complete,node};
+}
+function catalogueMore(anchor,item){
+  const presence=libraryPresence(item),actions=[];
+  if(presence.track){actions.push({label:'Play Next (downloaded file)',run:()=>enqueueTracks([presence.track],true)},{label:'Add downloaded file to Playback Queue',run:()=>enqueueTracks([presence.track])},{label:'Download original to this device',run:()=>requestClientDownload(presence.track.path,'song',presence.track.name)});}
+  if(presence.node&&!presence.track)actions.push({label:'Play downloaded songs next',run:async()=>enqueueTracks(await tracksForNode(presence.node),true)},{label:'Add downloaded songs to Playback Queue',run:async()=>enqueueTracks(await tracksForNode(presence.node))},{label:'Download library copy ZIP to this device',run:()=>requestClientDownload(presence.node.path,catalogueKind(item),presence.node.name)});
+  if(presence.node)actions.push({label:'Open downloaded '+(catalogueKind(item)==='artist'?'artist':'album'),run:()=>catalogueKind(item)==='artist'?showAlbums(presence.node.path):showAlbum(presence.node.path)});
+  actions.push({label:'Open in Apple Music',run:()=>window.open(catalogueUrl(item),'_blank','noopener,noreferrer')});openMoreMenu(anchor,actions);
+}
+async function queueAppleUrl(url){
+  const response=await fetch('/api/queue',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+  const data=await response.json();if(!response.ok)throw new Error(data.error||'Could not save to server');
+  showToast('Saving to server — see Download History for progress','success');return data.id;
+}
+function saveButtonHtml(item,index) {
+  const presence=libraryPresence(item),kind=catalogueKind(item);
+  const pending=Object.values(state.jobs).some(job=>job.url===catalogueUrl(item)&&['pending','running'].includes(job.status));
+  if(pending)return '<button class="track-dl" disabled aria-label="Queued for server" title="Queued for server">…</button>';
+  if(presence.complete&&presence.node) return `<button class="track-dl catalog-device" data-item="${index}" aria-label="Download ${escHtml(kind)} to this device" title="Download ${escHtml(kind)} to this device">${downloadIcon()}</button>`;
+  const label=kind==='artist'?'Save artist albums to server':kind==='album'&&presence.node&&!presence.alternate?'Save missing songs to server':'Save '+kind+' to server';
+  return `<button class="track-dl catalog-save" data-item="${index}" aria-label="${escHtml(label)}" title="${escHtml(label)}">${downloadIcon()}</button>`;
+}
+function resultCardHtml(item,index) {
+  const title=catalogueTitle(item)||'Unknown',presence=libraryPresence(item),art=item.artworkUrl100?.replace('100x100','300x300');
+  const mark=!state.libraryIndexReady?'…':presence.complete?'✓':presence.node?'◐':'↓';
+  return `<article class="result-card"><button class="catalogue-open" data-item="${index}" aria-label="Browse ${escHtml(title)}"><div class="library-art">${art?`<img class="result-art" src="${escHtml(art)}" loading="lazy" alt="">`:'<div class="result-art-placeholder">♫</div>'}<span class="card-library-badge" title="${escHtml(presence.label)}" aria-label="${escHtml(presence.label)}">${mark}</span></div><div class="result-info"><div class="result-title">${escHtml(title)}</div>${catalogueKind(item)!=='artist'?`<div class="result-sub">${escHtml(item.artistName||'')}</div>`:''}</div></button></article>`;
 }
 
-function returnToLibrary() {
-  state.searchActive = false;
-  state.searchScope = 'local';
-  state.searchRequestId += 1;
-  if (state.libraryReturnView) state.libraryView = { ...state.libraryReturnView };
-  const scrollTop = state.libraryReturnScroll;
-  renderLibrary();
-  requestAnimationFrame(() => { document.querySelector('main').scrollTop = scrollTop; });
+async function doAppleSearch(){
+  const q=document.getElementById('search-input').value.trim();if(!q)return;
+  beginSearch('apple');state.catalogueTrail=[];
+  if(/^https:\/\/music\.apple\.com\//i.test(q)){
+    const url=new URL(q),id=url.searchParams.get('i')||url.pathname.match(/\/(\d+)\/?$/)?.[1];
+    const kind=url.searchParams.has('i')?'song':url.pathname.includes('/artist/')?'artist':url.pathname.includes('/song/')?'song':'album';
+    if(!id)return showToast('Could not identify this Apple Music link','error');
+    return openCatalogueItem({resultType:kind,[kind==='artist'?'artistId':kind==='album'?'collectionId':'trackId']:Number(id)},false);
+  }
+  const requestId=++state.searchRequestId,content=document.getElementById('library-content');
+  document.getElementById('library-title').textContent='Search Apple Music';document.getElementById('library-subtitle').textContent=`Searching for “${q}”`;
+  content.innerHTML='<div class="search-loading">Searching Apple Music…</div>';
+  try{
+    const response=await fetch(`/api/search?q=${encodeURIComponent(q)}&type=${searchType}`),data=await response.json();if(!response.ok)throw new Error(data.error);
+    if(requestId!==state.searchRequestId||!state.searchActive||state.searchScope!=='apple')return;
+    state.catalogueView={kind:'search',items:data.results||[],query:q};renderCatalogue();
+  }catch{if(requestId===state.searchRequestId)content.innerHTML='<div class="search-loading">Apple Music search is unavailable. Try again, or return to your library.</div>';}
 }
-
-document.querySelectorAll('.type-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    searchType = btn.dataset.type;
-    const currentQuery = document.getElementById('search-input').value.trim();
-    if (currentQuery && !/^https:\/\/music\.apple\.com\//i.test(currentQuery)) {
-      if (state.searchScope === 'apple') doAppleSearch();
-      else doLocalSearch();
+async function openCatalogueItem(item,push=true){
+  beginSearch('apple');if(push&&state.catalogueView)state.catalogueTrail.push(state.catalogueView);
+  const kind=catalogueKind(item),requestId=++state.searchRequestId;document.getElementById('search-panel').hidden=true;
+  const content=document.getElementById('library-content');content.innerHTML='<div class="search-loading">Opening Apple Music…</div>';
+  try{
+    let items=[item];
+    if(kind!=='song'||!item.trackName){
+      const response=await fetch(`/api/catalogue?kind=${kind}&id=${encodeURIComponent(catalogueId(item))}`),data=await response.json();if(!response.ok)throw new Error(data.error);items=data.results||[];
     }
-    else showRoot(state.librarySection);
-  });
-});
-
-document.getElementById('search-form').addEventListener('submit', e => {
-  e.preventDefault();
-  doLocalSearch();
-});
-
-document.getElementById('apple-search-btn').addEventListener('click', doAppleSearch);
-
-function localMatches(q) {
-  const query = q.toLocaleLowerCase();
-  const artists = (state.libraryData || []).filter(node => node.type === 'dir');
-  if (searchType === 'artist') return artists.filter(node => node.name.toLocaleLowerCase().includes(query));
-  const albums = artists.flatMap(artist => (artist.children || []).filter(node => node.type === 'dir'));
-  if (searchType === 'album') return albums.filter(node => node.name.toLocaleLowerCase().includes(query) || node.path.toLocaleLowerCase().includes(query));
-  return artists.flatMap(collectTracks).filter(node => stripExt(node.name).toLocaleLowerCase().includes(query) || node.path.toLocaleLowerCase().includes(query));
+    if(requestId!==state.searchRequestId||!state.searchActive||state.searchScope!=='apple')return;
+    const primary=items.find(value=>catalogueKind(value)===kind&&String(catalogueId(value))===String(catalogueId(item)))||item;
+    if(!catalogueTitle(primary))throw new Error('Item unavailable');
+    const children=kind==='artist'?items.filter(value=>value.wrapperType==='collection').map(value=>({...value,resultType:'album'})):kind==='album'?items.filter(value=>value.wrapperType==='track'&&value.kind==='song').map(value=>({...value,resultType:'song'})):[];
+    state.catalogueView={kind,item:{...primary,resultType:kind},items:children};renderCatalogue();document.querySelector('main').scrollTop=0;
+  }catch{if(requestId===state.searchRequestId)content.innerHTML='<div class="search-loading">This catalogue item is unavailable. Use Back to return.</div>';}
 }
-
-async function doLocalSearch() {
-  const q = document.getElementById('search-input').value.trim();
-  if (!q) return showRoot(state.librarySection);
-  beginSearch('local');
-  state.searchRequestId += 1;
-  const items = localMatches(q);
-  const content = document.getElementById('library-content');
-  document.getElementById('library-title').textContent = `Library results for “${q}”`;
-  document.getElementById('library-subtitle').textContent = `${items.length} downloaded ${searchType}${items.length !== 1 ? 's' : ''}`;
-  if (!items.length) {
-    content.innerHTML = `<div class="search-fallback"><strong>No downloaded ${searchType}s found for “${escHtml(q)}”.</strong><button class="btn" id="search-apple-empty">Search Apple Music?</button></div>`;
-    document.getElementById('search-apple-empty').addEventListener('click', doAppleSearch);
-    return;
+function renderCatalogue(){
+  const view=state.catalogueView;if(!view)return;document.getElementById('search-panel').hidden=view.kind!=='search';
+  document.querySelector('.library-heading').hidden=false;
+  document.getElementById('library-back').hidden=false;document.getElementById('library-back').textContent=state.catalogueTrail.length?'‹ Back':'‹ Library';
+  const content=document.getElementById('library-content');let boundItems=[];
+  if(view.kind==='search'){
+    document.getElementById('library-title').textContent='Apple Music';document.getElementById('library-subtitle').textContent=`${view.items.length} results for “${view.query}”`;
+    boundItems=view.items;
+    content.innerHTML=['artist','album','song'].map(kind=>{
+      const items=view.items.map((item,index)=>({item,index})).filter(pair=>catalogueKind(pair.item)===kind);
+      return items.length?`<section class="search-section"><h3>${({artist:'Artists',album:'Albums',song:'Songs'})[kind]}</h3><div class="result-grid">${items.map(pair=>resultCardHtml(pair.item,pair.index)).join('')}</div></section>`:'';
+    }).join('')||'<div class="library-empty">No Apple Music results found.</div>';
+  }else{
+    const item=view.item,presence=libraryPresence(item),art=(item.artworkUrl100||view.items[0]?.artworkUrl100)?.replace('100x100','600x600');boundItems=[item,...view.items];
+    document.getElementById('library-title').textContent=catalogueTitle(item);document.getElementById('library-subtitle').textContent='Apple Music catalogue';
+    document.querySelector('.library-heading').hidden=true;
+    const duration=view.kind==='album'?view.items.reduce((sum,track)=>sum+(track.trackTimeMillis||0),0)/1000:(item.trackTimeMillis||0)/1000;
+    const details=[item.releaseDate?.slice(0,4),item.primaryGenreName,view.kind==='album'?`${item.trackCount||view.items.length} songs`:'',duration?formatTime(duration):''].filter(Boolean).join(' · ');
+    content.innerHTML=`<section class="album-hero">${art?`<img class="album-hero-art" src="${escHtml(art)}" alt="Artwork">`:'<div class="album-hero-art" aria-hidden="true">♫</div>'}<div class="album-hero-content"><p class="eyebrow">Apple Music · ${escHtml(view.kind)}</p><h2>${escHtml(catalogueTitle(item))}</h2>${view.kind!=='artist'?`<button class="text-link catalog-artist">${escHtml(item.artistName||'Artist')}</button>`:''}<p>${escHtml(details)}</p><p class="downloaded-badge ${presence.node||presence.track?'has-local':''}">${escHtml(presence.label)}</p><div class="hero-actions">${presence.track||presence.node?`<button class="btn catalog-play-local">${presence.alternate?'Play local version':presence.complete?'Play':'Play downloaded'}</button>`:''}${presence.node&&!presence.track?'<button class="btn btn-secondary catalog-shuffle-local" aria-label="Shuffle downloaded songs">Shuffle</button>':''}${saveButtonHtml(item,0)}<button class="more-button catalog-more" data-item="0" aria-label="More for catalogue item" aria-haspopup="menu">•••</button></div></div></section>`;
+    if(view.kind==='artist')content.innerHTML+=`<h3>Albums</h3><p class="catalogue-note">Browse an album before saving. Apple returns up to 200 catalogue entries.</p><div class="result-grid">${view.items.map((album,index)=>resultCardHtml(album,index+1)).join('')}</div>`;
+    if(view.kind==='album')content.innerHTML+=`<div class="track-list">${view.items.map((track,index)=>`<div class="catalogue-track"><span class="track-num">${track.trackNumber||index+1}</span><button class="text-link catalogue-open" data-item="${index+1}">${escHtml(track.trackName)}<small>${formatTime((track.trackTimeMillis||0)/1000)}</small></button><span class="downloaded-badge ${libraryPresence(track).track?'has-local':''}">${escHtml(libraryPresence(track).label)}</span>${libraryPresence(track).track?`<button class="track-dl catalog-row-play" data-item="${index+1}" aria-label="Play downloaded ${escHtml(track.trackName)}" title="Play downloaded file">▶</button>`:''}${saveButtonHtml(track,index+1)}<button class="more-button catalog-more" data-item="${index+1}" aria-label="More for ${escHtml(track.trackName)}" aria-haspopup="menu">•••</button></div>`).join('')}</div>`;
+    if(view.kind==='song')content.innerHTML+=`<p class="catalogue-note">${presence.alternate?'A possible local version is in your library. Play uses that file; saving requests this catalogue version.':presence.track?'This track is already on your server. Playback and device downloads use the original file.':'Save this song to your server to play the full downloaded track.'}</p>${item.collectionId?'<button class="text-link catalog-album">Browse this album →</button>':''}`;
+    if(item.copyright)content.insertAdjacentHTML('beforeend',`<p class="album-copyright">${escHtml(item.copyright)}</p>`);
+    content.querySelector('.catalog-artist')?.addEventListener('click',()=>openCatalogueItem({resultType:'artist',artistId:item.artistId,artistName:item.artistName}));
+    content.querySelector('.catalog-album')?.addEventListener('click',()=>openCatalogueItem({resultType:'album',collectionId:item.collectionId,collectionName:item.collectionName}));
+    content.querySelector('.catalog-shuffle-local')?.addEventListener('click',()=>playLibraryScope(presence.node,view.kind==='artist'?'artist':'album',true));
+    content.querySelector('.catalog-play-local')?.addEventListener('click',()=>presence.track?playFromAlbum(presence.track):playLibraryScope(presence.node,catalogueKind(item)==='artist'?'artist':'album'));
   }
-  if (searchType === 'song') {
-    const requestId = state.searchRequestId;
-    const albums = [...new Set(items.map(track => track.path.split('/').slice(0, 2).join('/')))];
-    await Promise.all(albums.map(albumPath => getAlbumMetadata(findLibraryNode(albumPath))));
-    if (state.searchRequestId !== requestId || !state.searchActive) return;
-    content.innerHTML = `<div class="track-list">${items.map((track, index) => `
-      <div class="track-row" data-path="${escHtml(track.path)}" data-name="${escHtml(track.name)}">
-        <span class="track-num">${index + 1}</span><span class="track-name">${escHtml(stripExt(track.name))}</span>
-        <span class="track-fidelity">${escHtml(formatFidelity(track))}</span>
-        <button class="track-dl client-download" data-path="${escHtml(track.path)}" data-name="${escHtml(track.name)}" data-kind="song" title="Download ${escHtml(track.name)}" aria-label="Download ${escHtml(track.name)}">${downloadIcon()}</button>
-      </div>`).join('')}</div>`;
-    content.querySelectorAll('.track-row').forEach(row => row.addEventListener('click', () => {
-      const track = findLibraryNode(row.dataset.path);
-      state.playQueue = [track];
-      playTrack(track, 0);
-    }));
-    content.querySelectorAll('.client-download').forEach(button => button.addEventListener('click', event => {
-      event.stopPropagation(); requestClientDownload(button.dataset.path, 'song', button.dataset.name);
-    }));
-  } else {
-    const kind = searchType === 'artist' ? 'artist' : 'album';
-    content.innerHTML = `<div class="library-grid">${items.map(node => libraryCardHtml(node, kind)).join('')}</div>`;
-    content.querySelectorAll('.library-card').forEach(card => card.addEventListener('click', () => kind === 'artist' ? showAlbums(card.dataset.path) : showAlbum(card.dataset.path)));
-    content.querySelectorAll('.library-play').forEach(button => button.addEventListener('click', async event => {
-      event.stopPropagation(); const card = button.closest('.library-card'); await playLibraryScope(findLibraryNode(card.dataset.path), kind);
-    }));
-    content.querySelectorAll('.library-download').forEach(button => button.addEventListener('click', event => {
-      event.stopPropagation(); const card = button.closest('.library-card'); requestClientDownload(card.dataset.path, kind, findLibraryNode(card.dataset.path)?.name || 'music');
-    }));
-  }
+  content.querySelectorAll('.catalogue-open').forEach(button=>button.addEventListener('click',()=>openCatalogueItem(boundItems[Number(button.dataset.item)])));
+  content.querySelectorAll('.catalog-more').forEach(button=>button.addEventListener('click',()=>catalogueMore(button,boundItems[Number(button.dataset.item)])));
+  content.querySelectorAll('.catalog-row-play').forEach(button=>button.addEventListener('click',()=>{const presence=libraryPresence(boundItems[Number(button.dataset.item)]);if(presence.track)playFromAlbum(presence.track);}));
+  content.querySelectorAll('.catalog-device').forEach(button=>button.addEventListener('click',()=>{
+    const item=boundItems[Number(button.dataset.item)],presence=libraryPresence(item),node=presence.track||presence.node;
+    if(node)requestClientDownload(node.path,catalogueKind(item),node.name);
+  }));
+  content.querySelectorAll('.catalog-save').forEach(button=>button.addEventListener('click',async()=>{
+    const item=boundItems[Number(button.dataset.item)];button.disabled=true;button.setAttribute('aria-label','Sending to server');button.textContent='…';
+    try{await queueAppleUrl(catalogueUrl(item));button.textContent='✓';button.setAttribute('aria-label','Queued for server');button.title='Queued for server';}catch{button.disabled=false;button.textContent='↻';button.setAttribute('aria-label','Retry save to server');button.title='Retry save to server';showToast('Could not save to server. Please retry.','error');}
+  }));
+  if(!state.libraryIndexReady&&!state.libraryIndexFailed)ensureLibraryIndex().then(()=>{if(state.catalogueView===view&&state.searchActive&&state.searchScope==='apple')renderCatalogue();}).catch(()=>{state.libraryIndexFailed=true;if(state.catalogueView===view&&state.searchActive&&state.searchScope==='apple')renderCatalogue();});
 }
 
-async function queueAppleUrl(url) {
-  try {
-    const res = await fetch('/api/queue', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Could not queue download');
-    showToast('Added to queue — view progress in Download History', 'success');
-  } catch (error) {
-    showToast(error.message || 'Could not queue download', 'error');
-  }
-}
-
-async function doAppleSearch() {
-  const q = document.getElementById('search-input').value.trim();
-  if (!q) return;
-  if (/^https:\/\/music\.apple\.com\//i.test(q)) return queueAppleUrl(q);
-  beginSearch('apple');
-  const requestId = ++state.searchRequestId;
-  const content = document.getElementById('library-content');
-  document.getElementById('library-title').textContent = `Apple Music results for “${q}”`;
-  document.getElementById('library-subtitle').textContent = `Searching for “${q}”`;
-  content.innerHTML = '<div class="search-loading"><span class="spinner"></span> Searching Apple Music…</div>';
-  try {
-    const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&type=${searchType}`);
-    const data = await res.json();
-    if (!state.searchActive || state.searchScope !== 'apple' || requestId !== state.searchRequestId) return;
-    renderSearchResults(data.results || []);
-  } catch {
-    if (!state.searchActive || requestId !== state.searchRequestId) return;
-    content.innerHTML = '<div class="search-loading">Search failed — try again</div>';
-  }
-}
-
-function renderSearchResults(items) {
-  const results = document.getElementById('library-content');
-  if (!items.length) {
-    results.innerHTML = '<div class="search-loading">No Apple Music results found</div>';
-    return;
-  }
-  document.getElementById('library-subtitle').textContent = `${items.length} Apple Music result${items.length !== 1 ? 's' : ''}`;
-  results.innerHTML = `<div class="result-grid">${items.map(item => resultCardHtml(item)).join('')}</div>`;
-  results.querySelectorAll('.result-dl').forEach(btn => {
-    btn.addEventListener('click', async e => {
-      e.stopPropagation();
-      const url = btn.dataset.url;
-      btn.disabled = true;
-      btn.textContent = 'Sending to server…';
-      try {
-        const res = await fetch('/api/queue', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url })
-        });
-        if (res.ok) {
-          btn.textContent = 'Queued on server';
-          btn.classList.add('queued');
-          showToast('Added to queue — view progress in Download History', 'success');
-        } else {
-          const d = await res.json();
-          btn.textContent = 'Download to server';
-          btn.disabled = false;
-          showToast(d.error || 'Failed', 'error');
-        }
-      } catch {
-        btn.textContent = 'Download to server';
-        btn.disabled = false;
-        showToast('Connection error', 'error');
-      }
-    });
-  });
-}
-
-function resultCardHtml(item) {
-  const title = escHtml(item.trackName || item.collectionName || item.artistName || 'Unknown');
-  const sub = escHtml(
-    item.artistName && item.collectionName ? `${item.artistName} — ${item.collectionName}` :
-    item.artistName || item.collectionName || ''
-  );
-  const art = item.artworkUrl100
-    ? `<img class="result-art" src="${escHtml(item.artworkUrl100.replace('100x100', '300x300'))}" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`
-    : '';
-  const placeholder = `<div class="result-art-placeholder" ${art ? 'style="display:none"' : ''}>♫</div>`;
-  const url = item.trackViewUrl || item.collectionViewUrl || item.artistLinkUrl || '';
-  const type = item.kind === 'song' ? 'Song' : item.wrapperType === 'collection' ? 'Album' : 'Artist';
-
-  return `
-    <div class="result-card">
-      ${art}${placeholder}
-      <div class="result-info">
-        <div class="result-title" title="${title}">${title}</div>
-        <div class="result-sub">${sub || type}</div>
-        ${url ? `<button class="result-dl" data-url="${escHtml(url)}">Download to server</button>` : '<button class="result-dl" disabled>No link</button>'}
-      </div>
-    </div>
-  `;
-}
 
 // Init
 renderJobs();

@@ -287,35 +287,48 @@ app.get('/api/library/download', (req, res) => {
   archive.finalize();
 });
 
-// Search via iTunes API (proxied to avoid any CORS issues)
+// Public catalogue metadata only; saving still uses the explicit queue endpoint.
+const catalogueCache = new Map();
+async function appleCatalogue(url) {
+  const cached = catalogueCache.get(url);
+  if (cached && Date.now() - cached.time < 60000) return cached.data;
+  const response = await fetch(url, { signal: AbortSignal.timeout(20000) });
+  if (!response.ok) throw new Error(`Apple catalogue returned ${response.status}`);
+  const data = await response.json();
+  if (!Array.isArray(data.results)) throw new Error('Invalid Apple catalogue response');
+  if (catalogueCache.size >= 200) catalogueCache.delete(catalogueCache.keys().next().value);
+  catalogueCache.set(url, { time: Date.now(), data });
+  return data;
+}
+
 app.get('/api/search', async (req, res) => {
-  const { q, type = 'song' } = req.query;
-  if (!q) return res.status(400).json({ error: 'Query required' });
-
-  const entityMap = { song: 'song', album: 'album', artist: 'musicArtist' };
-  const entity = entityMap[type] || 'song,album';
-
-  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=${entity}&limit=25&country=us`;
+  const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 200) : '';
+  const type = req.query.type || 'all';
+  const entities = { song: 'song', album: 'album', artist: 'musicArtist' };
+  if (!q || !(type === 'all' || entities[type])) return res.status(400).json({ error: 'Search query and valid type required' });
   try {
-    const r = await fetch(url);
-    const data = await r.json();
+    const types = type === 'all' ? ['artist','album','song'] : [type];
+    const groups = await Promise.all(types.map(async kind => {
+      const data = await appleCatalogue(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=${entities[kind]}&limit=25&country=us`);
+      return data.results.map(item => ({ ...item, resultType: kind }));
+    }));
+    res.json({ results: groups.flat() });
+  } catch {
+    res.status(502).json({ error: 'Apple Music search is unavailable; try again' });
+  }
+});
 
-    if (type === 'artist') {
-      const artists = data.results || [];
-      await Promise.all(artists.map(async artist => {
-        if (!artist.artistId) return;
-        try {
-          const lu = await fetch(`https://itunes.apple.com/lookup?id=${artist.artistId}&entity=album&limit=1`);
-          const ld = await lu.json();
-          const album = (ld.results || []).find(r => r.wrapperType === 'collection');
-          if (album && album.artworkUrl100) artist.artworkUrl100 = album.artworkUrl100;
-        } catch {}
-      }));
-    }
-
+app.get('/api/catalogue', async (req, res) => {
+  const { id, kind } = req.query;
+  if (typeof id !== 'string' || !/^\d{1,20}$/.test(id) || !['artist','album','song'].includes(kind)) {
+    return res.status(400).json({ error: 'Valid Apple ID and catalogue type required' });
+  }
+  try {
+    const entity = kind === 'artist' ? 'album' : 'song';
+    const data = await appleCatalogue(`https://itunes.apple.com/lookup?id=${id}&entity=${entity}&limit=200&country=us`);
     res.json(data);
-  } catch (e) {
-    res.status(500).json({ error: 'Search failed' });
+  } catch {
+    res.status(502).json({ error: 'Apple Music catalogue is unavailable; try again' });
   }
 });
 
