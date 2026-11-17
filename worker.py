@@ -8,6 +8,7 @@ import threading
 import time
 import sys
 import json
+import re
 from urllib.request import urlopen
 from urllib.error import URLError
 from urllib.parse import urlparse
@@ -40,11 +41,11 @@ def is_artist_url(url):
 
 
 def downloader_settings():
-    enabled = os.environ.get('MUSIC_USE_WRAPPER', 'false').lower()
+    enabled = os.environ.get('MUSIC_USE_WRAPPER', 'true').lower()
     if enabled not in ('true', 'false', '1', '0'):
         raise ValueError('MUSIC_USE_WRAPPER must be true or false')
     use_wrapper = enabled in ('true', '1')
-    codec = os.environ.get('MUSIC_SONG_CODEC_PRIORITY', 'aac-web')
+    codec = os.environ.get('MUSIC_SONG_CODEC_PRIORITY', 'alac')
     if codec not in ('aac-web', 'alac', 'alac,aac-web'):
         raise ValueError('MUSIC_SONG_CODEC_PRIORITY must be aac-web, alac, or alac,aac-web')
     if 'alac' in codec and not use_wrapper:
@@ -84,6 +85,11 @@ def check_wrapper_ready(settings):
     auth = snapshot.get('auth')
     if not isinstance(auth, dict) or auth.get('state') != 'authenticated':
         raise RuntimeError('Wrapper sign-in required; complete Apple Music login and 2FA privately')
+
+
+def downloader_reported_errors(line):
+    summary = re.search(r'Finished with (\d+) error\(s\)', line)
+    return bool(summary and int(summary.group(1)) > 0)
 
 
 def build_command(url, settings=None):
@@ -170,6 +176,7 @@ def run_job(job_id, url):
     status = 'done'
     try:
         settings = downloader_settings()
+        append_log(conn, job_id, 'Quality policy: highest available ALAC requested; source resolution varies. No AAC fallback. Existing files are kept and may be skipped, not upgraded.' if settings['codec'] == 'alac' else f"Quality policy: {settings['codec']}")
         check_wrapper_ready(settings)
         cmd = build_command(url, settings)
         append_log(conn, job_id, f'$ {" ".join(cmd)}')
@@ -184,6 +191,9 @@ def run_job(job_id, url):
         )
 
         def handle_line(line):
+            nonlocal status
+            if downloader_reported_errors(line):
+                status = 'error'
             print(f'[gamdl] {line}', flush=True)
             append_log(conn, job_id, line)
 
@@ -192,6 +202,8 @@ def run_job(job_id, url):
         if proc.returncode != 0:
             status = 'error'
             append_log(conn, job_id, f'[exited with code {proc.returncode}]')
+        if status == 'error':
+            append_log(conn, job_id, 'Download incomplete. Check the errors above; lossless availability is not guaranteed for every item.')
     except FileNotFoundError:
         msg = 'Error: gamdl not found. Check installation.'
         print(msg, flush=True)

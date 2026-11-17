@@ -16,11 +16,11 @@ class WrapperTests(unittest.TestCase):
         self.env.start()
         self.addCleanup(self.env.stop)
 
-    def test_default_is_explicit_aac_without_wrapper_or_overwrite(self):
+    def test_default_requests_strict_alac_without_overwrite(self):
         command = worker.build_command('https://music.apple.com/us/album/test/123')
         self.assertIn('--no-config-file', command)
-        self.assertEqual(command[command.index('--song-codec-priority') + 1], 'aac-web')
-        self.assertNotIn('--use-wrapper', command)
+        self.assertEqual(command[command.index('--song-codec-priority') + 1], 'alac')
+        self.assertIn('--use-wrapper', command)
         self.assertNotIn('--overwrite', command)
 
     def test_strict_alac_and_private_endpoints(self):
@@ -34,7 +34,7 @@ class WrapperTests(unittest.TestCase):
         self.assertNotIn('--overwrite', command)
 
     def test_alac_requires_wrapper(self):
-        os.environ['MUSIC_SONG_CODEC_PRIORITY'] = 'alac'
+        os.environ.update(MUSIC_SONG_CODEC_PRIORITY='alac', MUSIC_USE_WRAPPER='false')
         with self.assertRaisesRegex(ValueError, 'requires'):
             worker.downloader_settings()
 
@@ -87,7 +87,7 @@ class WrapperTests(unittest.TestCase):
             connection.execute("INSERT INTO jobs (id, status) VALUES (1, 'pending')")
             connection.commit()
             connection.close()
-            with patch.object(worker, 'DB_PATH', database), patch.dict(os.environ, {'MUSIC_SONG_CODEC_PRIORITY': 'alac'}), patch.object(worker.subprocess, 'Popen') as spawn:
+            with patch.object(worker, 'DB_PATH', database), patch.dict(os.environ, {'MUSIC_SONG_CODEC_PRIORITY': 'alac', 'MUSIC_USE_WRAPPER': 'false'}), patch.object(worker.subprocess, 'Popen') as spawn:
                 worker.run_job(1, 'https://music.apple.com/us/song/example/123')
             spawn.assert_not_called()
             connection = sqlite3.connect(database)
@@ -97,9 +97,15 @@ class WrapperTests(unittest.TestCase):
             self.assertIn('requires MUSIC_USE_WRAPPER', log)
 
     def test_aac_needs_no_wrapper(self):
+        os.environ.update(MUSIC_USE_WRAPPER='false', MUSIC_SONG_CODEC_PRIORITY='aac-web')
         with patch.object(worker, 'urlopen') as request:
             worker.check_wrapper_ready(worker.downloader_settings())
         request.assert_not_called()
+
+    def test_nonzero_downloader_summary_is_recognized(self):
+        self.assertTrue(worker.downloader_reported_errors('Finished with 2 error(s)'))
+        self.assertFalse(worker.downloader_reported_errors('Finished with 0 error(s)'))
+        self.assertFalse(worker.downloader_reported_errors('Downloading track'))
 
 
 if __name__ == '__main__':
