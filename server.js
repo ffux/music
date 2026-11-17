@@ -6,6 +6,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { visibleEntries, appendLibraryDirectory, libraryFingerprint } = require('./library-files');
 const { execFile } = require('child_process');
 
 const DATA_DIR = process.env.DATA_DIR || '/data';
@@ -48,7 +49,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/files', (req, res, next) => {
   res.setHeader('Accept-Ranges', 'bytes');
   next();
-}, express.static(MUSIC_DIR));
+}, express.static(MUSIC_DIR, {setHeaders(res, filePath) {
+  if (/\.flac$/i.test(filePath)) res.setHeader('Content-Type', 'audio/flac');
+}}));
 
 // Read-only, allowlisted status only. Authentication stays on the private SSH flow.
 const { createWrapperStatus } = require('./wrapper-status');
@@ -101,7 +104,7 @@ app.get('/api/library', (req, res) => {
   function scanDir(dir, base = '') {
     const result = [];
     try {
-      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      const entries = visibleEntries(dir);
       for (const entry of entries) {
         if (entry.name.startsWith('.')) continue;
         const relPath = base ? `${base}/${entry.name}` : entry.name;
@@ -122,7 +125,7 @@ app.get('/api/library', (req, res) => {
   res.json(scanDir(MUSIC_DIR));
 });
 
-// Extract and cache the embedded artwork from the first M4A in a library item.
+// Extract and cache the embedded artwork from the first supported audio file in a library item.
 app.get('/api/library/artwork', (req, res) => {
   const relativePath = req.query.path;
   if (typeof relativePath !== 'string' || !relativePath) {
@@ -147,16 +150,15 @@ app.get('/api/library/artwork', (req, res) => {
     return res.status(400).json({ error: 'Invalid library path' });
   }
 
-  function findM4a(itemPath) {
+  function findArtworkAudio(itemPath) {
     const stat = fs.lstatSync(itemPath);
     if (stat.isSymbolicLink()) return null;
-    if (stat.isFile()) return /\.m4a$/i.test(itemPath) ? itemPath : null;
+    if (stat.isFile()) return /\.(m4a|flac)$/i.test(itemPath) ? itemPath : null;
     if (!stat.isDirectory()) return null;
-    const entries = fs.readdirSync(itemPath, { withFileTypes: true })
-      .filter(entry => !entry.name.startsWith('.'))
+    const entries = visibleEntries(itemPath)
       .sort((a, b) => a.name.localeCompare(b.name));
     for (const entry of entries) {
-      const match = findM4a(path.join(itemPath, entry.name));
+      const match = findArtworkAudio(path.join(itemPath, entry.name));
       if (match) return match;
     }
     return null;
@@ -164,7 +166,7 @@ app.get('/api/library/artwork', (req, res) => {
 
   let mediaPath;
   try {
-    mediaPath = findM4a(realTarget);
+    mediaPath = findArtworkAudio(realTarget);
   } catch {
     return res.status(404).json({ error: 'Artwork not found' });
   }
@@ -218,7 +220,9 @@ app.get('/api/library/metadata', (req, res) => {
   if (!stat.isDirectory() || (realTarget !== realRoot && !realTarget.startsWith(`${realRoot}${path.sep}`))) {
     return res.status(400).json({ error: 'Invalid library path' });
   }
-  const cacheKey = `${realTarget}:${stat.mtimeMs}`;
+  let cacheKey;
+  try { cacheKey = `${realTarget}:${libraryFingerprint(realTarget)}`; }
+  catch { return res.status(404).json({ error: 'Library item changed; refresh and retry' }); }
   if (metadataCache.has(cacheKey)) return res.json(metadataCache.get(cacheKey));
 
   execFile('python3', [path.join(__dirname, 'metadata.py'), realTarget],
@@ -226,6 +230,7 @@ app.get('/api/library/metadata', (req, res) => {
       if (error) return res.status(500).json({ error: 'Could not read library metadata' });
       try {
         const metadata = JSON.parse(stdout);
+        if (metadataCache.size >= 200) metadataCache.delete(metadataCache.keys().next().value);
         metadataCache.set(cacheKey, metadata);
         res.json(metadata);
       } catch {
@@ -266,6 +271,7 @@ app.get('/api/library/download', (req, res) => {
     if (!/\.(m4a|mp3|flac|aac|opus)$/i.test(realTarget)) {
       return res.status(400).json({ error: 'Unsupported file type' });
     }
+    if (/\.flac$/i.test(realTarget)) res.type('audio/flac');
     return res.download(realTarget, path.basename(realTarget));
   }
 
@@ -284,7 +290,7 @@ app.get('/api/library/download', (req, res) => {
     else res.destroy(error);
   });
   archive.pipe(res);
-  archive.directory(realTarget, folderName);
+  appendLibraryDirectory(archive, realTarget, folderName);
   archive.finalize();
 });
 

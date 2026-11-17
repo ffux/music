@@ -9,6 +9,7 @@ import time
 import sys
 import json
 import re
+from flac_conversion import snapshot, convert_new_files
 from urllib.request import urlopen
 from urllib.error import URLError
 from urllib.parse import urlparse
@@ -184,6 +185,11 @@ def run_job(job_id, url):
             append_log(conn, job_id, 'Quality policy: highest available ALAC; no AAC fallback. Source resolution varies. Existing files are kept.')
         else:
             append_log(conn, job_id, f"Quality policy: {settings['codec']}")
+        convert_flac = os.environ.get('MUSIC_CONVERT_ALAC_TO_FLAC', 'true').lower()
+        if convert_flac not in ('true', 'false', '1', '0'):
+            raise ValueError('MUSIC_CONVERT_ALAC_TO_FLAC must be true or false')
+        convert_flac = convert_flac in ('true', '1')
+        before = snapshot(settings['output']) if convert_flac else {}
         check_wrapper_ready(settings)
         cmd = build_command(url, settings)
         append_log(conn, job_id, f'$ {" ".join(cmd)}')
@@ -209,10 +215,13 @@ def run_job(job_id, url):
         if proc.returncode != 0:
             status = 'error'
             append_log(conn, job_id, f'[exited with code {proc.returncode}]')
+        if status == 'done' and convert_flac:
+            append_log(conn, job_id, 'Converting newly downloaded ALAC to verified FLAC; originals are retained. AAC is unchanged.')
+            convert_new_files(settings['output'], before, lambda line: append_log(conn, job_id, line), MIN_FREE_BYTES)
         if status == 'error':
             append_log(conn, job_id, 'Download incomplete. Check the errors above; availability or download failure remains unresolved; see the actual file quality for completed tracks.')
     except FileNotFoundError:
-        msg = 'Error: gamdl not found. Check installation.'
+        msg = 'Error: a required executable or file is missing. Check gamdl, ffmpeg and ffprobe installation and the music mount.'
         print(msg, flush=True)
         append_log(conn, job_id, msg)
         status = 'error'

@@ -4,6 +4,7 @@ import sys
 import subprocess
 
 from mutagen.mp4 import MP4
+from mutagen.flac import FLAC
 
 
 def first_number(value, default=None):
@@ -11,7 +12,7 @@ def first_number(value, default=None):
         item = value[0]
         if isinstance(item, tuple):
             item = item[0]
-        return int(item)
+        return int(str(item).split('/')[0])
     except (IndexError, TypeError, ValueError):
         return default
 
@@ -44,6 +45,46 @@ def audio_fidelity(filename):
         return {'codec': None, 'sampleRate': None, 'bitDepth': None, 'duration': None}
 
 
+
+def read_tags(filename):
+    """Normalize FLAC comments into the legacy metadata keys used by the UI."""
+    try:
+        if filename.lower().endswith('.flac'):
+            tags = FLAC(filename).tags or {}
+            mapping = {
+                '\xa9nam': 'title', '\xa9ART': 'artist', 'aART': 'albumartist',
+                '\xa9alb': 'album', '\xa9day': 'date', '\xa9gen': 'genre',
+                'cprt': 'copyright', 'disk': 'discnumber', 'trkn': 'tracknumber',
+                'cnID': 'apple_song_id', 'plID': 'apple_album_id', 'atID': 'apple_artist_id',
+            }
+            return {key: tags[value] for key, value in mapping.items() if value in tags}
+        return MP4(filename).tags or {}
+    except Exception:
+        return {}
+
+
+def is_converted_source(directory, name):
+    if not name.lower().endswith('.m4a') or os.path.basename(name) != name:
+        return False
+    try:
+        marker_path = os.path.join(directory, '.' + name + '.flac.json')
+        if os.path.islink(marker_path) or os.path.getsize(marker_path) > 16384:
+            return False
+        with open(marker_path) as handle:
+            marker = json.load(handle)
+        if (marker.get('version') != 1 or marker['source']['name'] != name
+                or marker['output']['name'] != name[:-4] + '.flac'):
+            return False
+        for item in (marker['source'], marker['output']):
+            filename = os.path.join(directory, item['name'])
+            stat = os.stat(filename, follow_symlinks=False)
+            if (not os.path.isfile(filename) or os.path.islink(filename)
+                    or stat.st_size != item['size'] or stat.st_mtime_ns != item['mtime_ns']):
+                return False
+        return True
+    except (OSError, ValueError, KeyError, TypeError):
+        return False
+
 def main():
     root = os.path.realpath(sys.argv[1])
     dates = []
@@ -51,15 +92,15 @@ def main():
     album_info = {}
 
     for directory, dirnames, filenames in os.walk(root):
-        dirnames[:] = sorted(name for name in dirnames if not name.startswith('.'))
+        dirnames[:] = sorted(name for name in dirnames if not name.startswith('.')
+                             and not os.path.islink(os.path.join(directory, name)))
         for filename in sorted(filenames):
-            if not filename.lower().endswith(('.m4a', '.mp3', '.flac', '.aac', '.opus')):
+            if filename.startswith('.') or not filename.lower().endswith(('.m4a', '.mp3', '.flac', '.aac', '.opus')):
                 continue
             full_path = os.path.join(directory, filename)
-            try:
-                tags = MP4(full_path).tags or {}
-            except Exception:
-                tags = {}
+            if os.path.islink(full_path) or is_converted_source(directory, filename):
+                continue
+            tags = read_tags(full_path)
             date = str((tags.get('\xa9day') or [''])[0]).strip()
             if date:
                 dates.append(date)

@@ -1,0 +1,30 @@
+const fs=require('fs'),os=require('os'),path=require('path'),assert=require('assert/strict');
+const {isConvertedSource,visibleEntries,appendLibraryDirectory,libraryFingerprint}=require('./library-files');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'music-flac-library-'));
+try {
+  const source='01 Song.m4a',output='01 Song.flac';
+  for(const name of [source,output]) fs.writeFileSync(path.join(root,name),'fixture');
+  const identity=name=>{const st=fs.statSync(path.join(root,name));return{name,size:st.size,mtimeMs:st.mtimeMs,sha256:'a'.repeat(64)}};
+  const marker={version:1,source:identity(source),output:identity(output)};
+  const markerPath=path.join(root,`.${source}.flac.json`);
+  const save=()=>fs.writeFileSync(markerPath,JSON.stringify(marker));
+  assert.equal(isConvertedSource(root,source),false);save();
+  assert.equal(isConvertedSource(root,source),true);
+  assert.deepEqual(visibleEntries(root).map(x=>x.name),[output]);
+  const fingerprint=libraryFingerprint(root);
+  fs.mkdirSync(path.join(root,'Disc 2'));
+  fs.writeFileSync(path.join(root,'Disc 2','02.flac'),'fixture');
+  assert.notEqual(libraryFingerprint(root),fingerprint);
+  fs.rmSync(path.join(root,'Disc 2'),{recursive:true});
+  fs.symlinkSync('/etc/passwd',path.join(root,'outside.m4a'));
+  const archived=[];appendLibraryDirectory({file:(file,options)=>archived.push(options.name)},root,'Album');
+  assert.deepEqual(archived,['Album/'+output]);
+  marker.output.name='../outside.flac';save();assert.equal(isConvertedSource(root,source),false);
+  marker.output=identity(output);save();
+  fs.appendFileSync(path.join(root,output),'changed');assert.equal(isConvertedSource(root,source),false);
+  marker.output=identity(output);save();assert.equal(isConvertedSource(root,source),true);
+  fs.unlinkSync(path.join(root,output));assert.equal(isConvertedSource(root,source),false);
+  fs.symlinkSync(path.join(root,source),path.join(root,output));assert.equal(isConvertedSource(root,source),false);
+  fs.unlinkSync(markerPath);fs.symlinkSync(path.join(root,source),markerPath);assert.equal(isConvertedSource(root,source),false);
+  console.log('Library FLAC visibility and ZIP filtering passed: verified pairs, stale/missing output, traversal, symlinks');
+} finally {fs.rmSync(root,{recursive:true,force:true});}

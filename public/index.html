@@ -1629,7 +1629,7 @@ async function deleteFromServer(node){
   try{
     const preview=await fetch('/api/library/delete/preview',options({path:node.path,kind})),summary=await preview.json();
     if(!preview.ok)throw new Error(summary.error||'Could not review deletion');
-    if(!window.confirm(`Delete ${kind} “${summary.name}” from server?\n\nPermanently removes ${summary.songs} song${summary.songs===1?'':'s'} (${summary.files} file${summary.files===1?'':'s'}, including associated artwork) under “${summary.path}”.\n\nThis cannot be undone. Downloaded copies on your devices are kept.`))return;
+    if(!window.confirm(`Delete ${kind} “${summary.name}” from server?\n\nPermanently removes ${summary.songs} song${summary.songs===1?'':'s'} (${summary.files} file${summary.files===1?'':'s'}, including associated artwork) under “${summary.path}”.\n\nThis cannot be undone. Downloaded copies on your devices are kept.${kind==='song' && /\.flac$/i.test(summary.path) ? '\n\nAny retained ALAC original is kept and may reappear in your library.' : ''}`))return;
     try{
       const response=await fetch('/api/library/delete',options({token:summary.token,confirmed:true})),result=await response.json();
       if(result.ok||result.deletedFiles>0)applyDeletedScope(summary.path);
@@ -1845,7 +1845,7 @@ function startClientDownload(path) {
 
 function requestClientDownload(path, kind, name) {
   if (localStorage.getItem(downloadConfirmationKey) === 'yes') return startClientDownload(path);
-  const fileType = kind === 'song' ? 'the original M4A file' : `a ZIP containing this ${kind}`;
+  const fileType = kind === 'song' ? 'the stored audio file (without quality conversion)' : `a ZIP containing this ${kind}`;
   document.getElementById('confirmation-message').textContent = `“${name}” will be downloaded to this device as ${fileType}.`;
   pendingClientDownload = path;
   document.getElementById('download-confirmation').hidden = false;
