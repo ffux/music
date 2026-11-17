@@ -7,6 +7,9 @@ import signal
 import threading
 import time
 import sys
+import json
+from urllib.request import urlopen
+from urllib.error import URLError
 from urllib.parse import urlparse
 
 DATA_DIR = os.environ.get('DATA_DIR', '/data')
@@ -36,8 +39,61 @@ def is_artist_url(url):
     return 'artist' in parts
 
 
-def build_command(url):
-    cmd = ['gamdl', '--output-path', MUSIC_DIR]
+def downloader_settings():
+    enabled = os.environ.get('MUSIC_USE_WRAPPER', 'false').lower()
+    if enabled not in ('true', 'false', '1', '0'):
+        raise ValueError('MUSIC_USE_WRAPPER must be true or false')
+    use_wrapper = enabled in ('true', '1')
+    codec = os.environ.get('MUSIC_SONG_CODEC_PRIORITY', 'aac-web')
+    if codec not in ('aac-web', 'alac', 'alac,aac-web'):
+        raise ValueError('MUSIC_SONG_CODEC_PRIORITY must be aac-web, alac, or alac,aac-web')
+    if 'alac' in codec and not use_wrapper:
+        raise ValueError('ALAC requires MUSIC_USE_WRAPPER=true')
+    wrapper_url = os.environ.get('MUSIC_WRAPPER_URL', 'http://music-wrapper')
+    parsed = urlparse(wrapper_url)
+    if (parsed.scheme not in ('http', 'https') or not parsed.hostname
+            or parsed.username or parsed.password or parsed.query or parsed.fragment
+            or parsed.path not in ('', '/')):
+        raise ValueError('MUSIC_WRAPPER_URL must be an HTTP(S) base URL without credentials')
+    host = os.environ.get('MUSIC_WRAPPER_DECRYPT_HOST', parsed.hostname)
+    port = int(os.environ.get('MUSIC_WRAPPER_DECRYPT_PORT', '10020'))
+    if not host or not 1 <= port <= 65535:
+        raise ValueError('Invalid wrapper decrypt host or port')
+    subdir = os.environ.get('MUSIC_DOWNLOAD_SUBDIR', '')
+    output = os.path.realpath(os.path.join(MUSIC_DIR, subdir))
+    root = os.path.realpath(MUSIC_DIR)
+    if os.path.isabs(subdir) or os.path.commonpath([root, output]) != root:
+        raise ValueError('MUSIC_DOWNLOAD_SUBDIR must stay inside MUSIC_DIR')
+    return dict(use_wrapper=use_wrapper, codec=codec, wrapper_url=wrapper_url.rstrip('/'),
+                decrypt_host=host, decrypt_port=port, output=output)
+
+
+def check_wrapper_ready(settings):
+    if not settings['use_wrapper']:
+        return
+    try:
+        with urlopen(settings['wrapper_url'] + '/me', timeout=10) as response:
+            # /me contains account tokens. Never log its body.
+            snapshot = json.loads(response.read(1024 * 1024))
+    except (URLError, OSError, ValueError):
+        raise RuntimeError('Wrapper unavailable; check the private wrapper service') from None
+    if not isinstance(snapshot, dict) or not isinstance(snapshot.get('runtime'), dict):
+        raise RuntimeError('Wrapper returned an invalid readiness response')
+    if snapshot['runtime'].get('playback_ready') is not True:
+        raise RuntimeError('Wrapper playback is not ready; check its native libraries')
+    auth = snapshot.get('auth')
+    if not isinstance(auth, dict) or auth.get('state') != 'authenticated':
+        raise RuntimeError('Wrapper sign-in required; complete Apple Music login and 2FA privately')
+
+
+def build_command(url, settings=None):
+    settings = settings or downloader_settings()
+    cmd = ['gamdl', '--no-config-file', '--output-path', settings['output'],
+           '--song-codec-priority', settings['codec']]
+    if settings['use_wrapper']:
+        cmd += ['--use-wrapper', '--wrapper-url', settings['wrapper_url'],
+                '--wrapper-decrypt-host', settings['decrypt_host'],
+                '--wrapper-decrypt-port', str(settings['decrypt_port'])]
     if os.path.exists(COOKIES_PATH):
         cmd += ['--cookies-path', COOKIES_PATH]
     if is_artist_url(url):
@@ -109,15 +165,17 @@ def run_job(job_id, url):
     )
     conn.commit()
 
-    cmd = build_command(url)
-
     print(f'[worker] Starting job {job_id}: {url}', flush=True)
-    append_log(conn, job_id, f'$ {" ".join(cmd)}')
 
     status = 'done'
     try:
+        settings = downloader_settings()
+        check_wrapper_ready(settings)
+        cmd = build_command(url, settings)
+        append_log(conn, job_id, f'$ {" ".join(cmd)}')
         proc = subprocess.Popen(
             cmd,
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
