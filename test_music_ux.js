@@ -2,7 +2,7 @@ const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
 const html=fs.readFileSync(process.argv[2]||'public/index.html','utf8'),script=html.match(/<script>([\s\S]*)<\/script>/)[1];
 new vm.Script(script);
 const elements=new Map(),listeners=new Map();
-function element(id){if(!elements.has(id))elements.set(id,{id,value:'',hidden:false,textContent:'',innerHTML:'',style:{},dataset:{},src:'',currentTime:0,offsetHeight:200,classList:{add(){},remove(){},toggle(){}},setAttribute(k,v){this[k]=v},getAttribute(k){return this[k]},removeAttribute(k){delete this[k]},addEventListener(event,fn){listeners.set(id+':'+event,fn)},querySelectorAll(){return[]},querySelector(){return null},insertAdjacentHTML(where,text){this.innerHTML+=text},play(){return Promise.resolve()},pause(){},load(){},focus(){},contains(){return false}});return elements.get(id)}
+function element(id){if(!elements.has(id))elements.set(id,{id,value:'',hidden:false,textContent:'',innerHTML:'',style:{setProperty(){}},dataset:{},src:'',currentTime:0,offsetHeight:200,classList:{add(){},remove(){},toggle(){}},setAttribute(k,v){this[k]=v},getAttribute(k){return this[k]},removeAttribute(k){delete this[k]},addEventListener(event,fn){listeners.set(id+':'+event,fn)},querySelectorAll(){return[]},querySelector(){return null},insertAdjacentHTML(where,text){this.innerHTML+=text},play(){return Promise.resolve()},pause(){},load(){},focus(){},contains(){return false}});return elements.get(id)}
 const doc={getElementById:element,querySelector:element,querySelectorAll(){return[]},addEventListener(){},documentElement:{style:{setProperty(){}}}};
 let fetches=[]; const timers=new Map(); let timerId=0;
 const context=vm.createContext({console,document:doc,window:{addEventListener(){},innerHeight:900,innerWidth:1200,visualViewport:null},localStorage:{getItem(){return null}},requestAnimationFrame(){return 1},cancelAnimationFrame(){},setTimeout(fn){const id=++timerId;timers.set(id,fn);return id},clearTimeout(id){timers.delete(id)},URL,fetch:async(url)=>{fetches.push(url);throw Error('Unexpected network call '+url)}});
@@ -59,5 +59,27 @@ assert.equal(tracks.length,3);
   assert.equal(evaluate('formatTime(230)'),'3:50');
   assert.equal(evaluate('formatFidelity(tracks[0])'),'24-bit/44.1 kHz ALAC');
   assert.equal(evaluate('formatFidelity(tracks[2])'),'44.1 kHz AAC');
+  // Device downloads are secondary menu actions; server saves stay primary.
+  context.capturedActions=[];context.downloadCalls=[];
+  evaluate('openMoreMenu=(anchor,actions)=>{capturedActions=actions};requestClientDownload=(...args)=>downloadCalls.push(args)');
+  for(const [node,kind] of [[tracks[0],'song'],[data[0].children[0],'album'],[data[0],'artist']]){
+    context.menuNode=node;evaluate('localMore({id:"test-more"},menuNode)');
+    const action=context.capturedActions.find(action=>action.label.includes('to this device'));assert(action);await action.run();
+    assert.equal(context.downloadCalls.at(-1)[0],node.path);assert.equal(context.downloadCalls.at(-1)[1],kind);
+  }
+  assert.equal(evaluate('saveButtonHtml({resultType:"song",trackId:1},0)'), '');
+  assert.equal(evaluate('saveButtonHtml({resultType:"album",collectionId:10,trackCount:3},0)'), '');
+  assert.match(evaluate('saveButtonHtml({resultType:"album",collectionId:10,trackCount:6},0)'), /Save missing songs to server/);
+  assert.match(evaluate('saveButtonHtml({resultType:"song",trackId:999,trackName:"Missing",artistName:"Other"},0)'), /Save song to server/);
+  assert(!html.includes('class="track-dl client-download"'));assert(!html.includes('class="track-dl album-download"'));assert(!html.includes('class="track-dl artist-download"'));assert(!html.includes('class="track-dl catalog-device"'));
+  assert.equal(evaluate('catalogueArtwork({resultType:"artist",artistId:100})'),'/api/artist-artwork?id=100');
+  assert.equal(evaluate('catalogueArtwork({resultType:"artist",artistId:"bad"})'),null);
+  // Mobile presentation observes and controls the same audio element.
+  element('player').paused=true; element('player').duration=230; element('player').currentTime=30;
+  evaluate('syncMobilePlayer()');assert.equal(element('mobile-play-pause')['aria-label'],'Play');assert.equal(element('mobile-seek').max,'230');assert.equal(element('mobile-elapsed').textContent,'0:30');
+  listeners.get('mobile-seek:change')({target:{value:'999'}});assert.equal(element('player').currentTime,230);
+  element('player').paused=false;evaluate('syncMobilePlayer()');assert.equal(element('mini-play-pause')['aria-label'],'Pause');
+  listeners.get('mobile-player-open:click')();assert.equal(element('mobile-now-playing').hidden,false);listeners.get('mobile-player-collapse:click')();assert.equal(element('mobile-now-playing').hidden,true);
+  assert.match(html,/role="dialog" aria-modal="true" aria-labelledby="mobile-now-title"/);
   console.log('Search locality, edition-aware status, partial albums, album continuation, queue insertion, repeat, shuffle restoration, quality labels and policy-text removal passed');
 })().catch(error=>{console.error(error);process.exitCode=1});

@@ -584,7 +584,7 @@
       .album-hero h2 { font-size: 21px; }
       .album-hero .hero-actions { margin-top: 10px; }
       .track-row { grid-template-columns: 20px minmax(0,1fr) 32px 28px; gap: 4px 6px; }
-      .track-row > .more-button { grid-column: 4; grid-row: 1 / 3; width: 28px; }
+      .track-row > .more-button { grid-column: 3; grid-row: 1 / 3; width: 28px; }
       .track-dl { width: 32px; }
       .player-now #player-title { display: block; font-size: 12px; }
       .player-now { gap: 5px; }
@@ -619,6 +619,12 @@
     .library-grid, .result-grid { grid-template-columns: repeat(auto-fill,minmax(160px,1fr)); gap: 26px 22px; }
     .library-card, .result-card { background: transparent; border: 0; border-radius: 0; overflow: visible; transition: none; }
     .library-card:hover, .result-card:hover { transform: none; }
+    .library-art::before { content: "♫" / ""; position: absolute; inset: 0; display: grid; place-items: center; font-size: 48px; color: var(--muted); }
+    .library-art img { position: relative; }
+    .library-art img[hidden], .catalogue-hero-art img[hidden] { display: none; }
+    .catalogue-hero-art { position: relative; overflow: hidden; }
+    .catalogue-hero-art::before { content: "♫" / ""; position: absolute; inset: 0; display: grid; place-items: center; font-size: 48px; color: var(--muted); }
+    .catalogue-hero-art img { position: relative; display: block; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
     .library-art { border-radius: 7px; box-shadow: 0 2px 10px #0003; }
     .library-card:hover .library-art, .result-card:hover .library-art { filter: brightness(1.06); }
     .library-card:focus-visible { border-radius: 7px; }
@@ -667,13 +673,109 @@
       .album-hero .album-artist { font-size: 16px; }
       .hero-actions .btn { min-height: 42px; min-width: 100px; }
       .hero-actions .track-dl, .hero-actions .more-button { width: 40px; height: 40px; }
-      .track-row { grid-template-columns: 20px minmax(0,1fr) 40px 40px; padding: 11px 6px; }
+      .track-row { grid-template-columns: 20px minmax(0,1fr) 40px; padding: 11px 6px; }
       .track-row > .more-button, .track-dl { width: 40px; min-height: 40px; }
       .catalogue-track { grid-template-columns: 16px minmax(0,1fr) 36px 36px 36px; padding: 10px 2px; gap: 4px; }
       .catalogue-track > .more-button, .catalogue-track .track-dl { width: 36px; min-height: 40px; }
       .search-cta { padding: 16px; }
     }
     @media(prefers-reduced-motion:reduce) { *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; } }
+
+    .queue-art { width: 44px; height: 44px; object-fit: cover; border-radius: 5px; }
+    .queue-current img { width: 48px; height: 48px; object-fit: cover; border-radius: 5px; }
+    .mobile-only { display: none; }
+    #mobile-now-playing[hidden] { display: none; }
+    #mobile-now-playing { display: none; }
+    @media(max-width:700px) {
+      :root { --bg: #000; --surface: #171719; --surface2: #242426; --accent: #087cff; --accent2: #2997ff; }
+      .app-shell { grid-template-rows: 46px minmax(0,1fr); }
+      header { height: 46px; background: #000; border: 0; padding: 0 16px; }
+      main { grid-row: 2; }
+      .library-browser { padding: 18px 20px calc(210px + env(safe-area-inset-bottom,0px)); }
+      .library-sidebar { position: fixed; z-index: 80; left: 16px; right: 16px; bottom: calc(12px + env(safe-area-inset-bottom,0px)); height: 68px; padding: 5px 8px; border: 1px solid #ffffff20; border-radius: 36px; background: #242426ed; backdrop-filter: blur(24px); display: flex; box-shadow: 0 8px 28px #0006; }
+      .sidebar-nav { display: contents; }
+      .search-nav { margin: 0; order: 5; }
+      .library-nav-item { flex: 1; min-width: 0; border-radius: 26px; gap: 3px; color: #ececee; font-size: 10px; min-height: 56px; }
+      .library-nav-item svg { width: 23px; height: 23px; stroke: currentColor; }
+      .library-nav-item[aria-current="page"] { color: var(--accent2); background: #ffffff07; }
+      .library-heading h2 { font-size: 32px; letter-spacing: -.8px; }
+      .library-heading p { font-size: 13px; }
+      .library-toolbar { margin-bottom: 22px; }
+      .library-back { border-radius: 50%; width: 42px; height: 42px; font-size: 0; background: #1c1c1e; }
+      .library-back::before { content: '‹' / ''; font-size: 32px; line-height: 1; }
+      .library-grid:has(.library-card[data-kind="artist"]) { display: flex; flex-direction: column; gap: 0; }
+      .library-card[data-kind="artist"] { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid #ffffff1c; }
+      .library-card[data-kind="artist"] .library-art { width: 54px; height: 54px; flex-shrink: 0; }
+      .library-card[data-kind="artist"] .library-card-body { padding: 0; text-align: left; min-width: 0; }
+      .library-card[data-kind="artist"] .library-card-title { font-size: 18px; font-weight: 400; }
+      .album-hero { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0; text-align: center; padding: 10px 0 0; margin-bottom: 24px; }
+      .album-hero-content { display: contents; }
+      .album-hero-art { width: min(70vw,280px); height: min(70vw,280px); margin: 0 auto 24px; border-radius: 12px; }
+      .album-hero h2 { font-size: 25px; line-height: 1.2; margin: 0 0 7px; letter-spacing: -.5px; }
+      .album-hero .eyebrow { display: none; }
+      .album-hero .album-artist, .album-hero .catalog-artist { font-size: 21px; font-weight: 400; color: #f5f5f7; margin-bottom: 8px; }
+      .album-hero p { margin: 4px 0; font-size: 12px; }
+      .hero-actions { display: flex; width: 100%; justify-content: center; gap: 12px; margin: 18px 0 0 !important; }
+      .hero-actions .btn { min-width: 0; min-height: 46px; padding: 11px 18px; border-radius: 999px; font-size: 17px; font-weight: 600; }
+      .album-hero:not(.artist-hero) .hero-actions > .btn:first-child { background: #f5f5f7; color: #111; flex: 1; max-width: 210px; order: 2; }
+      .album-hero:not(.artist-hero) .hero-actions .btn-secondary { order: 1; flex: 0 0 46px; padding: 0; font-size: 0; background: #242426 !important; }
+      .album-hero:not(.artist-hero) .hero-actions .btn-secondary::before { content: '⇄' / ''; font-size: 27px; color: #f5f5f7; }
+      .hero-actions .track-dl { order: 3; width: 46px; height: 46px; background: #29292c; color: #fff; }
+      .hero-actions .more-button { position: absolute; top: -66px; right: 0; width: 42px; height: 42px; border: 1px solid #ffffff20; background: #1c1c1e; color: #ddd; }
+      .artist-hero .album-hero-art { border-radius: 50%; width: 132px; height: 132px; margin-bottom: 16px; }
+      .artist-hero h2 { font-size: 32px; margin-bottom: 12px; }
+      .artist-hero .hero-actions .btn { flex: 1; background: #1c1c1e; color: #f5f5f7 !important; }
+      .track-row { min-height: 60px; background: transparent !important; border-bottom: 1px solid #ffffff25; padding: 10px 0; }
+      .track-name { font-size: 16px; font-weight: 400; }
+      .track-fidelity { font-size: 11px; }
+      .track-row > .more-button, .catalogue-track > .more-button { color: #aaa; background: transparent; font-size: 19px; }
+      .search-section .result-grid { display: flex; flex-direction: column; gap: 0; }
+      .search-section .result-card { border-bottom: 1px solid #ffffff20; padding: 10px 0; }
+      .search-section .catalogue-open { display: flex; align-items: center; gap: 14px; }
+      .search-section .library-art { width: 58px; height: 58px; flex: 0 0 58px; }
+      .search-section .result-card[data-kind="artist"] .library-art { border-radius: 50%; }
+      .search-section .result-info { min-width: 0; flex: 1; padding: 0; }
+      .search-section .result-title { font-size: 17px; font-weight: 400; }
+      .search-section .result-sub { font-size: 13px; }
+      .unified-search button[type="submit"] { display: none; }
+      #apple-search-btn { flex: 0 0 auto; margin-left: auto; min-height: 32px; padding: 4px 0; background: transparent !important; }
+      .search-types { gap: 0; justify-content: space-between; border-bottom: 1px solid #ffffff20; }
+      .type-btn { flex: 1; border-radius: 0; font-size: 12px; padding: 10px 3px; border-bottom: 2px solid transparent; }
+      .type-btn.active { background: transparent; color: var(--accent2); border-bottom-color: var(--accent2); }
+      #player-bar.visible { position: fixed; z-index: 81; left: 16px; right: 16px; bottom: calc(90px + env(safe-area-inset-bottom,0px)); border: 1px solid #ffffff20; border-radius: 30px; padding: 8px 10px; background: #29292ceF; backdrop-filter: blur(24px); }
+      .player-now { margin: 0; gap: 8px; }
+      .player-now #player-title { flex: 1; }
+      #player-title #player-queue-position, #player-more, #playback-queue-toggle, #player-close, .player-bar-inner { display: none; }
+      #player-album-name { max-width: 165px; overflow: hidden; text-overflow: ellipsis; }
+      #player-artwork { width: 38px; height: 38px; }
+      .mobile-only { display: inline-flex; align-items: center; justify-content: center; width: 30px; min-height: 36px; font-size: 21px; padding: 0; }
+      #mobile-player-open { font-size: 18px; width: 22px; }
+      #mobile-now-playing:not([hidden]) { display: flex; position: fixed; z-index: 100; inset: 0; flex-direction: column; padding: calc(16px + env(safe-area-inset-top,0px)) 30px calc(26px + env(safe-area-inset-bottom,0px)); overflow-y: auto; background: #292829; isolation: isolate; }
+      #mobile-now-playing::before { content: ''; position: absolute; inset: 0; z-index: -1; background-image: linear-gradient(#242426b0,#242426e8),var(--now-art); background-size: cover; background-position: center; filter: blur(40px); }
+      #mobile-player-collapse { align-self: center; font-size: 30px; width: 60px; height: 36px; color: #bbb; }
+      #mobile-now-art { width: 100%; max-width: 370px; aspect-ratio: 1; object-fit: cover; border-radius: 12px; box-shadow: 0 12px 28px #0004; margin: 22px auto 30px; }
+      .mobile-now-heading { display: flex; align-items: center; gap: 12px; }
+      .mobile-now-heading > div { flex: 1; min-width: 0; }
+      #mobile-now-title { font-size: 23px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #mobile-now-artist { font-size: 19px; color: #d0d0d5; }
+      #mobile-now-quality { color: #b3b3bb; font-size: 11px; margin-top: 4px; }
+      #mobile-now-more { width: 38px; height: 38px; color: #fff; background: #ffffff25; }
+      .mobile-seek { margin: 24px 0; }
+      #mobile-seek { width: 100%; accent-color: #e3e3e8; height: 12px; }
+      .mobile-seek > div { display: flex; justify-content: space-between; color: #b3b3bb; font-size: 12px; margin-top: 6px; font-variant-numeric: tabular-nums; }
+      .mobile-transport, .mobile-player-tools { display: flex; justify-content: space-around; align-items: center; }
+      .mobile-transport button, .mobile-player-tools button { border: 0; background: transparent; color: #f5f5f7; min-width: 50px; height: 60px; font-size: 34px; cursor: pointer; }
+      #mobile-play-pause { font-size: 44px; }
+      .mobile-player-tools { margin-top: auto; padding-top: 28px; }
+      .mobile-player-tools button { font-size: 26px; height: 44px; color: #c7c7cc; }
+      .mobile-player-tools button[aria-pressed="true"] { background: #ffffff25; border-radius: 20px; color: white; }
+      .playback-drawer { padding-bottom: 20px; }
+      .queue-current { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--muted); }
+      .queue-current img { width: 64px; height: 64px; object-fit: cover; border-radius: 7px; }
+      .queue-current small { display: block; color: var(--text); font-size: 19px; margin-top: 3px; }
+      .queue-item { min-height: 74px; }
+      .queue-item .text-link { font-size: 16px; }
+    }
   </style>
 </head>
 <body>
@@ -705,7 +807,7 @@
         <button type="button" class="btn btn-secondary" id="apple-search-btn">Search Apple Music</button>
       </form>
       <div class="search-types" role="group" aria-label="Search type">
-        <button class="type-btn active" data-type="all">All</button>
+        <button class="type-btn active" data-type="all"><span class="nav-desktop-label">All</span><span class="nav-mobile-label">Top Results</span></button>
         <button class="type-btn" data-type="song">Songs</button>
         <button class="type-btn" data-type="album">Albums</button>
         <button class="type-btn" data-type="artist">Artists</button>
@@ -728,6 +830,9 @@
   <div class="player-now">
     <img id="player-artwork" alt="" width="42" height="42">
     <div id="player-title"><strong id="player-track-name"></strong><span id="player-album-name"></span><span id="player-queue-position"></span></div>
+    <button class="mobile-only player-action" id="mobile-player-open" aria-label="Open Now Playing">⌃</button>
+    <button class="mobile-only player-action" id="mini-play-pause" aria-label="Play">▶</button>
+    <button class="mobile-only player-action" id="mini-next" aria-label="Next track">⏭</button>
     <button class="player-action" id="player-more" aria-label="More for current track" aria-haspopup="menu">•••</button>
     <button class="player-action" id="playback-queue-toggle" aria-label="Show playback queue">Up Next</button>
     <button class="player-action" id="player-close" aria-label="Close player">✕</button>
@@ -742,6 +847,14 @@
 </div>
 </div>
 
+<section id="mobile-now-playing" role="dialog" aria-modal="true" aria-labelledby="mobile-now-title" hidden>
+  <button id="mobile-player-collapse" class="player-action" aria-label="Collapse Now Playing">⌄</button>
+  <img id="mobile-now-art" alt="Album artwork">
+  <div class="mobile-now-heading"><div><h2 id="mobile-now-title"></h2><p id="mobile-now-artist"></p><p id="mobile-now-quality"></p></div><button id="mobile-now-more" class="more-button" aria-label="More for current track" aria-haspopup="menu">•••</button></div>
+  <div class="mobile-seek"><input id="mobile-seek" type="range" min="0" max="1" step="0.1" value="0" aria-label="Playback position"><div><span id="mobile-elapsed">0:00</span><span id="mobile-remaining">−0:00</span></div></div>
+  <div class="mobile-transport"><button id="mobile-prev" aria-label="Previous track">⏮</button><button id="mobile-play-pause" aria-label="Play">▶</button><button id="mobile-next" aria-label="Next track">⏭</button></div>
+  <div class="mobile-player-tools"><button id="mobile-shuffle" aria-label="Shuffle off" aria-pressed="false">⇄</button><button id="mobile-repeat" aria-label="Repeat off" aria-pressed="false">↻</button><button id="mobile-up-next" aria-label="Show playback queue">☷</button><button id="mobile-stop" aria-label="Stop and close player">✕</button></div>
+</section>
 <div class="settings-overlay" id="settings-overlay" hidden></div>
 <aside class="downloads-drawer" id="downloads-drawer" aria-hidden="true">
   <div class="drawer-header"><h2>Download History</h2><button id="downloads-close" aria-label="Close download history">✕</button></div>
@@ -1102,8 +1215,9 @@ async function ensureArtistMetadata(artist) {
 }
 
 function libraryCardHtml(node,kind) {
-  const artwork=`/api/library/artwork?path=${encodeURIComponent(node.path)}`;
-  return `<article class="library-card" data-path="${escHtml(node.path)}" data-kind="${kind}" tabindex="0" aria-label="Open ${escHtml(node.name)}"><div class="library-art"><img src="${artwork}" alt="" loading="lazy" onerror="this.classList.add('art-missing')"></div><div class="library-card-body"><div class="library-card-title">${escHtml(node.name)}</div>${kind==='album'?`<div class="library-card-meta">${escHtml(node.path.split('/')[0])}</div>`:''}</div></article>`;
+  const artistId=kind==='artist'?collectTracks(node).find(track=>track.fidelity?.artistId)?.fidelity.artistId:null;
+  const artwork=kind==='artist'?(artistId?`/api/artist-artwork?id=${artistId}`:null):`/api/library/artwork?path=${encodeURIComponent(node.path)}`;
+  return `<article class="library-card" data-path="${escHtml(node.path)}" data-kind="${kind}" tabindex="0" aria-label="Open ${escHtml(node.name)}"><div class="library-art">${artwork?`<img src="${artwork}" alt="" loading="lazy" onerror="this.classList.add('art-missing')">`:""}</div><div class="library-card-body"><div class="library-card-title">${escHtml(node.name)}</div>${kind==='album'?`<div class="library-card-meta">${escHtml(node.path.split('/')[0])}</div>`:''}</div></article>`;
 }
 
 function allLibraryAlbums() {
@@ -1149,7 +1263,6 @@ function trackListHtml(files, withContext = false) {
       <span class="track-num">${playing ? '<span class="play-icon">▶</span>' : index + 1}</span>
       <span class="track-name">${escHtml(trackTitle(track))}${withContext ? `<small>${escHtml(track.path.split('/').slice(0,-1).join(' · '))}</small>` : ''}</span>
       <span class="track-fidelity">${escHtml(formatFidelity(track))}${track.fidelity?.duration ? ` · ${formatTime(track.fidelity.duration)}` : ''}</span>
-      <button class="track-dl client-download" data-path="${escHtml(track.path)}" data-name="${escHtml(track.name)}" data-kind="song" title="Download ${escHtml(track.name)}" aria-label="Download ${escHtml(track.name)}">${downloadIcon()}</button>
       <button class="more-button track-more" data-path="${escHtml(track.path)}" aria-label="More for ${escHtml(trackTitle(track))}" aria-haspopup="menu">•••</button>
     </div>`;
   }).join('')}</div>`;
@@ -1210,7 +1323,6 @@ function renderLibrary() {
     content.insertAdjacentHTML('afterbegin', localArtistHeader(artist));
     content.querySelector('.artist-play')?.addEventListener('click',()=>playLibraryScope(artist,'artist'));
     content.querySelector('.artist-shuffle')?.addEventListener('click',()=>playLibraryScope(artist,'artist',true));
-    content.querySelector('.artist-download')?.addEventListener('click',()=>requestClientDownload(artist.path,'artist',artist.name));
     content.querySelector('.artist-more')?.addEventListener('click',event=>localMore(event.currentTarget,artist));
   }
   if (view.level === 'tracks') {
@@ -1221,10 +1333,12 @@ function renderLibrary() {
     content.querySelector('.album-play')?.addEventListener('click', () => playLibraryScope(album, 'album'));
     content.querySelector('.album-shuffle')?.addEventListener('click', () => playLibraryScope(album, 'album', true));
     content.querySelector('.album-artist')?.addEventListener('click', () => showAlbums(view.artistPath));
-    content.querySelector('.album-download')?.addEventListener('click',()=>requestClientDownload(album.path,'album',album.name));
     content.querySelector('.album-more')?.addEventListener('click', event => localMore(event.currentTarget, album));
   }
   bindLibraryContent(content);
+  if(view.level==='artists'&&!state.libraryIndexReady&&!state.libraryIndexFailed)ensureLibraryIndex().then(()=>{
+    if(!state.searchActive&&state.libraryView.level==='artists')renderLibrary();
+  }).catch(()=>{state.libraryIndexFailed=true;});
 }
 
 function bindLibraryContent(content) {
@@ -1243,15 +1357,6 @@ function bindLibraryContent(content) {
   }));
   content.querySelectorAll('.library-more').forEach(button => button.addEventListener('click', event => {
     event.stopPropagation(); localMore(button, findLibraryNode(button.closest('.library-card').dataset.path));
-  }));
-  content.querySelectorAll('.library-download').forEach(button => button.addEventListener('click', event => {
-    event.stopPropagation();
-    const card = button.closest('.library-card');
-    requestClientDownload(card.dataset.path, card.dataset.kind, findLibraryNode(card.dataset.path)?.name || 'music');
-  }));
-  content.querySelectorAll('.client-download').forEach(button => button.addEventListener('click', event => {
-    event.stopPropagation();
-    requestClientDownload(button.dataset.path, button.dataset.kind, button.dataset.name);
   }));
   content.querySelectorAll('.track-row').forEach(row => {
     row.addEventListener('keydown', event => {
@@ -1345,11 +1450,11 @@ function localAlbumHeader(album) {
   const metadata = state.albumMetadata[album.path] || {}, info = metadata.album || {}, tracks = orderedTracks(album);
   const duration = tracks.reduce((sum,track) => sum + (track.fidelity?.duration || 0),0);
   const details = [metadata.releaseDate?.slice(0,4),info.genre,`${tracks.length} downloaded song${tracks.length !== 1 ? 's' : ''}`,duration ? formatTime(duration) : ''].filter(Boolean).join(' · ');
-  return `<section class="album-hero"><img class="album-hero-art" src="/api/library/artwork?path=${encodeURIComponent(album.path)}" alt="Album artwork"><div class="album-hero-content"><p class="eyebrow">In your library</p><h2>${escHtml(info.title || album.name)}</h2><button class="text-link album-artist">${escHtml(info.artist || album.path.split('/')[0])}</button><p>${escHtml(details)}</p><div class="hero-actions"><button class="btn album-play">Play</button><button class="btn btn-secondary album-shuffle">Shuffle</button><button class="track-dl album-download" aria-label="Download album ZIP to this device" title="Download album ZIP to this device">${downloadIcon()}</button><button class="more-button album-more" aria-label="More for album" aria-haspopup="menu">•••</button></div></div></section>`;
+  return `<section class="album-hero"><img class="album-hero-art" src="/api/library/artwork?path=${encodeURIComponent(album.path)}" alt="Album artwork"><div class="album-hero-content"><p class="eyebrow">In your library</p><h2>${escHtml(info.title || album.name)}</h2><button class="text-link album-artist">${escHtml(info.artist || album.path.split('/')[0])}</button><p>${escHtml(details)}</p><div class="hero-actions"><button class="btn album-play">Play</button><button class="btn btn-secondary album-shuffle">Shuffle</button><button class="more-button album-more" aria-label="More for album" aria-haspopup="menu">•••</button></div></div></section>`;
 }
 function localArtistHeader(artist) {
   if(!artist)return '';
-  return `<section class="album-hero"><img class="album-hero-art" src="/api/library/artwork?path=${encodeURIComponent(artist.path)}" alt="Artist library artwork"><div class="album-hero-content"><p class="eyebrow">In your library · Artist</p><h2>${escHtml(artist.name)}</h2><p>${orderedAlbums(artist).length} downloaded album${orderedAlbums(artist).length!==1?'s':''} · ${countTracks(artist)} songs</p><div class="hero-actions"><button class="btn artist-play">Play</button><button class="btn btn-secondary artist-shuffle">Shuffle</button><button class="track-dl artist-download" aria-label="Download artist ZIP to this device" title="Download artist ZIP to this device">${downloadIcon()}</button><button class="more-button artist-more" aria-label="More for artist" aria-haspopup="menu">•••</button></div></div></section>`;
+  return `<section class="album-hero artist-hero"><div class="album-hero-art catalogue-hero-art">${collectTracks(artist).find(track=>track.fidelity?.artistId)?`<img src="/api/artist-artwork?id=${collectTracks(artist).find(track=>track.fidelity?.artistId).fidelity.artistId}" alt="Artist portrait" onerror="this.hidden=true">`:""}</div><div class="album-hero-content"><p class="eyebrow">In your library · Artist</p><h2>${escHtml(artist.name)}</h2><p>${orderedAlbums(artist).length} downloaded album${orderedAlbums(artist).length!==1?'s':''} · ${countTracks(artist)} songs</p><div class="hero-actions"><button class="btn artist-play">Play</button><button class="btn btn-secondary artist-shuffle">Shuffle</button><button class="more-button artist-more" aria-label="More for artist" aria-haspopup="menu">•••</button></div></div></section>`;
 }
 let moreAnchor = null;
 function closeMoreMenu() {
@@ -1359,6 +1464,8 @@ function closeMoreMenu() {
 function openMoreMenu(anchor, actions) {
   closeMoreMenu(); moreAnchor = anchor; anchor.setAttribute('aria-expanded','true');
   const menu = document.getElementById('more-menu');
+  const mobileDialog=document.getElementById('mobile-now-playing');
+  (anchor.id==='mobile-now-more'?mobileDialog:document.body).appendChild(menu);
   menu.innerHTML = actions.map((action,index) => `<button role="menuitem" data-action="${index}">${escHtml(action.label)}</button>`).join('');
   menu.hidden = false;
   const rect = anchor.getBoundingClientRect();
@@ -1370,12 +1477,13 @@ function openMoreMenu(anchor, actions) {
   }));
   menu.querySelector('button')?.focus();
 }
+window.addEventListener('resize',closeMoreMenu);
 document.addEventListener('click', event => {
   if (!document.getElementById('more-menu').contains(event.target) && !moreAnchor?.contains(event.target)) closeMoreMenu();
 });
 document.getElementById('more-menu').addEventListener('keydown', event => {
   const buttons = [...event.currentTarget.querySelectorAll('button')], index = buttons.indexOf(document.activeElement);
-  if (event.key === 'Escape') { closeMoreMenu(); moreAnchor?.focus(); }
+  if (event.key === 'Escape') { event.stopPropagation(); closeMoreMenu(); moreAnchor?.focus(); }
   if (['ArrowDown','ArrowUp'].includes(event.key)) { event.preventDefault(); buttons[(index + (event.key === 'ArrowDown' ? 1 : buttons.length-1)) % buttons.length]?.focus(); }
 });
 async function tracksForNode(node) {
@@ -1392,7 +1500,7 @@ function localMore(anchor,node) {
     {label:'Play Next',run: async () => enqueueTracks(await tracksForNode(node), true)},
     {label:'Add to Playback Queue',run: async () => enqueueTracks(await tracksForNode(node), false)},
   ];
-  if(anchor.id==='player-more')actions.push({label:'Download original to this device',run:()=>requestClientDownload(node.path,kind,node.name)});
+  actions.push({label:kind==='song'?'Download original to this device':`Download ${kind} ZIP to this device`,run:()=>requestClientDownload(node.path,kind,node.name)});
   if (kind === 'song') { const album=albumForTrack(node); if (album) actions.push({label:'Go to Album',run:()=>showAlbum(album.path)}); }
   if (kind !== 'artist') actions.push({label:'Go to Artist',run:()=>showAlbums(node.path.split('/')[0])});
   openMoreMenu(anchor,actions);
@@ -1428,7 +1536,7 @@ function playTrack(track,index=null) {
   player.src=`/files/${encodeURIPath(track.path)}`;
   player.play().catch(()=>showToast('This browser could not play the original file. You can download it to this device.','error'));
   document.getElementById('player-bar').classList.add('visible');
-  renderPlaybackQueue();
+  renderPlaybackQueue();syncMobilePlayer();
   if (state.libraryData && !state.searchActive) renderLibrary();
 }
 async function playLibraryScope(node,kind,shuffle=false) {
@@ -1468,7 +1576,7 @@ function renderPlaybackQueue() {
   shuffle.setAttribute('aria-pressed',String(state.shuffle)); shuffle.setAttribute('aria-label',`Shuffle ${state.shuffle?'on':'off'}`);
   repeat.setAttribute('aria-pressed',String(state.repeat!=='off')); repeat.setAttribute('aria-label',`Repeat ${state.repeat}`); repeat.textContent=state.repeat==='one'?'↻1':'↻';
   const list=document.getElementById('playback-list');
-  list.innerHTML=(state.currentTrack ? `<p class="queue-current">Now Playing · ${escHtml(trackTitle(state.currentTrack))}</p>` : '') + (remaining.length ? `<h3>${state.currentTrack?'Coming Up':'Queued'}</h3>`+remaining.map(item=>`<div class="queue-item"><button class="text-link" data-queue-play="${item.queueId}">${escHtml(trackTitle(item))}<small>${escHtml(item.path.split('/').slice(0,-1).join(' · '))}</small></button><button class="more-button" data-queue-remove="${item.queueId}" aria-label="Remove ${escHtml(trackTitle(item))} from playback queue">×</button></div>`).join('') : '<p class="catalogue-note">Nothing else queued.</p>');
+  list.innerHTML=(state.currentTrack ? `<div class="queue-current"><img src="/api/library/artwork?path=${encodeURIComponent(albumForTrack(state.currentTrack)?.path||state.currentTrack.path)}" alt=""><div>Now Playing<small>${escHtml(trackTitle(state.currentTrack))}</small></div></div>` : '') + (remaining.length ? `<h3>${state.currentTrack?'Coming Up':'Queued'}</h3>`+remaining.map(item=>`<div class="queue-item"><img class="queue-art" src="/api/library/artwork?path=${encodeURIComponent(albumForTrack(item)?.path||item.path)}" alt=""><button class="text-link" data-queue-play="${item.queueId}">${escHtml(trackTitle(item))}<small>${escHtml(item.path.split('/').slice(0,-1).join(' · '))}</small></button><button class="more-button" data-queue-remove="${item.queueId}" aria-label="Remove ${escHtml(trackTitle(item))} from playback queue">×</button></div>`).join('') : '<p class="catalogue-note">Nothing else queued.</p>');
   list.querySelectorAll('[data-queue-play]').forEach(button=>button.addEventListener('click',()=>{const index=state.playQueue.findIndex(item=>item.queueId===Number(button.dataset.queuePlay));playTrack(state.playQueue[index],index);}));
   list.querySelectorAll('[data-queue-remove]').forEach(button=>button.addEventListener('click',()=>{const id=Number(button.dataset.queueRemove);state.playQueue=state.playQueue.filter(item=>item.queueId!==id);state.playQueueBase=state.playQueueBase.filter(item=>item.queueId!==id);renderPlaybackQueue();}));
   document.getElementById('clear-upcoming').disabled=!remaining.length;
@@ -1498,6 +1606,61 @@ document.getElementById('player-close').addEventListener('click',()=>{
   if(!state.searchActive)renderLibrary();
 });
 
+
+// Mobile player presentation; the original audio element and playback queue are shared.
+function closeMobilePlayer() {
+  document.getElementById('mobile-now-playing').hidden=true;
+  document.getElementById('mobile-player-open').focus();
+}
+function syncMobilePlayer() {
+  const player=document.getElementById('player'),track=state.currentTrack;
+  for(const id of ['mini-play-pause','mobile-play-pause']){
+    const button=document.getElementById(id);button.textContent=player.paused?'▶':'Ⅱ';button.setAttribute('aria-label',player.paused?'Play':'Pause');
+  }
+  if(!track)return;
+  document.getElementById('mobile-now-title').textContent=trackTitle(track);
+  document.getElementById('mobile-now-artist').textContent=track.fidelity?.artist||track.path.split('/')[0];
+  document.getElementById('mobile-now-quality').textContent=formatFidelity(track);
+  const art=document.getElementById('player-artwork').src;
+  document.getElementById('mobile-now-art').src=art;
+  document.getElementById('mobile-now-playing').style.setProperty('--now-art',`url(${JSON.stringify(art)})`);
+  const duration=Number.isFinite(player.duration)?player.duration:Number(track.fidelity?.duration)||0;
+  const seek=document.getElementById('mobile-seek');seek.max=String(duration||1);seek.value=String(player.currentTime||0);seek.disabled=!duration;
+  seek.setAttribute('aria-valuetext',`${formatTime(player.currentTime||0)} of ${formatTime(duration)}`);
+  document.getElementById('mobile-elapsed').textContent=formatTime(player.currentTime||0);
+  document.getElementById('mobile-remaining').textContent='−'+formatTime(Math.max(0,duration-(player.currentTime||0)));
+  for(const setting of ['shuffle','repeat']){
+    const target=document.getElementById('mobile-'+setting),source=document.getElementById('player-'+setting);
+    target.setAttribute('aria-label',source.getAttribute('aria-label'));target.setAttribute('aria-pressed',source.getAttribute('aria-pressed'));target.textContent=source.textContent;
+  }
+}
+document.getElementById('mobile-player-open').addEventListener('click',()=>{
+  if(!state.currentTrack)return openPlaybackQueue();
+  closeDrawers();syncMobilePlayer();document.getElementById('mobile-now-playing').hidden=false;document.getElementById('mobile-player-collapse').focus();
+});
+document.getElementById('mobile-player-collapse').addEventListener('click',closeMobilePlayer);
+document.getElementById('mobile-now-playing').addEventListener('keydown',event=>{
+  if(event.key==='Escape')closeMobilePlayer();
+  if(event.key==='Tab'){
+    const controls=[...event.currentTarget.querySelectorAll('button,input:not(:disabled)')],first=controls[0],last=controls[controls.length-1];
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+  }
+});
+for(const id of ['mini-play-pause','mobile-play-pause'])document.getElementById(id).addEventListener('click',()=>{
+  const player=document.getElementById('player');if(!state.currentTrack)return openPlaybackQueue();
+  if(player.paused)player.play().catch(()=>showToast('Playback unavailable for this file in this browser.','error'));else player.pause();
+});
+for(const id of ['mini-next','mobile-next'])document.getElementById(id).addEventListener('click',()=>moveQueue(1));
+document.getElementById('mobile-prev').addEventListener('click',()=>moveQueue(-1));
+document.getElementById('mobile-now-more').addEventListener('click',event=>localMore(event.currentTarget,state.currentTrack));
+document.getElementById('mobile-up-next').addEventListener('click',()=>{closeMobilePlayer();openPlaybackQueue();});
+document.getElementById('mobile-stop').addEventListener('click',()=>{closeMobilePlayer();document.getElementById('player-close').click();});
+for(const setting of ['shuffle','repeat'])document.getElementById('mobile-'+setting).addEventListener('click',()=>{document.getElementById('player-'+setting).click();syncMobilePlayer();});
+document.getElementById('mobile-seek').addEventListener('change',event=>{
+  const player=document.getElementById('player');if(Number.isFinite(player.duration))player.currentTime=Math.max(0,Math.min(player.duration,Number(event.target.value)||0));
+});
+for(const event of ['play','pause','timeupdate','loadedmetadata','ended'])document.getElementById('player').addEventListener(event,syncMobilePlayer);
 
 function encodeURIPath(p) {
   return p.split('/').map(encodeURIComponent).join('/');
@@ -1713,7 +1876,7 @@ function libraryPresence(item){
 function catalogueMore(anchor,item){
   const presence=libraryPresence(item),actions=[];
   if(presence.track){actions.push({label:'Play Next (downloaded file)',run:()=>enqueueTracks([presence.track],true)},{label:'Add downloaded file to Playback Queue',run:()=>enqueueTracks([presence.track])},{label:'Download original to this device',run:()=>requestClientDownload(presence.track.path,'song',presence.track.name)});}
-  if(presence.node&&!presence.track)actions.push({label:'Play downloaded songs next',run:async()=>enqueueTracks(await tracksForNode(presence.node),true)},{label:'Add downloaded songs to Playback Queue',run:async()=>enqueueTracks(await tracksForNode(presence.node))},{label:'Download library copy ZIP to this device',run:()=>requestClientDownload(presence.node.path,catalogueKind(item),presence.node.name)});
+  if(presence.node&&!presence.track)actions.push({label:'Play downloaded songs next',run:async()=>enqueueTracks(await tracksForNode(presence.node),true)},{label:'Add downloaded songs to Playback Queue',run:async()=>enqueueTracks(await tracksForNode(presence.node))},{label:`Download ${catalogueKind(item)} ZIP to this device (downloaded songs only)`,run:()=>requestClientDownload(presence.node.path,catalogueKind(item),presence.node.name)});
   if(presence.node)actions.push({label:'Open downloaded '+(catalogueKind(item)==='artist'?'artist':'album'),run:()=>catalogueKind(item)==='artist'?showAlbums(presence.node.path):showAlbum(presence.node.path)});
   actions.push({label:'Open in Apple Music',run:()=>window.open(catalogueUrl(item),'_blank','noopener,noreferrer')});openMoreMenu(anchor,actions);
 }
@@ -1726,14 +1889,18 @@ function saveButtonHtml(item,index) {
   const presence=libraryPresence(item),kind=catalogueKind(item);
   const pending=Object.values(state.jobs).some(job=>job.url===catalogueUrl(item)&&['pending','running'].includes(job.status));
   if(pending)return '<button class="track-dl" disabled aria-label="Queued for server" title="Queued for server">…</button>';
-  if(presence.complete&&presence.node) return `<button class="track-dl catalog-device" data-item="${index}" aria-label="Download ${escHtml(kind)} to this device" title="Download ${escHtml(kind)} to this device">${downloadIcon()}</button>`;
+  if(presence.complete) return '';
   const label=kind==='artist'?'Save artist albums to server':kind==='album'&&presence.node&&!presence.alternate?'Save missing songs to server':'Save '+kind+' to server';
   return `<button class="track-dl catalog-save" data-item="${index}" aria-label="${escHtml(label)}" title="${escHtml(label)}">${downloadIcon()}</button>`;
 }
+function catalogueArtwork(item,size=300) {
+  if(catalogueKind(item)==='artist')return /^\d+$/.test(String(item.artistId))?`/api/artist-artwork?id=${item.artistId}`:null;
+  return item.artworkUrl100?.replace('100x100',`${size}x${size}`);
+}
 function resultCardHtml(item,index) {
-  const title=catalogueTitle(item)||'Unknown',presence=libraryPresence(item),art=item.artworkUrl100?.replace('100x100','300x300');
+  const title=catalogueTitle(item)||'Unknown',presence=libraryPresence(item),art=catalogueArtwork(item);
   const mark=!state.libraryIndexReady?'…':presence.complete?'✓':presence.node?'◐':'↓';
-  return `<article class="result-card"><button class="catalogue-open" data-item="${index}" aria-label="Browse ${escHtml(title)}"><div class="library-art">${art?`<img class="result-art" src="${escHtml(art)}" loading="lazy" alt="">`:'<div class="result-art-placeholder">♫</div>'}<span class="card-library-badge" title="${escHtml(presence.label)}" aria-label="${escHtml(presence.label)}">${mark}</span></div><div class="result-info"><div class="result-title">${escHtml(title)}</div>${catalogueKind(item)!=='artist'?`<div class="result-sub">${escHtml(item.artistName||'')}</div>`:''}</div></button></article>`;
+  return `<article class="result-card" data-kind="${catalogueKind(item)}"><button class="catalogue-open" data-item="${index}" aria-label="Browse ${escHtml(title)}"><div class="library-art">${art?`<img class="result-art" src="${escHtml(art)}" loading="lazy" alt="" onerror="this.hidden=true">`:'<div class="result-art-placeholder">♫</div>'}<span class="card-library-badge" title="${escHtml(presence.label)}" aria-label="${escHtml(presence.label)}">${mark}</span></div><div class="result-info"><div class="result-title">${escHtml(title)}</div>${catalogueKind(item)!=='artist'?`<div class="result-sub">${escHtml(item.artistName||'')}</div>`:''}</div></button></article>`;
 }
 
 async function doAppleSearch(){
@@ -1783,12 +1950,12 @@ function renderCatalogue(){
       return items.length?`<section class="search-section"><h3>${({artist:'Artists',album:'Albums',song:'Songs'})[kind]}</h3><div class="result-grid">${items.map(pair=>resultCardHtml(pair.item,pair.index)).join('')}</div></section>`:'';
     }).join('')||'<div class="library-empty">No Apple Music results found.</div>';
   }else{
-    const item=view.item,presence=libraryPresence(item),art=(item.artworkUrl100||view.items[0]?.artworkUrl100)?.replace('100x100','600x600');boundItems=[item,...view.items];
+    const item=view.item,presence=libraryPresence(item),art=catalogueArtwork(item,600);boundItems=[item,...view.items];
     document.getElementById('library-title').textContent=catalogueTitle(item);document.getElementById('library-subtitle').textContent='Apple Music catalogue';
     document.querySelector('.library-heading').hidden=true;
     const duration=view.kind==='album'?view.items.reduce((sum,track)=>sum+(track.trackTimeMillis||0),0)/1000:(item.trackTimeMillis||0)/1000;
     const details=[item.releaseDate?.slice(0,4),item.primaryGenreName,view.kind==='album'?`${item.trackCount||view.items.length} songs`:'',duration?formatTime(duration):''].filter(Boolean).join(' · ');
-    content.innerHTML=`<section class="album-hero">${art?`<img class="album-hero-art" src="${escHtml(art)}" alt="Artwork">`:'<div class="album-hero-art" aria-hidden="true">♫</div>'}<div class="album-hero-content"><p class="eyebrow">Apple Music · ${escHtml(view.kind)}</p><h2>${escHtml(catalogueTitle(item))}</h2>${view.kind!=='artist'?`<button class="text-link catalog-artist">${escHtml(item.artistName||'Artist')}</button>`:''}<p>${escHtml(details)}</p><p class="downloaded-badge ${presence.node||presence.track?'has-local':''}">${escHtml(presence.label)}</p><div class="hero-actions">${presence.track||presence.node?`<button class="btn catalog-play-local">${presence.alternate?'Play local version':presence.complete?'Play':'Play downloaded'}</button>`:''}${presence.node&&!presence.track?'<button class="btn btn-secondary catalog-shuffle-local" aria-label="Shuffle downloaded songs">Shuffle</button>':''}${saveButtonHtml(item,0)}<button class="more-button catalog-more" data-item="0" aria-label="More for catalogue item" aria-haspopup="menu">•••</button></div></div></section>`;
+    content.innerHTML=`<section class="album-hero ${view.kind==='artist'?'artist-hero':''}">${art?`<div class="album-hero-art catalogue-hero-art"><img src="${escHtml(art)}" alt="Artwork" onerror="this.hidden=true"></div>`:'<div class="album-hero-art" aria-hidden="true">♫</div>'}<div class="album-hero-content"><p class="eyebrow">Apple Music · ${escHtml(view.kind)}</p><h2>${escHtml(catalogueTitle(item))}</h2>${view.kind!=='artist'?`<button class="text-link catalog-artist">${escHtml(item.artistName||'Artist')}</button>`:''}<p>${escHtml(details)}</p><p class="downloaded-badge ${presence.node||presence.track?'has-local':''}">${escHtml(presence.label)}</p><div class="hero-actions">${presence.track||presence.node?`<button class="btn catalog-play-local">${presence.alternate?'Play local version':presence.complete?'Play':'Play downloaded'}</button>`:''}${presence.node&&!presence.track?'<button class="btn btn-secondary catalog-shuffle-local" aria-label="Shuffle downloaded songs">Shuffle</button>':''}${saveButtonHtml(item,0)}<button class="more-button catalog-more" data-item="0" aria-label="More for catalogue item" aria-haspopup="menu">•••</button></div></div></section>`;
     if(view.kind==='artist')content.innerHTML+=`<h3>Albums</h3><div class="result-grid">${view.items.map((album,index)=>resultCardHtml(album,index+1)).join('')}</div>`;
     if(view.kind==='album')content.innerHTML+=`<div class="track-list">${view.items.map((track,index)=>`<div class="catalogue-track"><span class="track-num">${track.trackNumber||index+1}</span><button class="text-link catalogue-open" data-item="${index+1}">${escHtml(track.trackName)}<small>${formatTime((track.trackTimeMillis||0)/1000)}</small></button><span class="downloaded-badge ${libraryPresence(track).track?'has-local':''}">${escHtml(libraryPresence(track).label)}</span>${libraryPresence(track).track?`<button class="track-dl catalog-row-play" data-item="${index+1}" aria-label="Play downloaded ${escHtml(track.trackName)}" title="Play downloaded file">▶</button>`:''}${saveButtonHtml(track,index+1)}<button class="more-button catalog-more" data-item="${index+1}" aria-label="More for ${escHtml(track.trackName)}" aria-haspopup="menu">•••</button></div>`).join('')}</div>`;
     if(view.kind==='song')content.innerHTML+=`<p class="catalogue-note">${presence.alternate?'A possible local version is in your library. Play uses that file; saving requests this catalogue version.':presence.track?'This track is already on your server. Playback and device downloads use the original file.':'Save this song to your server to play the full downloaded track.'}</p>${item.collectionId?'<button class="text-link catalog-album">Browse this album →</button>':''}`;
@@ -1801,10 +1968,6 @@ function renderCatalogue(){
   content.querySelectorAll('.catalogue-open').forEach(button=>button.addEventListener('click',()=>openCatalogueItem(boundItems[Number(button.dataset.item)])));
   content.querySelectorAll('.catalog-more').forEach(button=>button.addEventListener('click',()=>catalogueMore(button,boundItems[Number(button.dataset.item)])));
   content.querySelectorAll('.catalog-row-play').forEach(button=>button.addEventListener('click',()=>{const presence=libraryPresence(boundItems[Number(button.dataset.item)]);if(presence.track)playFromAlbum(presence.track);}));
-  content.querySelectorAll('.catalog-device').forEach(button=>button.addEventListener('click',()=>{
-    const item=boundItems[Number(button.dataset.item)],presence=libraryPresence(item),node=presence.track||presence.node;
-    if(node)requestClientDownload(node.path,catalogueKind(item),node.name);
-  }));
   content.querySelectorAll('.catalog-save').forEach(button=>button.addEventListener('click',async()=>{
     const item=boundItems[Number(button.dataset.item)];button.disabled=true;button.setAttribute('aria-label','Sending to server');button.textContent='…';
     try{await queueAppleUrl(catalogueUrl(item));button.textContent='✓';button.setAttribute('aria-label','Queued for server');button.title='Queued for server';}catch{button.disabled=false;button.textContent='↻';button.setAttribute('aria-label','Retry save to server');button.title='Retry save to server';showToast('Could not save to server. Please retry.','error');}

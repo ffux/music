@@ -279,6 +279,17 @@ app.get('/api/library/download', (req, res) => {
   archive.finalize();
 });
 
+// Lazy portraits do not delay catalogue search. No arbitrary URL proxying.
+const { createArtistArtwork } = require('./artist-artwork');
+const artistArtwork = createArtistArtwork();
+app.get('/api/artist-artwork', async (req, res) => {
+  if(typeof req.query.id !== 'string' || !/^\d{1,20}$/.test(req.query.id))return res.sendStatus(400);
+  const url=await artistArtwork(req.query.id);
+  res.setHeader('Cache-Control',url?'private, max-age=3600':'private, max-age=60');
+  if(!url)return res.sendStatus(404);
+  res.redirect(302,url);
+});
+
 // Public catalogue metadata only; saving still uses the explicit queue endpoint.
 const catalogueCache = new Map();
 async function appleCatalogue(url) {
