@@ -684,15 +684,17 @@
 <aside class="settings-drawer" id="settings-drawer" aria-hidden="true">
   <div class="drawer-header"><h2>Settings</h2><button id="settings-close" aria-label="Close settings">✕</button></div>
   <section class="drawer-section">
-    <h3>Apple Music Cookies</h3>
-    <p>Upload a Netscape-format cookies.txt exported while signed in to Apple Music.</p>
-    <div id="cookie-status-box" class="cookie-status missing">No cookies.txt uploaded</div>
-    <div class="file-input-row">
-      <label class="file-label" for="cookie-file">Choose file</label>
-      <input type="file" id="cookie-file" accept=".txt">
-      <span id="cookie-filename">No file chosen</span>
-      <button class="btn btn-sm" id="upload-cookie-btn" disabled>Upload</button>
-    </div>
+    <h3>Apple Music connection</h3>
+    <div id="wrapper-status-box" class="cookie-status missing" role="status" aria-live="polite">Checking connection…</div>
+    <button class="btn btn-secondary" id="refresh-wrapper-status">Refresh status</button>
+    <details style="margin-top:18px" id="wrapper-sign-in">
+      <summary style="cursor:pointer">Sign in securely using Terminal</summary>
+      <p>On a computer with SSH access to your server, open Terminal and run:</p>
+      <code id="wrapper-login-command" style="display:block;overflow-wrap:anywhere;padding:12px;background:var(--surface2);border-radius:6px">ssh -t root@192.168.50.210 'python3 /root/music-alac-review/music/wrapper/login.py'</code>
+      <button class="btn btn-secondary btn-sm" id="copy-wrapper-command" style="margin-top:10px">Copy command</button>
+      <p>Enter your Apple ID, password and verification code only in Terminal. Inputs are hidden. Then return here and refresh the status.</p>
+      <p>If already signed in, the command keeps your current session. A phone needs an SSH client with existing server access; otherwise use your computer.</p>
+    </details>
   </section>
   <section class="drawer-section">
     <h3>Download confirmation</h3>
@@ -816,7 +818,7 @@ function openDrawer(name) {
   drawer.setAttribute('aria-hidden', 'false');
   document.getElementById(`${name}-toggle`).classList.add('active');
   if (name === 'settings') {
-    loadCookieStatus();
+    loadWrapperStatus();
     updateConfirmationStatus();
   }
 }
@@ -1489,49 +1491,37 @@ document.getElementById('reset-download-confirmation').addEventListener('click',
   showToast('Download confirmation reset', 'success');
 });
 
-// Cookies / Settings
-async function loadCookieStatus() {
+// Settings exposes readiness only; credentials never enter the browser.
+async function loadWrapperStatus() {
+  const box = document.getElementById('wrapper-status-box');
+  const button = document.getElementById('refresh-wrapper-status');
+  button.disabled = true;
+  box.textContent = 'Checking connection…';
+  box.className = 'cookie-status missing';
+  const labels = {
+    ready: 'Connected · ready to download',
+    sign_in_required: 'Sign-in required · use the secure Terminal steps below',
+    verification_required: 'Verification required · complete the code prompt in your active Terminal session',
+    session_incomplete: 'Session incomplete · check the wrapper on your server',
+    runtime_unavailable: 'Wrapper playback is unavailable · check the service on your server',
+    disabled: 'Wrapper is disabled in server settings',
+    unavailable: 'Cannot reach the wrapper · check the service or your connection',
+  };
   try {
-    const res = await fetch('/api/cookies/status');
-    const data = await res.json();
-    const box = document.getElementById('cookie-status-box');
-    if (data.exists) {
-      const d = new Date(data.mtime);
-      box.className = 'cookie-status ok';
-      box.textContent = `cookies.txt present — updated ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
-    } else {
-      box.className = 'cookie-status missing';
-      box.textContent = 'No cookies.txt uploaded';
-    }
-  } catch (e) {}
+    const response = await fetch('/api/wrapper/status', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Status unavailable');
+    const data = await response.json();
+    box.textContent = labels[data.state] || labels.unavailable;
+    box.className = 'cookie-status ' + (data.state === 'ready' ? 'ok' : 'missing');
+  } catch { box.textContent = labels.unavailable; }
+  finally { button.disabled = false; }
 }
-
-document.getElementById('cookie-file').addEventListener('change', function () {
-  const name = this.files[0]?.name || 'No file chosen';
-  document.getElementById('cookie-filename').textContent = name;
-  document.getElementById('upload-cookie-btn').disabled = !this.files[0];
-});
-
-document.getElementById('upload-cookie-btn').addEventListener('click', async () => {
-  const file = document.getElementById('cookie-file').files[0];
-  if (!file) return;
-  const form = new FormData();
-  form.append('cookies', file);
+document.getElementById('refresh-wrapper-status').addEventListener('click', loadWrapperStatus);
+document.getElementById('copy-wrapper-command').addEventListener('click', async () => {
   try {
-    const res = await fetch('/api/cookies', { method: 'POST', body: form });
-    const data = await res.json();
-    if (res.ok) {
-      showToast('cookies.txt updated', 'success');
-      loadCookieStatus();
-      document.getElementById('cookie-file').value = '';
-      document.getElementById('cookie-filename').textContent = 'No file chosen';
-      document.getElementById('upload-cookie-btn').disabled = true;
-    } else {
-      showToast(data.error || 'Upload failed', 'error');
-    }
-  } catch (e) {
-    showToast('Upload failed', 'error');
-  }
+    await navigator.clipboard.writeText(document.getElementById('wrapper-login-command').textContent);
+    showToast('Terminal command copied', 'success');
+  } catch { showToast('Select and copy the command above', 'error'); }
 });
 
 // Toast

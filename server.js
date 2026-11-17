@@ -1,7 +1,6 @@
 const express = require('express');
 const { WebSocketServer } = require('ws');
 const Database = require('better-sqlite3');
-const multer = require('multer');
 const archiver = require('archiver');
 const http = require('http');
 const fs = require('fs');
@@ -51,22 +50,15 @@ app.use('/files', (req, res, next) => {
   next();
 }, express.static(MUSIC_DIR));
 
-// Upload cookies.txt
-const upload = multer({ dest: '/tmp/' });
-app.post('/api/cookies', upload.single('cookies'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  const dest = path.join(DATA_DIR, 'cookies.txt');
-  fs.copyFileSync(req.file.path, dest);
-  fs.unlinkSync(req.file.path);
-  res.json({ ok: true, message: 'cookies.txt updated' });
+// Read-only, allowlisted status only. Authentication stays on the private SSH flow.
+const { createWrapperStatus } = require('./wrapper-status');
+const wrapperStatus = createWrapperStatus({
+  baseUrl: process.env.MUSIC_WRAPPER_URL || 'http://music-wrapper',
+  enabled: ['true', '1'].includes((process.env.MUSIC_USE_WRAPPER || 'true').toLowerCase()),
 });
-
-app.get('/api/cookies/status', (req, res) => {
-  const cookiePath = path.join(DATA_DIR, 'cookies.txt');
-  const exists = fs.existsSync(cookiePath);
-  let mtime = null;
-  if (exists) mtime = fs.statSync(cookiePath).mtime;
-  res.json({ exists, mtime });
+app.get('/api/wrapper/status', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(await wrapperStatus());
 });
 
 // Queue a download
