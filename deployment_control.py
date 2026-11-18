@@ -25,6 +25,10 @@ def control(db_path, action, token):
         if action=='begin':
             conn.execute('INSERT OR IGNORE INTO deployment_drain(id,token) VALUES(1,?)',(token,))
         elif action=='end':
+            bootstrap_table=conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='deployment_bootstrap_guard'").fetchone()
+            if (conn.execute("SELECT 1 FROM sqlite_master WHERE type='trigger' AND name IN ('music_bootstrap_running_update','music_bootstrap_running_insert')").fetchone()
+                    or (bootstrap_table and conn.execute('SELECT 1 FROM deployment_bootstrap_guard').fetchone())):
+                raise RuntimeError('Release the owned bootstrap guard with bootstrap_control.py instead')
             if not row:raise RuntimeError('No matching active drain')
             conn.execute('DELETE FROM deployment_drain WHERE id=1 AND token=?',(token,))
         elif action!='status':raise ValueError('Unknown drain action')
