@@ -134,6 +134,7 @@ assert.equal(tracks.length,3);
   assert(html.includes('#clear-upcoming { margin-top: 24px; }'));
   assert(!html.includes('Albums and songs ready to stream or download. Retained originals are not counted twice.'));
   assert(!html.includes('Free space available for downloads on the music storage drive (GB).'));
+  assert(!html.includes('--bg: #000'));assert(!html.includes('#087cff'));assert(!html.includes('#2997ff'));
   // Welcome totals use the API-visible library (retained ALAC originals are filtered server-side).
   context.statsFixture=[{type:'dir',path:'Artist',children:[{type:'dir',path:'Artist/Album',children:[{type:'file',path:'Artist/Album/a.flac',size:1500000000},{type:'file',path:'Artist/Album/b.m4a',size:500000000}]}]}];
   assert.equal(JSON.stringify(evaluate('welcomeTotals(statsFixture)')),JSON.stringify({albums:1,songs:2,bytes:2000000000}));
