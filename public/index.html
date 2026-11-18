@@ -428,10 +428,23 @@
     .drawer-section > p { color: var(--muted); font-size: 12px; margin-bottom: 14px; }
     .drawer-section .jobs-container { padding: 0; }
 
+    .settings-drawer, .downloads-drawer { inset: 0; margin: auto; height: fit-content; max-height: calc(100dvh - 32px); width: min(560px, calc(100% - 32px)); padding: 0; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 22px; box-shadow: 0 24px 90px #0008; transform: none; transition: none; }
+    .settings-drawer.open, .downloads-drawer.open { transform: none; }
+    .settings-drawer::backdrop, .downloads-drawer::backdrop { background: #0009; backdrop-filter: blur(6px); }
     /* Confirmation modal */
     .modal-backdrop { position: fixed; inset: 0; z-index: 110; background: rgba(0,0,0,.7); display: grid; place-items: center; padding: 20px; }
     .modal-backdrop[hidden] { display: none; }
     .confirmation-dialog { width: min(430px, 100%); background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+    .welcome-dialog { margin: auto; width: min(540px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; padding: 28px; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 22px; box-shadow: 0 24px 90px #0008; }
+    .welcome-dialog::backdrop { background: #0009; backdrop-filter: blur(6px); }
+    .welcome-dialog h2 { font-size: 28px; margin-bottom: 16px; }
+    .welcome-dialog p { color: var(--muted); line-height: 1.6; margin: 12px 0; }
+    .welcome-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 22px 0; }
+    .welcome-stats div { background: var(--surface2); border-radius: 12px; padding: 16px 8px; text-align: center; }
+    .welcome-stats strong, .welcome-stats span { display: block; }
+    .welcome-stats strong { font-size: 23px; }
+    .welcome-stats span { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .welcome-dialog .btn { width: 100%; margin-top: 12px; }
     .confirmation-dialog h2 { font-size: 18px; margin-bottom: 8px; }
     .confirmation-dialog p { color: var(--muted); font-size: 13px; }
     .confirmation-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 22px; }
@@ -984,8 +997,8 @@
   <div class="mobile-player-tools"><button id="mobile-shuffle" aria-label="Shuffle off" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h3c5 0 7 12 12 12h3M3 18h3c2.5 0 4.5-3 6-6s3.5-6 6-6h3m-4-4 4 4-4 4m0 4 4 4-4 4"/></svg></button><button id="mobile-repeat" aria-label="Repeat off" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4M3 10V8a2 2 0 0 1 2-2h16M7 22l-4-4 4-4m14 0v2a2 2 0 0 1-2 2H3"/></svg></button><button id="mobile-up-next" aria-label="Show playback queue"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 10h16M4 15h9M4 20h9"/><path d="m17 15 5 3-5 3Z" fill="currentColor" stroke="none"/></svg></button><button id="mobile-stop" aria-label="Stop and close player"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
 </section>
 <div class="settings-overlay" id="settings-overlay" hidden></div>
-<aside class="downloads-drawer" id="downloads-drawer" aria-hidden="true">
-  <div class="drawer-header"><h2>Download History</h2><button id="downloads-close" aria-label="Close download history"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
+<dialog class="downloads-drawer" id="downloads-drawer" aria-hidden="true" aria-label="Download History">
+  <div class="drawer-header"><h2>Download History</h2><button id="downloads-close" aria-label="Close download history"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" aria-label="Download History" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
   <section class="drawer-section">
     <p>Monitor active downloads and review completed jobs.</p>
     <div class="job-filters" role="group" aria-label="Filter download history">
@@ -995,9 +1008,9 @@
     </div>
     <div id="download-jobs"></div>
   </section>
-</aside>
-<aside class="settings-drawer" id="settings-drawer" aria-hidden="true">
-  <div class="drawer-header"><h2>Settings</h2><button id="settings-close" aria-label="Close settings"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
+</dialog>
+<dialog class="settings-drawer" id="settings-drawer" aria-hidden="true" aria-label="Settings">
+  <div class="drawer-header"><h2>Settings</h2><button id="settings-close" aria-label="Close settings"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" aria-label="Settings" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
   <section class="drawer-section">
     <h3>Apple Music connection</h3>
     <div id="wrapper-status-box" class="cookie-status missing" role="status" aria-live="polite">Checking connection…</div>
@@ -1016,7 +1029,7 @@
     <p id="confirmation-status">The confirmation dialog is enabled.</p>
     <button class="btn btn-secondary" id="reset-download-confirmation">Reset confirmation dialog</button>
   </section>
-</aside>
+</dialog>
 
 <aside class="playback-drawer" id="playback-drawer" aria-hidden="true" aria-label="Playback queue">
   <div class="drawer-header"><h2>Up Next</h2><button id="playback-close" aria-label="Close playback queue"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
@@ -1025,6 +1038,19 @@
 <div id="more-menu" role="menu" hidden></div>
 <div id="toast"></div>
 
+<dialog class="welcome-dialog" id="welcome-dialog" aria-labelledby="welcome-title" aria-describedby="welcome-intro">
+  <h2 id="welcome-title">Welcome to Music</h2>
+  <p id="welcome-intro">Search the Apple Music catalogue, save albums and songs to the remote server, then stream them in your browser or download a copy to your device.</p>
+  <p>Downloads request the highest available stereo quality: lossless ALAC is converted to FLAC without losing audio quality. When no lossless source is available, AAC is kept as AAC. Quality varies by release.</p>
+  <div class="welcome-stats" aria-label="Music available in your library" aria-live="polite">
+    <div><strong id="welcome-albums">—</strong><span>albums</span></div>
+    <div><strong id="welcome-songs">—</strong><span>songs</span></div>
+    <div><strong id="welcome-gb">—</strong><span>GB free</span></div>
+  </div>
+  <p id="welcome-stats-note">Loading your library…</p>
+  <p id="welcome-storage-note" aria-live="polite">Checking available music storage…</p>
+  <button class="btn" id="welcome-start" autofocus>Explore the library</button>
+</dialog>
 <div class="modal-backdrop" id="download-confirmation" hidden>
   <div class="confirmation-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmation-title">
     <h2 id="confirmation-title">Download to this device?</h2>
@@ -1119,6 +1145,7 @@ function handleWsMessage(msg) {
 
 function closeDrawers() {
   document.querySelectorAll('.settings-drawer, .downloads-drawer, .playback-drawer').forEach(drawer => {
+    if(drawer.open) drawer.close?.();
     drawer.classList.remove('open');
     drawer.setAttribute('aria-hidden', 'true');
   });
@@ -1128,10 +1155,10 @@ function closeDrawers() {
 
 function openDrawer(name) {
   closeDrawers();
-  document.getElementById('settings-overlay').hidden = false;
   const drawer = document.getElementById(`${name}-drawer`);
   drawer.classList.add('open');
   drawer.setAttribute('aria-hidden', 'false');
+  drawer.showModal?.();
   document.getElementById(`${name}-toggle`).classList.add('active');
   if (name === 'settings') {
     loadWrapperStatus();
@@ -1139,6 +1166,11 @@ function openDrawer(name) {
   }
 }
 
+for(const name of ['downloads','settings']) {
+  const dialog=document.getElementById(name+'-drawer');
+  dialog.addEventListener('cancel',event=>{event.preventDefault();closeDrawers();});
+  dialog.addEventListener('click',event=>{if(event.target!==dialog)return;const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)closeDrawers();});
+}
 document.getElementById('downloads-toggle').addEventListener('click', () => openDrawer('downloads'));
 document.getElementById('settings-toggle').addEventListener('click', () => openDrawer('settings'));
 document.getElementById('downloads-close').addEventListener('click', closeDrawers);
@@ -1240,6 +1272,7 @@ async function loadLibrary({ silent = false } = {}) {
     const res = await fetch('/api/library');
     if (!res.ok) throw new Error('Library request failed');
     state.libraryData = await res.json();
+    updateWelcomeStats();
     state.libraryIndexReady = false; state.libraryIndexFailed = false;
     for (const album of allLibraryAlbums()) {
       const cached = state.albumMetadata[album.path];
@@ -1253,6 +1286,7 @@ async function loadLibrary({ silent = false } = {}) {
   } catch (e) {
     if (!silent) {
       document.getElementById('library-content').innerHTML = '<div class="library-empty">Failed to load library</div>';
+      document.getElementById('welcome-stats-note').textContent = 'Library totals are temporarily unavailable.';
     }
     return false;
   }
@@ -1888,6 +1922,42 @@ function formatFidelity(track) {
   return [resolution, info.codec].filter(Boolean).join(' ');
 }
 
+const welcomeKey = 'music-welcome-seen-v1';
+function welcomeTotals(nodes) {
+  const tracks = new Map();
+  for (const node of nodes || []) for (const track of collectTracks(node)) tracks.set(track.path, track);
+  const albums = new Set((nodes || []).filter(node=>node.type==='dir').flatMap(artist=>(artist.children||[]).filter(album=>album.type==='dir' && collectTracks(album).length).map(album=>album.path)));
+  return { albums: albums.size, songs: tracks.size, bytes: [...tracks.values()].reduce((sum,track)=>sum+Math.max(0,Number(track.size)||0),0) };
+}
+function updateWelcomeStats() {
+  const totals = welcomeTotals(state.libraryData);
+  document.getElementById('welcome-albums').textContent = totals.albums.toLocaleString();
+  document.getElementById('welcome-songs').textContent = totals.songs.toLocaleString();
+  document.getElementById('welcome-stats-note').textContent = 'Albums and songs ready to stream or download. Retained originals are not counted twice.';
+}
+async function loadWelcomeStorage() {
+  document.getElementById('welcome-gb').textContent='—';
+  document.getElementById('welcome-storage-note').textContent='Checking available music storage…';
+  try {
+    const response=await fetch('/api/library/storage');
+    const data=await response.json();
+    if(!response.ok || !Number.isFinite(data.availableBytes) || data.availableBytes<0)throw Error('unavailable');
+    document.getElementById('welcome-gb').textContent=(data.availableBytes/1e9).toLocaleString(undefined,{maximumFractionDigits:1});
+    document.getElementById('welcome-storage-note').textContent='Free space available for downloads on the music storage drive (GB).';
+  } catch {
+    document.getElementById('welcome-gb').textContent='—';
+    document.getElementById('welcome-storage-note').textContent='Available music storage could not be checked. Try reopening this window later.';
+  }
+}
+function showWelcome(force=false) {
+  let seen=false; try { seen=localStorage.getItem(welcomeKey)==='yes'; } catch {}
+  const dialog=document.getElementById('welcome-dialog');
+  if((force || !seen) && !dialog.open) { dialog.showModal();loadWelcomeStorage(); }
+}
+document.getElementById('welcome-start').addEventListener('click',()=>document.getElementById('welcome-dialog').close());
+document.getElementById('welcome-dialog').addEventListener('keydown',event=>{if(event.key==='Tab'){event.preventDefault();document.getElementById('welcome-start').focus();}});
+document.getElementById('welcome-dialog').addEventListener('close',()=>{try { localStorage.setItem(welcomeKey,'yes'); } catch {} });
+
 const downloadConfirmationKey = 'music-client-download-confirmed-v1';
 let pendingClientDownload = null;
 
@@ -1932,7 +2002,10 @@ function updateConfirmationStatus() {
 document.getElementById('reset-download-confirmation').addEventListener('click', () => {
   localStorage.removeItem(downloadConfirmationKey);
   updateConfirmationStatus();
-  showToast('Download confirmation reset', 'success');
+  try { localStorage.removeItem(welcomeKey); } catch {}
+  closeDrawers();
+  showWelcome(true);
+  showToast('Download confirmation and welcome reset', 'success');
 });
 
 // Settings exposes readiness only; credentials never enter the browser.
@@ -2197,6 +2270,7 @@ function renderCatalogue(){
 
 
 // Init
+showWelcome();
 renderJobs();
 connectWs();
 loadLibrary();

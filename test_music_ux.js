@@ -132,6 +132,17 @@ assert.equal(tracks.length,3);
   assert(element('playback-list').innerHTML.includes('<h3>Now Playing</h3><div class="queue-item queue-now">'));
   assert(element('playback-list').innerHTML.includes('Remi Wolf'));
   assert(html.includes('#clear-upcoming { margin-top: 24px; }'));
+  // Welcome totals use the API-visible library (retained ALAC originals are filtered server-side).
+  context.statsFixture=[{type:'dir',path:'Artist',children:[{type:'dir',path:'Artist/Album',children:[{type:'file',path:'Artist/Album/a.flac',size:1500000000},{type:'file',path:'Artist/Album/b.m4a',size:500000000}]}]}];
+  assert.equal(JSON.stringify(evaluate('welcomeTotals(statsFixture)')),JSON.stringify({albums:1,songs:2,bytes:2000000000}));
+  assert.equal(evaluate('welcomeTotals([]).songs'),0);
+  assert.equal(evaluate('welcomeTotals([...statsFixture,...statsFixture]).bytes'),2000000000);
+  const preferences=new Map();context.localStorage={getItem:k=>preferences.get(k),setItem:(k,v)=>preferences.set(k,v),removeItem:k=>preferences.delete(k)};
+  const welcome=element('welcome-dialog');welcome.open=false;welcome.showModal=()=>welcome.open=true;welcome.close=()=>{welcome.open=false;listeners.get('welcome-dialog:close')();};
+  evaluate('showWelcome()');assert.equal(welcome.open,true);listeners.get('welcome-start:click')();assert.equal(welcome.open,false);
+  evaluate('showWelcome()');assert.equal(welcome.open,false);
+  preferences.set('music-client-download-confirmed-v1','yes');listeners.get('reset-download-confirmation:click')();
+  assert.equal(preferences.has('music-client-download-confirmed-v1'),false);assert.equal(welcome.open,true);
   // No title bar or Recently Added count; utilities remain available on mobile.
   assert(!html.includes('<header>'));assert(!html.includes('id="library-home"'));
   assert(!html.includes('Sorted by latest file date'));

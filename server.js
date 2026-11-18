@@ -125,6 +125,14 @@ app.get('/api/library', (req, res) => {
   res.json(scanDir(MUSIC_DIR));
 });
 
+// Free capacity on the music filesystem, not the app container's root disk.
+const { musicStorageStats } = require('./music-storage');
+app.get('/api/library/storage', async (req,res)=>{
+  res.setHeader('Cache-Control','no-store');
+  try { res.json(await musicStorageStats(MUSIC_DIR)); }
+  catch { res.status(503).json({error:'Music storage availability could not be checked'}); }
+});
+
 // Extract and cache the embedded artwork from the first supported audio file in a library item.
 app.get('/api/library/artwork', (req, res) => {
   const relativePath = req.query.path;
