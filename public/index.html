@@ -1292,8 +1292,7 @@ async function ensureArtistMetadata(artist) {
 }
 
 function libraryCardHtml(node,kind) {
-  const artistId=kind==='artist'?collectTracks(node).find(track=>track.fidelity?.artistId)?.fidelity.artistId:null;
-  const artwork=kind==='artist'?(artistId?`/api/artist-artwork?id=${artistId}`:null):`/api/library/artwork?path=${encodeURIComponent(node.path)}`;
+  const artwork=kind==='artist'?`/api/library/artist-artwork?path=${encodeURIComponent(node.path)}`:`/api/library/artwork?path=${encodeURIComponent(node.path)}`;
   return `<article class="library-card" data-path="${escHtml(node.path)}" data-kind="${kind}" tabindex="0" aria-label="Open ${escHtml(node.name)}"><div class="library-art">${artwork?`<img src="${artwork}" alt="" loading="lazy" onerror="this.classList.add('art-missing')">`:""}</div><div class="library-card-body"><div class="library-card-title">${escHtml(node.name)}</div>${kind==='album'?`<div class="library-card-meta">${escHtml(node.path.split('/')[0])}</div>`:''}</div></article>`;
 }
 
@@ -1426,9 +1425,6 @@ function renderLibrary() {
     content.querySelector('.album-more')?.addEventListener('click', event => localMore(event.currentTarget, album));
   }
   bindLibraryContent(content);
-  if(view.level==='artists'&&!state.libraryIndexReady&&!state.libraryIndexFailed)ensureLibraryIndex().then(()=>{
-    if(!state.searchActive&&state.libraryView.level==='artists')renderLibrary();
-  }).catch(()=>{state.libraryIndexFailed=true;});
 }
 
 function bindLibraryContent(content) {
@@ -1545,7 +1541,7 @@ function localAlbumHeader(album) {
 }
 function localArtistHeader(artist) {
   if(!artist)return '';
-  return `<section class="album-hero artist-hero"><div class="album-hero-art catalogue-hero-art">${collectTracks(artist).find(track=>track.fidelity?.artistId)?`<img src="/api/artist-artwork?id=${collectTracks(artist).find(track=>track.fidelity?.artistId).fidelity.artistId}" alt="Artist portrait" onerror="this.hidden=true">`:""}</div><div class="album-hero-content"><p class="eyebrow">In your library · Artist</p><h2>${escHtml(artist.name)}</h2><p>${orderedAlbums(artist).length} downloaded album${orderedAlbums(artist).length!==1?'s':''} · ${countTracks(artist)} songs</p><div class="hero-actions"><button class="btn artist-play">${musicIcon('play')}<span>Play</span></button><button class="btn btn-secondary artist-shuffle">${musicIcon('shuffle')}<span class="action-label">Shuffle</span></button><button class="more-button artist-more" aria-label="More for artist" aria-haspopup="menu">${musicIcon('more')}</button></div></div></section>`;
+  return `<section class="album-hero artist-hero"><div class="album-hero-art catalogue-hero-art"><img src="/api/library/artist-artwork?path=${encodeURIComponent(artist.path)}" alt="Artist portrait" onerror="this.hidden=true"></div><div class="album-hero-content"><p class="eyebrow">In your library · Artist</p><h2>${escHtml(artist.name)}</h2><p>${orderedAlbums(artist).length} downloaded album${orderedAlbums(artist).length!==1?'s':''} · ${countTracks(artist)} songs</p><div class="hero-actions"><button class="btn artist-play">${musicIcon('play')}<span>Play</span></button><button class="btn btn-secondary artist-shuffle">${musicIcon('shuffle')}<span class="action-label">Shuffle</span></button><button class="more-button artist-more" aria-label="More for artist" aria-haspopup="menu">${musicIcon('more')}</button></div></div></section>`;
 }
 let moreAnchor = null;
 function closeMoreMenu() {

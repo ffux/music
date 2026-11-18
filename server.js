@@ -294,15 +294,27 @@ app.get('/api/library/download', (req, res) => {
   archive.finalize();
 });
 
-// Lazy portraits do not delay catalogue search. No arbitrary URL proxying.
-const { createArtistArtwork } = require('./artist-artwork');
-const artistArtwork = createArtistArtwork();
-app.get('/api/artist-artwork', async (req, res) => {
-  if(typeof req.query.id !== 'string' || !/^\d{1,20}$/.test(req.query.id))return res.sendStatus(400);
-  const url=await artistArtwork(req.query.id);
-  res.setHeader('Cache-Control',url?'private, max-age=3600':'private, max-age=60');
-  if(!url)return res.sendStatus(404);
-  res.redirect(302,url);
+// Persistent artist portraits are served locally, independently of audio metadata.
+const { createPortraitCache } = require('./artist-portrait-cache');
+const portraits = createPortraitCache({ musicDir: MUSIC_DIR, dataDir: DATA_DIR });
+async function sendPortrait(res, lookup) {
+  try {
+    const image = await lookup();
+    res.setHeader('Cache-Control', image ? 'private, max-age=3600' : 'private, max-age=60');
+    if (!image) return res.sendStatus(404);
+    return res.type('image/jpeg').sendFile(image, { dotfiles: 'allow' });
+  } catch {
+    res.setHeader('Cache-Control', 'private, max-age=60');
+    return res.sendStatus(404);
+  }
+}
+app.get('/api/library/artist-artwork', (req, res) => {
+  if (typeof req.query.path !== 'string' || !req.query.path || req.query.path.startsWith('.') || /[\\/]/.test(req.query.path)) return res.sendStatus(400);
+  return sendPortrait(res, () => portraits.library(req.query.path));
+});
+app.get('/api/artist-artwork', (req, res) => {
+  if (typeof req.query.id !== 'string' || !/^\d{1,20}$/.test(req.query.id)) return res.sendStatus(400);
+  return sendPortrait(res, () => portraits.catalogue(req.query.id));
 });
 
 // Public catalogue metadata only; saving still uses the explicit queue endpoint.

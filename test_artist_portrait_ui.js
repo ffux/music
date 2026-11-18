@@ -1,0 +1,15 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const html = fs.readFileSync('public/index.html', 'utf8');
+const card = html.slice(html.indexOf('function libraryCardHtml('), html.indexOf('\nfunction allLibraryAlbums('));
+const context = {encodeURIComponent, escHtml: value => String(value), collectTracks: () => {throw Error('Artist cards must not wait for audio metadata');}};
+vm.createContext(context);vm.runInContext(card, context);
+const rendered = vm.runInContext('libraryCardHtml({path:"Artist & Friends",name:"Artist & Friends"},"artist")', context);
+assert(rendered.includes('/api/library/artist-artwork?path=Artist%20%26%20Friends'));
+assert(rendered.includes('loading="lazy"'));
+assert(!rendered.includes('/api/artist-artwork?id='));
+assert(!html.includes("view.level==='artists'&&!state.libraryIndexReady"));
+assert(html.includes('/api/library/artist-artwork?path=${encodeURIComponent(artist.path)}'));
+assert(html.includes('/api/artist-artwork?id=${item.artistId}'));
+console.log('Artist portraits: folder route available without album metadata; catalogue ID route retained');
