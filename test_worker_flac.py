@@ -20,7 +20,7 @@ class WorkerFlacTests(unittest.TestCase):
             with patch.object(worker, 'DB_PATH', db_path), patch.object(worker, 'downloader_settings', return_value=settings), \
                  patch.object(worker, 'check_wrapper_ready'), patch.object(worker, 'build_command', return_value=['fixture-downloader']), \
                  patch.object(worker.subprocess, 'Popen', return_value=process), patch.object(worker, 'stream_process'), \
-                 patch.object(worker, 'convert_new_files') as convert, patch.dict(os.environ, {'MUSIC_CONVERT_ALAC_TO_FLAC': enabled}):
+                 patch.object(worker, 'run_conversion_plan') as convert, patch.dict(os.environ, {'MUSIC_CONVERT_ALAC_TO_FLAC': enabled}):
                 if conversion_error: convert.side_effect = RuntimeError('fixture verification failed')
                 worker.run_job(1, 'https://example.test/fixture')
                 calls = convert.call_count

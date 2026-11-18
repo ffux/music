@@ -9,7 +9,9 @@ import time
 import sys
 import json
 import re
-from flac_conversion import snapshot, convert_new_files
+from deployment_control import claim_next_job
+from flac_conversion import snapshot
+from conversion_recovery import init_plans, prepare_conversion_plan, has_conversion_plan, run_conversion_plan
 from urllib.request import urlopen
 from urllib.error import URLError
 from urllib.parse import urlparse
@@ -216,8 +218,9 @@ def run_job(job_id, url):
             status = 'error'
             append_log(conn, job_id, f'[exited with code {proc.returncode}]')
         if status == 'done' and convert_flac:
+            prepare_conversion_plan(conn, job_id, settings['output'], before)
             append_log(conn, job_id, 'Converting newly downloaded ALAC to verified FLAC; originals are retained. AAC is unchanged.')
-            convert_new_files(settings['output'], before, lambda line: append_log(conn, job_id, line), MIN_FREE_BYTES)
+            run_conversion_plan(conn, job_id, lambda line: append_log(conn, job_id, line), MIN_FREE_BYTES)
         if status == 'error':
             append_log(conn, job_id, 'Download incomplete. Check the errors above; availability or download failure remains unresolved; see the actual file quality for completed tracks.')
     except FileNotFoundError:
@@ -240,6 +243,28 @@ def run_job(job_id, url):
     print(f'[worker] Job {job_id} finished: {status}', flush=True)
 
 
+def recover_interrupted_jobs():
+    conn = get_db()
+    init_plans(conn)
+    jobs = conn.execute("SELECT id FROM jobs WHERE status='running' ORDER BY id").fetchall()
+    for job in jobs:
+        job_id = job['id']
+        status = 'error'
+        if has_conversion_plan(conn, job_id):
+            try:
+                append_log(conn, job_id, 'Resuming persisted FLAC conversion after restart; no redownload.')
+                run_conversion_plan(conn, job_id, lambda line: append_log(conn, job_id, line), MIN_FREE_BYTES)
+                status = 'done'
+                append_log(conn, job_id, 'FLAC recovery completed; originals retained.')
+            except Exception as error:
+                append_log(conn, job_id, f'FLAC recovery stopped safely: {error}')
+        else:
+            append_log(conn, job_id, '[worker restarted before download completion was checkpointed; manual retry required]')
+        conn.execute('UPDATE jobs SET status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?', (status, job_id))
+        conn.commit()
+    conn.close()
+
+
 def main():
     # Wait for DB and data dir to be ready
     print('[worker] Waiting for database...', flush=True)
@@ -260,25 +285,12 @@ def main():
 
     print('[worker] Ready, polling for jobs...', flush=True)
 
-    # A container restart kills its child downloader. Mark those abandoned jobs
-    # clearly instead of leaving them stuck in the running state forever.
-    conn = get_db()
-    recovered = conn.execute(
-        "UPDATE jobs SET status = 'error', "
-        "log = log || '[worker restarted before this job finished]\\n', "
-        "updated_at = CURRENT_TIMESTAMP WHERE status = 'running'"
-    ).rowcount
-    conn.commit()
-    conn.close()
-    if recovered:
-        print(f'[worker] Marked {recovered} interrupted job(s) as error', flush=True)
+    recover_interrupted_jobs()
 
     while True:
         try:
             conn = get_db()
-            job = conn.execute(
-                "SELECT * FROM jobs WHERE status = 'pending' ORDER BY created_at LIMIT 1"
-            ).fetchone()
+            job = claim_next_job(conn)
             conn.close()
 
             if job:
