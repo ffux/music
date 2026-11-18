@@ -918,6 +918,7 @@
     .mobile-library-utilities .download-icon { width: 26px; height: 26px; flex-shrink: 0; }
     @media(max-width:700px) {
       .mobile-library-utilities { display: flex; }
+      .library-hub:has(+ .mobile-library-utilities) { margin-bottom: 0; }
     }
   </style>
 </head>
@@ -1445,7 +1446,7 @@ function renderLibrary() {
   document.querySelector('.library-heading').hidden = ['tracks','albums'].includes(view.level);
 
   if(view.level==='hub'){
-    state.librarySection='library';syncLibraryNav();back.hidden=true;title.textContent='Library';subtitle.textContent='Your downloaded music';
+    state.librarySection='library';syncLibraryNav();back.hidden=true;title.textContent='Library';subtitle.textContent='';
     content.innerHTML=`<div class="library-hub">${[['artists','artist','Artists'],['all-albums','albums','Albums'],['songs','songs','Songs']].map(([section,icon,label])=>`<button data-library-shortcut="${section}">${musicIcon(icon)}<span>${label}</span>${musicIcon('back')}</button>`).join('')}</div><div class="library-hub mobile-library-utilities"><button data-mobile-drawer="downloads">${downloadIcon()}<span>Download History</span>${musicIcon('back')}</button><button data-mobile-drawer="settings">${musicIcon('settings')}<span>Settings</span>${musicIcon('back')}</button></div><h3 class="hub-recent-title">Recently Added</h3><div class="library-grid">${rootLibraryItems('recent').slice(0,8).map(node=>libraryCardHtml(node,'album')).join('')}</div>`;
     content.querySelectorAll('[data-library-shortcut]').forEach(button=>button.addEventListener('click',()=>{
       showRoot(button.dataset.libraryShortcut);state.libraryTrail=[{level:'hub',artistPath:null,albumPath:null}];renderLibrary();

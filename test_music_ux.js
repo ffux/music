@@ -150,7 +150,7 @@ assert.equal(tracks.length,3);
   assert(!html.includes('<header>'));assert(!html.includes('id="library-home"'));
   assert(!html.includes('Sorted by latest file date'));
   evaluate('state.libraryData=fixture;showRoot("recent")');assert.equal(element('library-subtitle').textContent,'');
-  evaluate('showRoot("library")');assert.match(element('library-content').innerHTML,/data-mobile-drawer="downloads"/);assert.match(element('library-content').innerHTML,/data-mobile-drawer="settings"/);
+  evaluate('showRoot("library")');assert.equal(element('library-subtitle').textContent,'');assert.match(element('library-content').innerHTML,/data-mobile-drawer="downloads"/);assert.match(element('library-content').innerHTML,/data-mobile-drawer="settings"/);
   assert(html.indexOf('id="downloads-toggle"')>html.indexOf('aria-label="Library"'));
   assert(html.indexOf('id="settings-toggle"')<html.indexOf('</aside>'));
   console.log('Search locality, edition-aware status, partial albums, album continuation, queue insertion, repeat, shuffle restoration, quality labels and policy-text removal passed');
