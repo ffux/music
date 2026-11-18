@@ -99,5 +99,30 @@ assert.equal(tracks.length,3);
   evaluate('applyDeletedScope(tracks[0].path)');assert.equal(evaluate('state.currentTrack'),null);assert.equal(evaluate('state.playQueue.length'),2);assert.equal(evaluate('state.playIndex'),-1);assert.equal(evaluate('state.playQueue[1].queueId'),survivorId);
   evaluate('startPlaybackQueue(tracks,0,false);applyDeletedScope(tracks[2].path)');assert.equal(evaluate('state.currentTrack.path'),tracks[0].path);assert.equal(evaluate('state.playIndex'),0);assert.equal(evaluate('state.playQueue.length'),2);
   evaluate('applyDeletedScope(fixture[0].path)');assert.equal(evaluate('state.playQueue.length'),0);assert.equal(evaluate('state.currentTrack'),null);
+  // Search-card download controls are separate from navigation and queue once.
+  const downloadCases=[
+    [{resultType:'album',collectionId:900,collectionName:'Album',trackCount:5},'https://music.apple.com/us/album/900'],
+    [{resultType:'artist',artistId:901,artistName:'Artist'},'https://music.apple.com/us/artist/901'],
+    [{resultType:'song',trackId:902,collectionId:900,trackName:'Song'},'https://music.apple.com/us/album/900?i=902'],
+  ];
+  let queueRequests=0;
+  for(const [item,url] of downloadCases){
+    context.queueItem=item;const card=evaluate('resultCardHtml(queueItem,0)');
+    assert.match(card,/card-save-action/);assert.match(card,/catalog-save/);
+    assert(!card.slice(card.indexOf('<button class="catalogue-open"'),card.indexOf('</button>')).includes('catalog-save'));
+    const button=element('save-'+queueRequests);button.disabled=false;context.queueButton=button;
+    let stopped=0;context.queueEvent={preventDefault(){stopped++;},stopPropagation(){stopped++;}};
+    context.fetch=async(target,options)=>{assert.equal(target,'/api/queue');assert.equal(JSON.parse(options.body).url,url);queueRequests++;return{ok:true,json:async()=>({id:1000+queueRequests})};};
+    await evaluate('saveCatalogueItem(queueItem,queueButton,queueEvent)');assert.equal(stopped,2);assert.equal(button.disabled,true);
+    assert.match(evaluate('resultCardHtml(queueItem,0)'),/Queued for server/);
+  }
+  context.queueItem={resultType:'album',collectionId:9999};context.queueButton=element('pending-save');context.queueButton.disabled=false;
+  let finishSave;context.fetch=()=>{queueRequests++;return new Promise(resolve=>{finishSave=resolve;});};
+  const pendingSave=evaluate('saveCatalogueItem(queueItem,queueButton)');const beforeDuplicate=queueRequests;
+  context.otherButton=element('rerendered-save');context.otherButton.disabled=false;
+  await evaluate('saveCatalogueItem(queueItem,otherButton)');assert.equal(queueRequests,beforeDuplicate);
+  assert.match(evaluate('saveButtonHtml(queueItem,0)'),/Queued for server/);
+  finishSave({ok:false,json:async()=>({error:'fixture rejection'})});await pendingSave;assert.equal(context.queueButton.disabled,false);
+  context.fetch=async()=>({ok:true,json:async()=>({id:2000})});await evaluate('saveCatalogueItem(queueItem,queueButton)');assert.equal(context.queueButton.disabled,true);
   console.log('Search locality, edition-aware status, partial albums, album continuation, queue insertion, repeat, shuffle restoration, quality labels and policy-text removal passed');
 })().catch(error=>{console.error(error);process.exitCode=1});

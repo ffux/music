@@ -538,6 +538,9 @@
       #player-title { display: none; }
     }
 
+    .result-card { position: relative; }
+    .card-save-action { position: absolute; top: 8px; right: 8px; z-index: 2; }
+    .card-save-action .card-library-badge { position: static; display: inline-block; }
     .card-library-badge { position:absolute;top:8px;right:8px;padding:3px 8px;border-radius:20px;background:#111d;color:var(--text);font-size:13px; }
     .album-hero { display: flex; gap: 24px; align-items: center; margin: 0 0 24px; }
     .album-hero-art { width: 180px; height: 180px; object-fit: cover; border-radius: 12px; background: var(--surface2); flex-shrink: 0; }
@@ -729,7 +732,8 @@
       .track-row > .more-button, .catalogue-track > .more-button { color: #aaa; background: transparent; font-size: 19px; }
       .search-section .result-grid { display: flex; flex-direction: column; gap: 0; }
       .search-section .result-card { border-bottom: 1px solid #ffffff20; padding: 10px 0; }
-      .search-section .catalogue-open { display: flex; align-items: center; gap: 14px; }
+      .search-section .catalogue-open { display: flex; align-items: center; gap: 14px; padding-right: 48px; }
+      .search-section .card-save-action { top: 50%; right: 0; transform: translateY(-50%); }
       .search-section .library-art { width: 58px; height: 58px; flex: 0 0 58px; }
       .search-section .result-card[data-kind="artist"] .library-art { border-radius: 50%; }
       .search-section .result-info { min-width: 0; flex: 1; padding: 0; }
@@ -2073,14 +2077,16 @@ function catalogueMore(anchor,item){
   if(presence.track||presence.node)actions.push({label:'Delete downloaded '+(presence.track?'song':catalogueKind(item))+' from server…',danger:true,run:()=>deleteFromServer(presence.track||presence.node)});
   actions.push({label:'Open in Apple Music',run:()=>window.open(catalogueUrl(item),'_blank','noopener,noreferrer')});openMoreMenu(anchor,actions);
 }
+const catalogueSavePending = new Set();
 async function queueAppleUrl(url){
   const response=await fetch('/api/queue',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
   const data=await response.json();if(!response.ok)throw new Error(data.error||'Could not save to server');
+  if(data.id != null && !state.jobs[data.id]) state.jobs[data.id]={id:data.id,url,status:'pending'};
   showToast('Saving to server — see Download History for progress','success');return data.id;
 }
 function saveButtonHtml(item,index) {
   const presence=libraryPresence(item),kind=catalogueKind(item);
-  const pending=Object.values(state.jobs).some(job=>job.url===catalogueUrl(item)&&['pending','running'].includes(job.status));
+  const pending=catalogueSavePending.has(catalogueUrl(item))||Object.values(state.jobs).some(job=>job.url===catalogueUrl(item)&&['pending','running'].includes(job.status));
   if(pending)return '<button class="track-dl" disabled aria-label="Queued for server" title="Queued for server">…</button>';
   if(presence.complete) return '';
   const label=kind==='artist'?'Save artist albums to server':kind==='album'&&presence.node&&!presence.alternate?'Save missing songs to server':'Save '+kind+' to server';
@@ -2092,8 +2098,17 @@ function catalogueArtwork(item,size=300) {
 }
 function resultCardHtml(item,index) {
   const title=catalogueTitle(item)||'Unknown',presence=libraryPresence(item),art=catalogueArtwork(item);
-  const mark=!state.libraryIndexReady?'…':presence.complete?'✓':presence.node?'◐':'↓';
-  return `<article class="result-card" data-kind="${catalogueKind(item)}"><button class="catalogue-open" data-item="${index}" aria-label="Browse ${escHtml(title)}"><div class="library-art">${art?`<img class="result-art" src="${escHtml(art)}" loading="lazy" alt="" onerror="this.hidden=true">`:'<div class="result-art-placeholder">♫</div>'}<span class="card-library-badge" title="${escHtml(presence.label)}" aria-label="${escHtml(presence.label)}">${mark}</span></div><div class="result-info"><div class="result-title">${escHtml(title)}</div>${catalogueKind(item)!=='artist'?`<div class="result-sub">${escHtml(item.artistName||'')}</div>`:''}</div></button></article>`;
+  const action=saveButtonHtml(item,index)||`<span class="card-library-badge" title="${escHtml(presence.label)}" aria-label="${escHtml(presence.label)}">✓</span>`;
+  return `<article class="result-card" data-kind="${catalogueKind(item)}"><button class="catalogue-open" data-item="${index}" aria-label="Browse ${escHtml(title)}"><div class="library-art">${art?`<img class="result-art" src="${escHtml(art)}" loading="lazy" alt="" onerror="this.hidden=true">`:'<div class="result-art-placeholder">♫</div>'}</div><div class="result-info"><div class="result-title">${escHtml(title)}</div>${catalogueKind(item)!=='artist'?`<div class="result-sub">${escHtml(item.artistName||'')}</div>`:''}</div></button><div class="card-save-action">${action}</div></article>`;
+}
+async function saveCatalogueItem(item,button,event) {
+  event?.preventDefault?.(); event?.stopPropagation?.();
+  const url=catalogueUrl(item);
+  if(button.disabled||catalogueSavePending.has(url))return;
+  catalogueSavePending.add(url);button.disabled=true;button.setAttribute('aria-label','Sending to server');button.textContent='…';
+  try{await queueAppleUrl(url);button.innerHTML=musicIcon('check');button.setAttribute('aria-label','Queued for server');button.title='Queued for server';}
+  catch{button.disabled=false;button.innerHTML=musicIcon('repeat');button.setAttribute('aria-label','Retry save to server');button.title='Retry save to server';showToast('Could not save to server. Please retry.','error');}
+  finally{catalogueSavePending.delete(url);}
 }
 
 async function doAppleSearch(){
@@ -2161,10 +2176,7 @@ function renderCatalogue(){
   content.querySelectorAll('.catalogue-open').forEach(button=>button.addEventListener('click',()=>openCatalogueItem(boundItems[Number(button.dataset.item)])));
   content.querySelectorAll('.catalog-more').forEach(button=>button.addEventListener('click',()=>catalogueMore(button,boundItems[Number(button.dataset.item)])));
   content.querySelectorAll('.catalog-row-play').forEach(button=>button.addEventListener('click',()=>{const presence=libraryPresence(boundItems[Number(button.dataset.item)]);if(presence.track)playFromAlbum(presence.track);}));
-  content.querySelectorAll('.catalog-save').forEach(button=>button.addEventListener('click',async()=>{
-    const item=boundItems[Number(button.dataset.item)];button.disabled=true;button.setAttribute('aria-label','Sending to server');button.textContent='…';
-    try{await queueAppleUrl(catalogueUrl(item));button.innerHTML=musicIcon('check');button.setAttribute('aria-label','Queued for server');button.title='Queued for server';}catch{button.disabled=false;button.innerHTML=musicIcon('repeat');button.setAttribute('aria-label','Retry save to server');button.title='Retry save to server';showToast('Could not save to server. Please retry.','error');}
-  }));
+  content.querySelectorAll('.catalog-save').forEach(button=>button.addEventListener('click',event=>saveCatalogueItem(boundItems[Number(button.dataset.item)],button,event)));
   if(!state.libraryIndexReady&&!state.libraryIndexFailed)ensureLibraryIndex().then(()=>{if(state.catalogueView===view&&state.searchActive&&state.searchScope==='apple')renderCatalogue();}).catch(()=>{state.libraryIndexFailed=true;if(state.catalogueView===view&&state.searchActive&&state.searchScope==='apple')renderCatalogue();});
 }
 
