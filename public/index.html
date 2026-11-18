@@ -946,6 +946,21 @@
       .playback-drawer .drawer-header { background: var(--bg); }
     }
     @media(prefers-reduced-motion:reduce) { .playback-drawer, .desktop-seek { transition: none; } }
+
+    /* Shared translucent surfaces; keep text/icons opaque and fall back safely. */
+    :root { --floating-surface: #303033; --floating-filter: none; }
+    @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      :root { --floating-surface: rgba(48,48,51,.82); --floating-filter: blur(18px) saturate(115%); }
+    }
+    #player-bar.visible, .mobile-bottom-nav, #more-menu, #toast,
+    .settings-drawer, .downloads-drawer, .welcome-dialog, .confirmation-dialog {
+      background: var(--floating-surface); backdrop-filter: var(--floating-filter); -webkit-backdrop-filter: var(--floating-filter);
+    }
+    .settings-drawer .drawer-header, .downloads-drawer .drawer-header { background: var(--floating-surface); }
+    @media(prefers-reduced-transparency:reduce) {
+      :root { --floating-surface: #303033; --floating-filter: none; }
+      .settings-drawer::backdrop, .downloads-drawer::backdrop, .welcome-dialog::backdrop { backdrop-filter: none; -webkit-backdrop-filter: none; }
+    }
 </style>
 </head>
 <body>
