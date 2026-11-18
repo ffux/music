@@ -444,6 +444,7 @@
     .welcome-stats strong, .welcome-stats span { display: block; }
     .welcome-stats strong { font-size: 23px; }
     .welcome-stats span { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .welcome-dialog p:empty { display: none; }
     .welcome-dialog .btn { width: 100%; margin-top: 12px; }
     .confirmation-dialog h2 { font-size: 18px; margin-bottom: 8px; }
     .confirmation-dialog p { color: var(--muted); font-size: 13px; }
@@ -1933,7 +1934,7 @@ function updateWelcomeStats() {
   const totals = welcomeTotals(state.libraryData);
   document.getElementById('welcome-albums').textContent = totals.albums.toLocaleString();
   document.getElementById('welcome-songs').textContent = totals.songs.toLocaleString();
-  document.getElementById('welcome-stats-note').textContent = 'Albums and songs ready to stream or download. Retained originals are not counted twice.';
+  document.getElementById('welcome-stats-note').textContent = '';
 }
 async function loadWelcomeStorage() {
   document.getElementById('welcome-gb').textContent='—';
@@ -1943,7 +1944,7 @@ async function loadWelcomeStorage() {
     const data=await response.json();
     if(!response.ok || !Number.isFinite(data.availableBytes) || data.availableBytes<0)throw Error('unavailable');
     document.getElementById('welcome-gb').textContent=(data.availableBytes/1e9).toLocaleString(undefined,{maximumFractionDigits:1});
-    document.getElementById('welcome-storage-note').textContent='Free space available for downloads on the music storage drive (GB).';
+    document.getElementById('welcome-storage-note').textContent='';
   } catch {
     document.getElementById('welcome-gb').textContent='—';
     document.getElementById('welcome-storage-note').textContent='Available music storage could not be checked. Try reopening this window later.';
