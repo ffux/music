@@ -74,6 +74,8 @@ assert.equal(tracks.length,3);
   assert(!html.includes('class="track-dl client-download"'));assert(!html.includes('class="track-dl album-download"'));assert(!html.includes('class="track-dl artist-download"'));assert(!html.includes('class="track-dl catalog-device"'));
   assert.equal(evaluate('catalogueArtwork({resultType:"artist",artistId:100})'),'/api/artist-artwork?id=100');
   assert.equal(evaluate('catalogueArtwork({resultType:"artist",artistId:"bad"})'),null);
+  assert(!html.includes('id="player-queue-position"'));
+  evaluate('renderPlaybackQueue()');assert.match(element('playback-queue-toggle')['aria-label'],/Show playback queue, \d+ upcoming/);
   // Mobile presentation observes and controls the same audio element.
   element('player').paused=true; element('player').duration=230; element('player').currentTime=30;
   evaluate('syncMobilePlayer()');assert.equal(element('mobile-play-pause')['aria-label'],'Play');assert.equal(element('mobile-seek').max,'230');assert.equal(element('mobile-elapsed').textContent,'0:30');
