@@ -927,7 +927,7 @@
       #player-shuffle, #player-prev, #mini-play-pause, #player-next, #player-repeat { grid-row: 1; }
       .desktop-volume { grid-column: 10; grid-row: 1; font-size: 0; }
       #desktop-volume { height: 4px; }
-      .desktop-seek { position: absolute; left: 24px; bottom: 0; width: calc(100% - 48px); height: 3px; margin: 0; border: 0; border-radius: 4px; appearance: none; -webkit-appearance: none; background: linear-gradient(to right,#e2e2e7 var(--seek-progress,0%),#ffffff26 var(--seek-progress,0%)); transition: height .16s ease; }
+      .desktop-seek { position: relative; grid-column: 6 / 8; grid-row: 1; align-self: end; left: auto; bottom: auto; transform: translateY(9px); width: calc(100% - 12px); height: 3px; margin: 0 0 0 12px; border: 0; border-radius: 4px; appearance: none; -webkit-appearance: none; background: linear-gradient(to right,#e2e2e7 var(--seek-progress,0%),#ffffff26 var(--seek-progress,0%)); transition: height .16s ease; }
       .desktop-seek::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #eee; opacity: 0; transition: opacity .16s; }
       .desktop-seek::-moz-range-thumb { width: 12px; height: 12px; border: 0; border-radius: 50%; background: #eee; opacity: 0; }
       #player-bar:hover .desktop-seek, .desktop-seek:focus-visible { height: 8px; }
@@ -938,6 +938,7 @@
     @media(min-width:701px) and (max-width:1000px) {
       #player-bar.visible { padding: 10px 12px 13px; grid-template-columns: 24px 24px 30px 24px 24px minmax(60px,1fr) 24px 24px 24px 56px; gap: 3px; }
       #player-artwork { width: 32px; height: 32px; }
+      .desktop-seek { width: calc(100% - 6px); margin-left: 6px; }
     }
     @media(max-width:700px) {
       .playback-drawer { z-index: 110; inset: 0; width: 100%; height: 100%; border: 0; padding: env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px); transform: translateY(100%); transition: transform .25s ease, visibility .25s; visibility: hidden; }
