@@ -754,8 +754,6 @@
       .search-section .result-info { min-width: 0; flex: 1; padding: 0; }
       .search-section .result-title { font-size: 17px; font-weight: 400; }
       .search-section .result-sub { font-size: 13px; }
-      .unified-search button[type="submit"] { display: none; }
-      #apple-search-btn { flex: 0 0 auto; margin-left: auto; min-height: 32px; padding: 4px 0; background: transparent !important; }
       .search-types { gap: 0; justify-content: space-between; border-bottom: 1px solid #ffffff20; }
       .type-btn { flex: 1; border-radius: 0; font-size: 12px; padding: 10px 3px; border-bottom: 2px solid transparent; }
       .type-btn.active { background: transparent; color: var(--accent2); border-bottom-color: var(--accent2); }
@@ -858,7 +856,7 @@
     }
 
     @media(max-width:700px) {
-      .btn, .type-btn, #apple-search-btn { min-height: 44px; }
+      .btn, .type-btn { min-height: 44px; }
       .track-row { grid-template-columns: 20px minmax(0,1fr) 44px; }
       .track-row > .more-button { width: 44px; }
       .catalogue-track { grid-template-columns: 16px minmax(0,1fr) 44px 44px 44px; }
@@ -942,8 +940,6 @@
       <section id="search-panel" hidden>
       <form class="unified-search" id="search-form">
         <input type="text" id="search-input" placeholder="Search your music…" autocomplete="off" spellcheck="false">
-        <button type="submit" class="btn">Search</button>
-        <button type="button" class="btn btn-secondary" id="apple-search-btn">Search Apple Music</button>
       </form>
       <div class="search-types" role="group" aria-label="Search type">
         <button class="type-btn active" data-type="all"><span class="nav-desktop-label">All</span><span class="nav-mobile-label">Top Results</span></button>
@@ -2087,7 +2083,6 @@ function scheduleLibrarySearch(event) {
 document.getElementById('search-input').addEventListener('input', scheduleLibrarySearch);
 document.getElementById('search-input').addEventListener('compositionend', scheduleLibrarySearch);
 document.getElementById('search-form').addEventListener('submit',event=>{event.preventDefault();clearTimeout(librarySearchTimer);doLocalSearch();});
-document.getElementById('apple-search-btn').addEventListener('click',doAppleSearch);
 function localMatches(q,type=searchType){
   const query=q.toLocaleLowerCase(),artists=(state.libraryData||[]).filter(node=>node.type==='dir');
   if(type==='artist')return artists.filter(node=>node.name.toLocaleLowerCase().includes(query));
