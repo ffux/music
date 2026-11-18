@@ -850,6 +850,42 @@
       #more-menu button { min-height: 44px; }
     }
     #more-menu .menu-danger { color: #ff637d; }
+
+    /* Widescreen shell: the sidebar is independent of the content and floating dock. */
+    .desktop-seek, .desktop-volume { display: none; }
+    @media (min-width: 701px) {
+      .app-shell { --sidebar-width: 232px; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); grid-template-rows: 60px minmax(0, 1fr); }
+      header { grid-column: 2; grid-row: 1; background: transparent; border: 0; padding: 0 28px; }
+      .library-sidebar { grid-row: 1 / -1; margin: 10px 0 10px 10px; padding: 24px 12px; border: 1px solid #ffffff0c; border-radius: 22px; background: #252527; }
+      main { padding-bottom: 120px; scroll-padding-bottom: 120px; }
+      #player-bar.visible { position: fixed; z-index: 81; left: calc(var(--sidebar-width) + 24px); right: 24px; bottom: 20px; width: auto; max-width: 1050px; margin: 0 auto; display: grid; grid-template-columns: 30px 30px 38px 30px 30px minmax(80px, 1fr) auto auto auto; gap: 8px; align-items: center; padding: 12px 18px; min-height: 82px; border: 1px solid #ffffff24; border-radius: 28px; background: #303033ed; box-shadow: 0 12px 40px #0007; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+      #player-bar .player-now, #player-bar .player-bar-inner { display: contents; }
+      #player-bar .player-summary { grid-column: 6; grid-row: 1; margin: 0 12px; align-self: start; }
+      #player-artwork { width: 44px; height: 44px; border-radius: 8px; flex-shrink: 0; }
+      #player-title { font-size: 13px; }
+      #player-track-name { display: block; overflow: hidden; text-overflow: ellipsis; }
+      #player-queue-position, audio#player { display: none; }
+      #player-shuffle { grid-column: 1; grid-row: 1 / 3; }
+      #player-prev { grid-column: 2; grid-row: 1 / 3; }
+      #mini-play-pause { display: inline-flex; grid-column: 3; grid-row: 1 / 3; justify-content: center; align-items: center; }
+      #mini-play-pause .ui-icon { width: 28px; height: 28px; }
+      #player-next { grid-column: 4; grid-row: 1 / 3; }
+      #player-repeat { grid-column: 5; grid-row: 1 / 3; }
+      #player-more { grid-column: 7; grid-row: 1; }
+      #playback-queue-toggle { grid-column: 8; grid-row: 1; white-space: nowrap; }
+      #player-close { grid-column: 9; grid-row: 1; }
+      #player-bar .player-action, #player-bar .player-skip { min-width: 0; padding: 4px; }
+      .desktop-seek { display: block; grid-column: 6; grid-row: 2; width: calc(100% - 24px); margin: -3px 12px 0; height: 12px; accent-color: #dddde3; cursor: pointer; }
+      .desktop-volume { display: flex; grid-column: 7 / 10; grid-row: 2; align-items: center; gap: 6px; color: var(--muted); font-size: 10px; }
+      #desktop-volume { width: 100%; min-width: 0; height: 12px; accent-color: #dddde3; }
+    }
+    @media (min-width: 701px) and (max-width: 1000px) {
+      .app-shell { --sidebar-width: 196px; }
+      #player-bar.visible { left: calc(var(--sidebar-width) + 12px); right: 12px; padding: 10px 12px; gap: 3px; grid-template-columns: 24px 26px 32px 26px 24px minmax(70px, 1fr) auto auto auto; }
+      #player-bar .player-summary { margin: 0 6px; }
+      #player-artwork { width: 32px; height: 32px; }
+      #playback-queue-toggle { font-size: 10px; }
+    }
   </style>
 </head>
 <body>
@@ -900,7 +936,7 @@
   </div>
 </main>
 
-<!-- Player bar: final app-shell row, kept in normal document flow -->
+<!-- Shared audio engine with responsive floating player controls. -->
 <div id="player-bar">
   <div class="player-now">
     <div class="player-summary" id="mobile-player-summary">
@@ -913,6 +949,8 @@
     <button class="player-action" id="playback-queue-toggle" aria-label="Show playback queue">Up Next</button>
     <button class="player-action" id="player-close" aria-label="Close player"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
   </div>
+  <input class="desktop-seek" id="desktop-seek" type="range" min="0" max="1" step="0.1" value="0" aria-label="Playback position">
+  <label class="desktop-volume">Volume<input id="desktop-volume" type="range" min="0" max="1" step="0.01" value="1" aria-label="Volume"></label>
   <div class="player-bar-inner">
     <button class="player-action" id="player-shuffle" aria-label="Shuffle off" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h3c5 0 7 12 12 12h3M3 18h3c2.5 0 4.5-3 6-6s3.5-6 6-6h3m-4-4 4 4-4 4m0 4 4 4-4 4"/></svg></button>
     <button class="player-skip" id="player-prev" title="Previous track"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m20 5-10 7 10 7Z" fill="currentColor" stroke="none"/><path d="M6 5v14" stroke-width="3"/></svg></button>
@@ -1756,8 +1794,10 @@ function syncMobilePlayer() {
   document.getElementById('mobile-now-art').src=art;
   document.getElementById('mobile-now-playing').style.setProperty('--now-art',`url(${JSON.stringify(art)})`);
   const duration=Number.isFinite(player.duration)?player.duration:Number(track.fidelity?.duration)||0;
-  const seek=document.getElementById('mobile-seek');seek.max=String(duration||1);seek.value=String(player.currentTime||0);seek.disabled=!duration;
+  for(const id of ['mobile-seek','desktop-seek']){
+  const seek=document.getElementById(id);seek.max=String(duration||1);seek.value=String(player.currentTime||0);seek.disabled=!duration;
   seek.setAttribute('aria-valuetext',`${formatTime(player.currentTime||0)} of ${formatTime(duration)}`);
+  }
   document.getElementById('mobile-elapsed').textContent=formatTime(player.currentTime||0);
   document.getElementById('mobile-remaining').textContent='−'+formatTime(Math.max(0,duration-(player.currentTime||0)));
   for(const setting of ['shuffle','repeat']){
@@ -1799,8 +1839,14 @@ document.getElementById('mobile-now-more').addEventListener('click',event=>local
 document.getElementById('mobile-up-next').addEventListener('click',()=>{closeMobilePlayer();openPlaybackQueue();});
 document.getElementById('mobile-stop').addEventListener('click',()=>{closeMobilePlayer();document.getElementById('player-close').click();});
 for(const setting of ['shuffle','repeat'])document.getElementById('mobile-'+setting).addEventListener('click',()=>{document.getElementById('player-'+setting).click();syncMobilePlayer();});
-document.getElementById('mobile-seek').addEventListener('change',event=>{
+for(const id of ['mobile-seek','desktop-seek'])document.getElementById(id).addEventListener('change',event=>{
   const player=document.getElementById('player');if(Number.isFinite(player.duration))player.currentTime=Math.max(0,Math.min(player.duration,Number(event.target.value)||0));
+});
+document.getElementById('desktop-volume').addEventListener('input',event=>{
+  const player=document.getElementById('player');player.volume=Math.max(0,Math.min(1,Number(event.target.value)));player.muted=false;
+});
+document.getElementById('player').addEventListener('volumechange',()=>{
+  const player=document.getElementById('player');document.getElementById('desktop-volume').value=String(player.muted?0:player.volume);
 });
 for(const event of ['play','pause','timeupdate','loadedmetadata','ended'])document.getElementById('player').addEventListener(event,syncMobilePlayer);
 
