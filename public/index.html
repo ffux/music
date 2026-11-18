@@ -575,6 +575,8 @@
     .playback-drawer.open { transform: translateX(0); }
     .queue-item { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding: 10px 0; }
     .queue-item .text-link { flex: 1; color: var(--text); min-width: 0; }
+    #clear-upcoming { margin-top: 24px; }
+    .queue-now .text-link { text-align: left; }
     .queue-item small { display: block; color: var(--muted); font-size: 11px; }
     .queue-current { color: var(--accent2); font-size: 12px; margin: 12px 0; }
     @media(max-width:700px) {
@@ -890,27 +892,35 @@
       #player-artwork { width: 32px; height: 32px; }
       #playback-queue-toggle { font-size: 10px; }
     }
+
+    /* Navigation owns utilities; content starts at the top, without a title bar. */
+    .app-shell { grid-template-rows: minmax(0, 1fr); }
+    main { grid-row: 1; }
+    .sidebar-utilities { margin-top: 24px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .utility-toggle { position: relative; padding-right: 30px; }
+    .utility-toggle.active { background: var(--surface2); }
+    #active-badge { top: 12px; right: 10px; }
+    #library-subtitle:empty { display: none; }
+    .mobile-library-utilities { display: none; }
+    .mobile-library-utilities .download-icon { width: 26px; height: 26px; flex-shrink: 0; }
+    @media(max-width:700px) {
+      .mobile-library-utilities { display: flex; }
+    }
   </style>
 </head>
 <body>
 <div class="app-shell">
 
-<header>
-  <button class="logo" id="library-home" aria-label="Open Library" title="Library">♫ Music</button>
-  <div class="header-right">
-    <button class="header-icon-button" id="downloads-toggle" aria-label="Download History" title="Download History">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
-      <span id="active-badge" hidden>0</span>
-    </button>
-    <button class="header-icon-button" id="settings-toggle" aria-label="Settings" title="Settings"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m10 3-.6 2.2-2 .9L5.3 5.5 3.5 8.6 5 10.2v2.6l-1.5 1.6 1.8 3.1 2.1-.6 2 .9L10 20h4l.6-2.2 2-.9 2.1.6 1.8-3.1-1.5-1.6v-2.6l1.5-1.6-1.8-3.1-2.1.6-2-.9L14 3Z"/><circle cx="12" cy="11.5" r="3"/></svg></button>
-  </div>
-</header>
+
 
 <aside class="library-sidebar"><button class="library-nav-item search-nav" data-library-section="search" aria-label="Search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/></svg><span>Search</span></button><p class="sidebar-label">Library</p><nav class="sidebar-nav" aria-label="Library"><button class="library-nav-item" data-library-section="recent" aria-label="Recently Added"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="nav-desktop-label">Recently Added</span><span class="nav-mobile-label">Recent</span></button>
 <button class="library-nav-item" data-library-section="artists" aria-label="Artists"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg><span>Artists</span></button>
 <button class="library-nav-item" data-library-section="all-albums" aria-label="Albums"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg><span>Albums</span></button>
 <button class="library-nav-item" data-library-section="songs" aria-label="Songs"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13M9 8l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/></svg><span>Songs</span></button>
-</nav></aside>
+</nav><nav class="sidebar-utilities" aria-label="App"><button class="library-nav-item utility-toggle" id="downloads-toggle" aria-label="Download History" title="Download History">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+      <span id="active-badge" hidden>0</span>
+    <span>Download History</span></button><button class="library-nav-item utility-toggle" id="settings-toggle" aria-label="Settings" title="Settings"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m10 3-.6 2.2-2 .9L5.3 5.5 3.5 8.6 5 10.2v2.6l-1.5 1.6 1.8 3.1 2.1-.6 2 .9L10 20h4l.6-2.2 2-.9 2.1.6 1.8-3.1-1.5-1.6v-2.6l1.5-1.6-1.8-3.1-2.1.6-2-.9L14 3Z"/><circle cx="12" cy="11.5" r="3"/></svg><span>Settings</span></button></nav></aside>
 <nav class="mobile-bottom-nav" aria-label="Main navigation"><button data-mobile-destination="recent"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>New</span></button><button data-mobile-destination="library"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M4 6h16"/><rect x="3" y="9" width="18" height="12" rx="2"/></svg><span>Library</span></button><button data-mobile-destination="search"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/></svg><span>Search</span></button></nav>
 <main>
   <div class="tab active" id="tab-library">
@@ -1010,7 +1020,7 @@
 
 <aside class="playback-drawer" id="playback-drawer" aria-hidden="true" aria-label="Playback queue">
   <div class="drawer-header"><h2>Up Next</h2><button id="playback-close" aria-label="Close playback queue"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
-  <section class="drawer-section"><p>Playback queue · separate from Download History</p><div id="playback-list"></div><button class="btn btn-secondary" id="clear-upcoming">Clear upcoming</button></section>
+  <section class="drawer-section"><p>Playback queue</p><div id="playback-list"></div><button class="btn btn-secondary" id="clear-upcoming">Clear upcoming</button></section>
 </aside>
 <div id="more-menu" role="menu" hidden></div>
 <div id="toast"></div>
@@ -1113,7 +1123,7 @@ function closeDrawers() {
     drawer.setAttribute('aria-hidden', 'true');
   });
   document.getElementById('settings-overlay').hidden = true;
-  document.querySelectorAll('.header-icon-button').forEach(button => button.classList.remove('active'));
+  document.querySelectorAll('.utility-toggle').forEach(button => button.classList.remove('active'));
 }
 
 function openDrawer(name) {
@@ -1402,10 +1412,11 @@ function renderLibrary() {
 
   if(view.level==='hub'){
     state.librarySection='library';syncLibraryNav();back.hidden=true;title.textContent='Library';subtitle.textContent='Your downloaded music';
-    content.innerHTML=`<div class="library-hub">${[['artists','artist','Artists'],['all-albums','albums','Albums'],['songs','songs','Songs']].map(([section,icon,label])=>`<button data-library-shortcut="${section}">${musicIcon(icon)}<span>${label}</span>${musicIcon('back')}</button>`).join('')}</div><h3 class="hub-recent-title">Recently Added</h3><div class="library-grid">${rootLibraryItems('recent').slice(0,8).map(node=>libraryCardHtml(node,'album')).join('')}</div>`;
+    content.innerHTML=`<div class="library-hub">${[['artists','artist','Artists'],['all-albums','albums','Albums'],['songs','songs','Songs']].map(([section,icon,label])=>`<button data-library-shortcut="${section}">${musicIcon(icon)}<span>${label}</span>${musicIcon('back')}</button>`).join('')}</div><div class="library-hub mobile-library-utilities"><button data-mobile-drawer="downloads">${downloadIcon()}<span>Download History</span>${musicIcon('back')}</button><button data-mobile-drawer="settings">${musicIcon('settings')}<span>Settings</span>${musicIcon('back')}</button></div><h3 class="hub-recent-title">Recently Added</h3><div class="library-grid">${rootLibraryItems('recent').slice(0,8).map(node=>libraryCardHtml(node,'album')).join('')}</div>`;
     content.querySelectorAll('[data-library-shortcut]').forEach(button=>button.addEventListener('click',()=>{
       showRoot(button.dataset.libraryShortcut);state.libraryTrail=[{level:'hub',artistPath:null,albumPath:null}];renderLibrary();
     }));
+    content.querySelectorAll('[data-mobile-drawer]').forEach(button=>button.addEventListener('click',()=>openDrawer(button.dataset.mobileDrawer)));
     bindLibraryContent(content);return;
   }
   if (!state.libraryData?.length) {
@@ -1423,7 +1434,7 @@ function renderLibrary() {
     if(!back.hidden)back.innerHTML=musicIcon('back')+'<span>Library</span>';
     title.textContent = ({recent:'Recently Added',artists:'Artists','all-albums':'Albums',songs:'Songs'})[view.level];
     const unit = view.level === 'artists' ? 'artist' : view.level === 'songs' ? 'song' : 'album';
-    subtitle.textContent = `${items.length} ${unit}${items.length !== 1 ? 's' : ''}${view.level === 'recent' ? ' · Sorted by latest file date' : ''}`;
+    subtitle.textContent = view.level === 'recent' ? '' : `${items.length} ${unit}${items.length !== 1 ? 's' : ''}`;
     content.innerHTML = !items.length ? '<div class="library-empty">No music found</div>' : view.level === 'songs'
       ? trackListHtml(items, true)
       : `<div class="library-grid">${items.map(node => libraryCardHtml(node, view.level === 'artists' ? 'artist' : 'album')).join('')}</div>`;
@@ -1559,11 +1570,7 @@ document.getElementById('library-back').addEventListener('click', () => {
   else showRoot(state.librarySection);
 });
 
-document.getElementById('library-home').addEventListener('click', () => {
-  document.getElementById('search-input').value = '';
-  showRoot('recent');
-  document.querySelector('main').scrollTop = 0;
-});
+
 
 function trackTitle(track) {
   return track?.fidelity?.title || stripExt(track?.name || '').replace(/^\d+(?:-\d+)?[ ._-]+/, '');
@@ -1741,6 +1748,10 @@ function moveQueue(direction,ended=false) {
   if (next<0 || next>=state.playQueue.length) return;
   playTrack(state.playQueue[next],next);
 }
+function queueTrackDetails(track) {
+  const album=albumForTrack(track), info=state.albumMetadata[album?.path]?.album || {};
+  return [track.fidelity?.artist || info.artist || track.path.split('/')[0], info.title || album?.name || track.path.split('/').slice(-2,-1)[0]].filter(Boolean).join(' · ');
+}
 function renderPlaybackQueue() {
   const remaining=state.playQueue.slice(state.playIndex+1);
   document.getElementById('player-queue-position').textContent=state.currentTrack ? `${state.playIndex+1} of ${state.playQueue.length}` : `${remaining.length} queued`;
@@ -1749,7 +1760,7 @@ function renderPlaybackQueue() {
   shuffle.setAttribute('aria-pressed',String(state.shuffle)); shuffle.setAttribute('aria-label',`Shuffle ${state.shuffle?'on':'off'}`);
   repeat.setAttribute('aria-pressed',String(state.repeat!=='off')); repeat.setAttribute('aria-label',`Repeat ${state.repeat}`); repeat.innerHTML=musicIcon('repeat')+(state.repeat==='one'?'<span class="repeat-one">1</span>':'');
   const list=document.getElementById('playback-list');
-  list.innerHTML=(state.currentTrack ? `<div class="queue-current"><img src="/api/library/artwork?path=${encodeURIComponent(albumForTrack(state.currentTrack)?.path||state.currentTrack.path)}" alt=""><div>Now Playing<small>${escHtml(trackTitle(state.currentTrack))}</small></div></div>` : '') + (remaining.length ? `<h3>${state.currentTrack?'Coming Up':'Queued'}</h3>`+remaining.map(item=>`<div class="queue-item"><img class="queue-art" src="/api/library/artwork?path=${encodeURIComponent(albumForTrack(item)?.path||item.path)}" alt=""><button class="text-link" data-queue-play="${item.queueId}">${escHtml(trackTitle(item))}<small>${escHtml(item.path.split('/').slice(0,-1).join(' · '))}</small></button><button class="more-button" data-queue-remove="${item.queueId}" aria-label="Remove ${escHtml(trackTitle(item))} from playback queue">${musicIcon('close')}</button></div>`).join('') : '<p class="catalogue-note">Nothing else queued.</p>');
+  list.innerHTML=(state.currentTrack ? `<h3>Now Playing</h3><div class="queue-item queue-now"><img class="queue-art" src="/api/library/artwork?path=${encodeURIComponent(albumForTrack(state.currentTrack)?.path||state.currentTrack.path)}" alt=""><div class="text-link">${escHtml(trackTitle(state.currentTrack))}<small>${escHtml(queueTrackDetails(state.currentTrack))}</small></div></div>` : '') + (remaining.length ? `<h3>${state.currentTrack?'Coming Up':'Queued'}</h3>`+remaining.map(item=>`<div class="queue-item"><img class="queue-art" src="/api/library/artwork?path=${encodeURIComponent(albumForTrack(item)?.path||item.path)}" alt=""><button class="text-link" data-queue-play="${item.queueId}">${escHtml(trackTitle(item))}<small>${escHtml(queueTrackDetails(item))}</small></button><button class="more-button" data-queue-remove="${item.queueId}" aria-label="Remove ${escHtml(trackTitle(item))} from playback queue">${musicIcon('close')}</button></div>`).join('') : '<p class="catalogue-note">Nothing else queued.</p>');
   list.querySelectorAll('[data-queue-play]').forEach(button=>button.addEventListener('click',()=>{const index=state.playQueue.findIndex(item=>item.queueId===Number(button.dataset.queuePlay));playTrack(state.playQueue[index],index);}));
   list.querySelectorAll('[data-queue-remove]').forEach(button=>button.addEventListener('click',()=>{const id=Number(button.dataset.queueRemove);state.playQueue=state.playQueue.filter(item=>item.queueId!==id);state.playQueueBase=state.playQueueBase.filter(item=>item.queueId!==id);renderPlaybackQueue();}));
   document.getElementById('clear-upcoming').disabled=!remaining.length;

@@ -127,5 +127,17 @@ assert.equal(tracks.length,3);
   finishSave({ok:false,json:async()=>({error:'fixture rejection'})});await pendingSave;assert.equal(context.queueButton.disabled,false);assert.equal(context.rerenders,1);
   evaluate('renderCatalogue=originalCatalogueRender');context.queueButton.isConnected=true;
   context.fetch=async()=>({ok:true,json:async()=>({id:2000})});await evaluate('saveCatalogueItem(queueItem,queueButton)');assert.equal(context.queueButton.disabled,true);
+  assert(!html.includes('separate from Download History'));
+  evaluate('startPlaybackQueue(tracks,0,false)');
+  assert(element('playback-list').innerHTML.includes('<h3>Now Playing</h3><div class="queue-item queue-now">'));
+  assert(element('playback-list').innerHTML.includes('Remi Wolf'));
+  assert(html.includes('#clear-upcoming { margin-top: 24px; }'));
+  // No title bar or Recently Added count; utilities remain available on mobile.
+  assert(!html.includes('<header>'));assert(!html.includes('id="library-home"'));
+  assert(!html.includes('Sorted by latest file date'));
+  evaluate('state.libraryData=fixture;showRoot("recent")');assert.equal(element('library-subtitle').textContent,'');
+  evaluate('showRoot("library")');assert.match(element('library-content').innerHTML,/data-mobile-drawer="downloads"/);assert.match(element('library-content').innerHTML,/data-mobile-drawer="settings"/);
+  assert(html.indexOf('id="downloads-toggle"')>html.indexOf('aria-label="Library"'));
+  assert(html.indexOf('id="settings-toggle"')<html.indexOf('</aside>'));
   console.log('Search locality, edition-aware status, partial albums, album continuation, queue insertion, repeat, shuffle restoration, quality labels and policy-text removal passed');
 })().catch(error=>{console.error(error);process.exitCode=1});
