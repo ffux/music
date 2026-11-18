@@ -107,6 +107,25 @@ def checked_source(source, root):
     return source
 
 
+def settled_fingerprint(path):
+    """Let network-filesystem attributes settle after publishing/unlinking."""
+    with path.open('rb') as handle:
+        os.fsync(handle.fileno())
+    previous = fingerprint(path)
+    stable = 0
+    for _ in range(10):
+        time.sleep(1.1)  # allow remote attribute caches to refresh
+        current = fingerprint(path)
+        if current == previous:
+            stable += 1
+            if stable == 3:
+                return current
+        else:
+            stable = 0
+        previous = current
+    raise RuntimeError('Audio file identity did not settle; original retained')
+
+
 def convert(source, root, min_free_bytes=1024**3):
     """Return a result; never remove or overwrite source or an existing output."""
     started = time.monotonic()
@@ -134,7 +153,7 @@ def convert(source, root, min_free_bytes=1024**3):
     required = int(duration * info[1] * info[2] * (info[3] // 8) * 1.1) + source.stat().st_size + 1024**2
     if shutil.disk_usage(source.parent).free < min_free_bytes + required:
         raise RuntimeError('Insufficient free space for a retained-original conversion')
-    before = fingerprint(source)
+    before = settled_fingerprint(source)
     fd, temporary = tempfile.mkstemp(prefix='.flac-conversion-', suffix='.flac', dir=source.parent)
     os.close(fd)
     temp = Path(temporary)
@@ -155,7 +174,10 @@ def convert(source, root, min_free_bytes=1024**3):
             os.fsync(handle.fileno())
         # Hard link publishes atomically and fails rather than overwriting another writer.
         os.link(temp, output)
-        record = {'version': 1, 'source': before, 'output': fingerprint(output)}
+        # Finish link cleanup before recording server-side timestamps. SMB can
+        # acknowledge the link before its final attributes become visible.
+        temp.unlink()
+        record = {'version': 1, 'source': before, 'output': settled_fingerprint(output)}
         with marker.open('x') as handle:
             json.dump(record, handle)
             handle.flush()

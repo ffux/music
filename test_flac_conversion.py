@@ -58,6 +58,20 @@ class ConversionTests(unittest.TestCase):
             self.assertEqual(marker['output']['sha256'], conversion.fingerprint(output)['sha256'])
             self.assertEqual(conversion.convert(source, self.root, 0)['status'], 'unchanged')
 
+    def test_published_timestamp_settles_before_marker(self):
+        output = self.root / 'published.flac'
+        output.write_bytes(b'fixture')
+        calls = []
+        def delayed_attribute_update(_):
+            calls.append(True)
+            if len(calls) == 2:
+                stat = output.stat()
+                os.utime(output, ns=(stat.st_atime_ns, stat.st_mtime_ns + 2_000_000_000))
+        with patch.object(conversion.time, 'sleep', side_effect=delayed_attribute_update):
+            result = conversion.settled_fingerprint(output)
+        self.assertGreaterEqual(len(calls), 5)
+        self.assertEqual(result, conversion.fingerprint(output))
+
     def test_aac_is_not_promoted_to_lossless(self):
         source = self.root / 'aac.m4a'
         conversion.run(['ffmpeg', '-v', 'error', '-f', 'lavfi', '-i', 'sine=duration=0.1', '-c:a', 'aac', str(source)])

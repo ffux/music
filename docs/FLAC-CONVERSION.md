@@ -100,3 +100,15 @@ and VM timing remain outstanding.
   successful seek test.
 - Edge is not installed on the connected Mac, so Edge-specific testing remains
   unverified. Local tests do not prove authenticated remote mobile playback.
+
+## Production rollout follow-up
+
+Release 0531379 deployed successfully on 18 November 2026. The guarded migration
+converted 32 ALAC tracks and skipped 52 AAC tracks. SHA-256 checks confirmed all
+84 original files unchanged. Two SMB output timestamps changed after publishing,
+which safely exposed retained originals rather than hiding unverified files.
+Their markers were repaired only after exact source/output hash validation, with
+marker backups retained. Publication now waits for source and output identities
+to settle after flushing and hard-link cleanup, with a bounded timeout and a
+regression test for delayed filesystem timestamps. This adds several seconds to
+conversion; earlier benchmark timings predate this safeguard.
