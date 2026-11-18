@@ -82,3 +82,21 @@ synthetic converted track passed library single-entry visibility, Apple song ID
 metadata, JPEG artwork extraction, HTTP 206 byte-range serving and FLAC-only ZIP
 download. Syntax and whitespace checks passed. Actual browser decoder testing
 and VM timing remain outstanding.
+
+## Server and desktop verification, 18 November 2026
+
+- Server tests passed using an isolated checkout inside the existing Node 20 app
+  container, without changing application code or library files.
+- A copied real 198.659-second ALAC track (24-bit/96 kHz, stereo) converted and
+  completed PCM/tag verification in **8.102 seconds** on the server. ALAC was
+  78,581,435 bytes; FLAC was 78,052,458 bytes. This is one high-resolution sample,
+  not a download-time benchmark or a guarantee for every track.
+- The real file exposed scalar MP4 compilation tags; normalization now supports
+  scalar booleans and the regression fixture explicitly checks this field.
+- Firefox 158 and Chrome 157 on the Mac both decoded the converted sample and
+  continued playback beyond a seek to 60 seconds with no media error. Tests were
+  muted and served locally. Chrome seeking requires HTTP byte ranges, which the
+  app already supports; a plain non-range test server was replaced before the
+  successful seek test.
+- Edge is not installed on the connected Mac, so Edge-specific testing remains
+  unverified. Local tests do not prove authenticated remote mobile playback.

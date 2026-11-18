@@ -26,6 +26,7 @@ class ConversionTests(unittest.TestCase):
         tags['\xa9alb'] = ['Test album']; tags['aART'] = ['Various']
         tags['cnID'] = [123]; tags['plID'] = [456]; tags['atID'] = [789]
         tags['trkn'] = [(2, 10)]; tags['disk'] = [(1, 2)]
+        tags['cpil'] = True
         tags['\xa9day'] = ['2026-01-01']; tags['\xa9lyr'] = ['Words']
         # Real tiny PNG artwork, independent of external media.
         from PIL import Image
@@ -51,6 +52,7 @@ class ConversionTests(unittest.TestCase):
             self.assertEqual(tags['tracknumber'], ['2'])
             self.assertEqual(tags['disctotal'], ['2'])
             self.assertEqual(tags['lyrics'], ['Words'])
+            self.assertEqual(tags['compilation'], ['1'])
             self.assertEqual(tags.pictures[0].data, bytes(MP4(source)['covr'][0]))
             marker = json.loads(source.with_name('.' + source.name + '.flac.json').read_text())
             self.assertEqual(marker['output']['sha256'], conversion.fingerprint(output)['sha256'])

@@ -61,8 +61,11 @@ def copy_tags(source, output):
     flac.clear()
     for source_key, target_key in TAG_MAP.items():
         if source_key in tags:
+            values = tags[source_key]
+            if not isinstance(values, (list, tuple)):
+                values = [values]
             flac[target_key] = [str(int(v)) if isinstance(v, bool) else str(v)
-                                for v in tags[source_key]]
+                                for v in values]
     for source_key, number, total in [('trkn', 'TRACKNUMBER', 'TRACKTOTAL'),
                                       ('disk', 'DISCNUMBER', 'DISCTOTAL')]:
         if tags.get(source_key):
